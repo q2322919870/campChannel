@@ -74,8 +74,20 @@
           <tbody>
             <tr v-for="u in userList" :key="u.id">
               <td>{{ u.id }}</td>
-              <td>{{ u.username }}</td>
-              <td>{{ u.realName || '-' }}</td>
+              <td>
+                <span v-if="!u.editingUsername">{{ u.username }}</span>
+                <input v-else v-model="u.editUsername" class="inline-input" />
+                <button v-if="!u.editingUsername" class="edit-btn" @click="startEditUsername(u)">✏️</button>
+                <button v-if="u.editingUsername" class="save-btn" @click="saveUsername(u)">保存</button>
+                <button v-if="u.editingUsername" class="cancel-btn" @click="cancelEditUsername(u)">取消</button>
+              </td>
+              <td>
+                <span v-if="!u.editingRealName">{{ u.realName || '-' }}</span>
+                <input v-else v-model="u.editRealName" class="inline-input" />
+                <button v-if="!u.editingRealName" class="edit-btn" @click="startEditRealName(u)">✏️</button>
+                <button v-if="u.editingRealName" class="save-btn" @click="saveRealName(u)">保存</button>
+                <button v-if="u.editingRealName" class="cancel-btn" @click="cancelEditRealName(u)">取消</button>
+              </td>
               <td>{{ u.email }}</td>
               <td>{{ u.role === 'sys_admin' ? '管理员' : '普通用户' }}</td>
               <td>
@@ -111,6 +123,19 @@
           </div>
         </div>
         <div class="section-card">
+          <div class="section-card-title">频道筛选</div>
+          <div class="channel-filters">
+            <select v-model="channelFilter.type" class="filter-select">
+              <option value="">全部类型</option>
+              <option value="1">公共频道</option>
+              <option value="2">私人频道</option>
+            </select>
+            <input v-model="channelFilter.creatorUsername" placeholder="频道主用户名" class="filter-input" />
+            <button class="filter-btn" @click="fetchChannels">筛选</button>
+            <button class="filter-btn reset" @click="resetChannelFilter">重置</button>
+          </div>
+        </div>
+        <div class="section-card">
           <div class="section-card-title">频道列表</div>
           <table class="admin-table">
             <thead>
@@ -119,6 +144,7 @@
                 <th>名称</th>
                 <th>编号</th>
                 <th>类型</th>
+                <th>频道主</th>
                 <th>状态</th>
                 <th>创建时间</th>
                 <th>操作</th>
@@ -130,6 +156,7 @@
                 <td>{{ ch.name }}</td>
                 <td><code>{{ ch.channelCode }}</code></td>
                 <td>{{ ch.type === 1 ? '公共' : '私人' }}</td>
+                <td>{{ ch.creatorUsername || '-' }}</td>
                 <td>
                   <span class="status-badge" :class="statusClass(ch.status)">
                     {{ statusLabel(ch.status) }}
@@ -401,6 +428,7 @@ const userList = ref<any[]>([])
 
 const newChannel = reactive({ name: '', description: '' })
 const channelList = ref<any[]>([])
+const channelFilter = reactive({ type: '', creatorUsername: '' })
 
 const pendingPosts = ref<any[]>([])
 const pendingComments = ref<any[]>([])
@@ -655,11 +683,67 @@ async function deleteUser(u: any) {
   }
 }
 
+function startEditUsername(u: any) {
+  u.editingUsername = true
+  u.editUsername = u.username
+}
+
+async function saveUsername(u: any) {
+  if (!u.editUsername || !u.editUsername.trim()) return
+  try {
+    const res = await api.put(`/admin/users/${u.id}`, { username: u.editUsername.trim() })
+    if (res.data.code === 200) {
+      u.username = u.editUsername.trim()
+      u.editingUsername = false
+    } else {
+      alert(res.data.message || '修改失败')
+    }
+  } catch (e: any) {
+    alert(e.response?.data?.message || '修改失败')
+  }
+}
+
+function cancelEditUsername(u: any) {
+  u.editingUsername = false
+}
+
+function startEditRealName(u: any) {
+  u.editingRealName = true
+  u.editRealName = u.realName || ''
+}
+
+async function saveRealName(u: any) {
+  try {
+    const res = await api.put(`/admin/users/${u.id}`, { realName: u.editRealName.trim() })
+    if (res.data.code === 200) {
+      u.realName = u.editRealName.trim()
+      u.editingRealName = false
+    } else {
+      alert(res.data.message || '修改失败')
+    }
+  } catch (e: any) {
+    alert(e.response?.data?.message || '修改失败')
+  }
+}
+
+function cancelEditRealName(u: any) {
+  u.editingRealName = false
+}
+
 async function fetchChannels() {
   try {
-    const res = await api.get('/admin/channels')
+    const params: Record<string, any> = {}
+    if (channelFilter.type) params.type = Number(channelFilter.type)
+    if (channelFilter.creatorUsername) params.creatorUsername = channelFilter.creatorUsername
+    const res = await api.get('/admin/channels', { params })
     if (res.data.code === 200 && Array.isArray(res.data.data)) channelList.value = res.data.data
   } catch {}
+}
+
+function resetChannelFilter() {
+  channelFilter.type = ''
+  channelFilter.creatorUsername = ''
+  fetchChannels()
 }
 
 async function createChannel() {
@@ -1317,6 +1401,102 @@ onMounted(() => {
   font-size: 11px;
   background: rgba(124, 159, 203, 0.1);
   color: var(--primary);
+}
+
+.channel-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+  border-color: var(--primary);
+}
+
+.filter-input {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  width: 160px;
+  transition: border-color 0.2s;
+}
+
+.filter-input:focus {
+  border-color: var(--primary);
+}
+
+.inline-input {
+  padding: 4px 8px;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  background: rgba(124, 159, 203, 0.08);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  width: 120px;
+}
+
+.edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.edit-btn:hover {
+  background: rgba(124, 159, 203, 0.15);
+}
+
+.save-btn {
+  padding: 2px 10px;
+  border: 1px solid #4ade80;
+  border-radius: 6px;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: all 0.15s;
+}
+
+.save-btn:hover {
+  background: rgba(74, 222, 128, 0.2);
+}
+
+.cancel-btn {
+  padding: 2px 10px;
+  border: 1px solid #ff6b6b;
+  border-radius: 6px;
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: all 0.15s;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 107, 107, 0.2);
 }
 
 @media (max-width: 1024px) {

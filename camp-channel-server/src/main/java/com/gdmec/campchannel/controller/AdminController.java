@@ -145,6 +145,36 @@ public class AdminController {
         return Result.success("用户已删除", null);
     }
 
+    @PutMapping("/users/{userId}")
+    @Operation(summary = "修改用户信息")
+    public Result<Void> updateUser(
+            @PathVariable Long userId,
+            @RequestBody UpdateUserRequest request,
+            @AuthenticationPrincipal SecurityUser currentUser) {
+
+        if (!"sys_admin".equals(currentUser.getRole())) {
+            return Result.failed(ErrorCode.FORBIDDEN);
+        }
+
+        User user = userService.getById(userId);
+        if (user == null) {
+            return Result.failed(ErrorCode.BAD_REQUEST, "用户不存在");
+        }
+
+        if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
+            user.setUsername(request.getUsername().trim());
+        }
+        if (request.getRealName() != null) {
+            user.setRealName(request.getRealName().trim());
+        }
+        userService.updateById(user);
+
+        operationLogService.log(currentUser.getId(), "用户管理", "修改用户信息",
+                "修改用户ID: " + userId + " 的用户名/真实姓名", "PUT", "/admin/users/" + userId, null);
+
+        return Result.success("用户信息已更新", null);
+    }
+
     @GetMapping("/channels/pending")
     @Operation(summary = "获取待审核频道列表")
     public Result<List<Channel>> getPendingChannels(
@@ -164,16 +194,57 @@ public class AdminController {
 
     @GetMapping("/channels")
     @Operation(summary = "获取所有频道列表（管理员）")
-    public Result<List<Channel>> getAllChannels(
-            @AuthenticationPrincipal SecurityUser currentUser) {
+    public Result<List<java.util.Map<String, Object>>> getAllChannels(
+            @AuthenticationPrincipal SecurityUser currentUser,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) String creatorUsername) {
 
         if (!"sys_admin".equals(currentUser.getRole())) {
             return Result.failed(ErrorCode.FORBIDDEN);
         }
 
-        List<Channel> channels = channelService.list(
-                new QueryWrapper<Channel>().orderByDesc("create_time"));
-        return Result.success(channels);
+        QueryWrapper<Channel> queryWrapper = new QueryWrapper<>();
+        if (type != null) {
+            queryWrapper.eq("type", type);
+        }
+        queryWrapper.orderByDesc("create_time");
+        List<Channel> channels = channelService.list(queryWrapper);
+
+        // 填充频道主用户名
+        List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Channel ch : channels) {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", ch.getId());
+            map.put("channelCode", ch.getChannelCode());
+            map.put("name", ch.getName());
+            map.put("description", ch.getDescription());
+            map.put("type", ch.getType());
+            map.put("status", ch.getStatus());
+            map.put("creatorId", ch.getCreatorId());
+            map.put("createTime", ch.getCreateTime());
+            map.put("updateTime", ch.getUpdateTime());
+
+            if (ch.getCreatorId() != null && ch.getCreatorId() > 0) {
+                User creator = userService.getById(ch.getCreatorId());
+                map.put("creatorUsername", creator != null ? creator.getUsername() : "系统");
+            } else {
+                map.put("creatorUsername", "系统");
+            }
+            result.add(map);
+        }
+
+        // 按频道主用户名筛选
+        if (creatorUsername != null && !creatorUsername.trim().isEmpty()) {
+            String keyword = creatorUsername.trim().toLowerCase();
+            result = result.stream()
+                    .filter(m -> {
+                        String name = String.valueOf(m.get("creatorUsername")).toLowerCase();
+                        return name.contains(keyword);
+                    })
+                    .toList();
+        }
+
+        return Result.success(result);
     }
 
     @DeleteMapping("/channels/{channelId}")
@@ -376,6 +447,12 @@ public class AdminController {
     @Data
     public static class StatusUpdateRequest {
         private Integer status;
+    }
+
+    @Data
+    public static class UpdateUserRequest {
+        private String username;
+        private String realName;
     }
 
     @Data
