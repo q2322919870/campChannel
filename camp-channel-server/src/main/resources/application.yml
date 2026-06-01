@@ -1,0 +1,118 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: camp-channel-server
+  main:
+    allow-circular-references: true
+  profiles:
+    active:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/camp_channel?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: root
+    password: q871651480  # 请修改为您本地数据库密码
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 15
+      idle-timeout: 30000
+      pool-name: CampChannelHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+      schema-locations: classpath:db/schema.sql,classpath:db/migration-v2.0.sql
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:        # 如果本地 Redis 有密码，请填写
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+  mail:
+    host: smtp.exmail.qq.com
+    port: 465
+    username: 25120327@stu.gdmec.edu.cn
+    password: YaWS7inrt5EuiMQa
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+            checkserveridentity: false
+          socketFactory:
+            port: 465
+            class: javax.net.ssl.SSLSocketFactory
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+
+# MyBatis-Plus配置
+mybatis-plus:
+  configuration:
+    map-underline-to-camel-case: true
+    cache-enabled: false
+  global-config:
+    db-config:
+      id-type: auto
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+# JWT配置
+jwt:
+  secret: c2VjcmV0LWtleS1mb3ItY2FtcC1jaGFubmVsLXNlY3VyaXR5LXYxLTAtdGVzdC1vbmx5-32bytes-secret
+  expiration: 604800  # Token 有效期（秒），默认7天
+  header: Authorization
+  token-start-with: "Bearer "
+
+# Springdoc OpenAPI配置
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha
+    tagsSorter: alpha
+
+# 业务防刷限流与文件上传配置
+app:
+  upload:
+    local-path: ${user.dir}/uploads/ # 本地文件模拟 OSS 存储路径
+  word-filter:
+    file-path: classpath:sensitive_words.txt
+
+# 日志配置 - 输出到控制台
+logging:
+  level:
+    root: INFO
+    com.gdmec.campchannel: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.data.redis: INFO
+    org.mybatis: INFO
+    org.springframework.mail: DEBUG
+    com.sun.mail: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-5level] [%logger{50}] %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-5level] [%logger{50}] %msg%n"
+  file:
+    path: ./logs/camp-channel.log
+  console:
+    enabled: true
