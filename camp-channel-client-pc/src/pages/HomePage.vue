@@ -287,7 +287,7 @@ function viewPost(postId: number) {
 
 function goToGroupChat(channelId: number) {
   if (!channelId) return
-  const tab = channelTabs.value.find(t => t.id === channelId)
+  const tab = channelTabs.value.find(t => t.id === String(channelId))
   const name = tab?.name || '群聊'
   router.push({ name: 'GroupChat', params: { id: channelId }, query: { name } })
 }
