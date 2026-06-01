@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="post-detail">
     <div class="post-main">
       <div class="post-card">
@@ -268,40 +268,40 @@ onMounted(() => {
 <style scoped>
 .post-detail { max-width: 720px; margin: 0 auto; }
 .post-main { display: flex; flex-direction: column; gap: 20px; }
-.post-card { padding: 28px; background: var(--card); border: 1px solid var(--border); border-radius: var(--card-radius); }
+.post-card { padding: 28px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--card-radius); }
 .post-author-row { display: flex; gap: 12px; margin-bottom: 20px; }
-.post-avatar { width: 44px; height: 44px; border-radius: var(--radius); background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; overflow: hidden; }
+.post-avatar { width: 44px; height: 44px; border-radius: var(--radius); background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; overflow: hidden; }
 .post-avatar img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
 .author-name { font-size: 15px; font-weight: 600; }
-.post-time { font-size: 12px; color: var(--text-secondary); }
+.post-time { font-size: 12px; color: var(--on-surface-variant); }
 .role-badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; vertical-align: middle; }
 .role-badge.role-owner { background: rgba(240, 173, 78, 0.2); color: #f0ad4e; }
 .role-badge.role-admin { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
 .role-badge.role-member { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.5); }
 .post-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
-.post-content { font-size: 15px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 20px; }
+.post-content { font-size: 15px; line-height: 1.8; color: var(--on-surface-variant); margin-bottom: 20px; }
 .pin-indicator { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(240, 173, 78, 0.1); border: 1px solid rgba(240, 173, 78, 0.3); border-radius: 10px; color: #f0ad4e; font-size: 13px; font-weight: 500; margin-bottom: 16px; }
-.post-actions { display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 16px; }
-.action-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: none; border: none; color: var(--text-secondary); font-size: 14px; cursor: pointer; border-radius: 10px; transition: all 0.2s; }
-.action-btn:hover { background: var(--card); color: var(--primary); }
-.action-btn.liked { color: var(--accent); }
+.post-actions { display: flex; gap: 8px; border-top: 1px solid var(--outline-variant); padding-top: 16px; }
+.action-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: none; border: none; color: var(--on-surface-variant); font-size: 14px; cursor: pointer; border-radius: 10px; transition: all 0.2s; }
+.action-btn:hover { background: var(--surface); color: var(--primary); }
+.action-btn.liked { color: var(--secondary); }
 .action-btn.pinned { color: #f0ad4e; background: rgba(240, 173, 78, 0.1); }
 .action-btn.danger { color: #ff6b6b; }
 .delete-comment { background: none; border: none; color: #ff6b6b; font-size: 11px; cursor: pointer; margin-left: 8px; }
-.comments-section { padding: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; }
+.comments-section { padding: 24px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 20px; }
 .comments-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
 .comment-input { display: flex; gap: 8px; margin-bottom: 20px; }
-.comment-input input { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 14px; outline: none; }
+.comment-input input { flex: 1; padding: 12px 16px; border: 1px solid var(--outline-variant); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 14px; outline: none; }
 .comment-input input:focus { border-color: var(--primary); }
-.comment-input button { padding: 12px 20px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-weight: 600; cursor: pointer; }
-.comment-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.comment-input button { padding: 12px 20px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-weight: 600; cursor: pointer; }
+.comment-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--outline-variant); }
 .comment-item:last-child { border-bottom: none; }
-.comment-avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
+.comment-avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--secondary), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
 .comment-avatar-img { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; }
 .comment-body { flex: 1; }
 .comment-author { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
 .me-badge { font-size: 10px; color: #fff; background: #e74c3c; padding: 1px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700; vertical-align: middle; }
-.comment-text { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; }
-.comment-time { font-size: 11px; color: var(--text-secondary); }
-.no-comments { text-align: center; padding: 32px; color: var(--text-secondary); font-size: 14px; }
+.comment-text { font-size: 14px; color: var(--on-surface-variant); margin-bottom: 4px; }
+.comment-time { font-size: 11px; color: var(--on-surface-variant); }
+.no-comments { text-align: center; padding: 32px; color: var(--on-surface-variant); font-size: 14px; }
 </style>

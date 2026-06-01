@@ -16,13 +16,13 @@ export class GlassEffect {
     ctx.fillRect(0, 0, width, height)
 
     const gradient2 = ctx.createRadialGradient(width * 0.8, height * 0.15, 0, width * 0.8, height * 0.15, 400)
-    gradient2.addColorStop(0, this.hexToRgba(colors.primaryLight, 0.08))
+    gradient2.addColorStop(0, this.hexToRgba(colors.onPrimaryContainer, 0.08))
     gradient2.addColorStop(1, 'transparent')
     ctx.fillStyle = gradient2
     ctx.fillRect(0, 0, width, height)
 
     const gradient3 = ctx.createRadialGradient(width * 0.2, height * 0.85, 0, width * 0.2, height * 0.85, 350)
-    gradient3.addColorStop(0, this.hexToRgba(colors.accent, 0.08))
+    gradient3.addColorStop(0, this.hexToRgba(colors.secondary, 0.08))
     gradient3.addColorStop(1, 'transparent')
     ctx.fillStyle = gradient3
     ctx.fillRect(0, 0, width, height)

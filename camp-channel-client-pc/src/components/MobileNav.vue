@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <nav class="mobile-nav">
     <div class="mobile-nav-inner">
       <div
@@ -94,7 +94,7 @@ function isActive(path: string): boolean {
   background: rgba(15, 18, 25, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--outline-variant);
   padding: 6px 0 6px;
   padding-bottom: max(6px, env(safe-area-inset-bottom));
   display: flex;
@@ -117,7 +117,7 @@ function isActive(path: string): boolean {
   gap: 2px;
   padding: 4px 8px;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   transition: all 0.2s;
   border-radius: 8px;
   -webkit-tap-highlight-color: transparent;

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="notification-page">
     <div class="page-header">
       <h1>通知中心</h1>
@@ -86,13 +86,13 @@ onMounted(() => { fetchNotifications() })
 .read-all-btn { padding: 8px 20px; border-radius: 10px; border: 1px solid var(--primary); background: none; color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .read-all-btn:hover { background: rgba(124,159,203,0.1); }
 .notifications-list { display: flex; flex-direction: column; gap: 8px; }
-.notification-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.2s; }
+.notification-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 14px; cursor: pointer; transition: all 0.2s; }
 .notification-item:hover { border-color: var(--primary); }
 .notification-item.unread { border-left: 3px solid var(--primary); }
 .notif-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .notif-body { flex: 1; }
 .notif-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.notif-content { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
-.notif-time { font-size: 11px; color: var(--text-secondary); }
+.notif-content { font-size: 13px; color: var(--on-surface-variant); margin-bottom: 4px; }
+.notif-time { font-size: 11px; color: var(--on-surface-variant); }
 .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); margin-top: 14px; flex-shrink: 0; }
 </style>

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="admin-page">
     <div class="admin-sidebar">
       <div
@@ -895,8 +895,8 @@ onMounted(() => {
   flex-direction: column;
   gap: 4px;
   padding: 8px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   flex-shrink: 0;
   overflow-y: auto;
@@ -910,13 +910,13 @@ onMounted(() => {
   border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   transition: all 0.2s;
 }
 
 .admin-tab:hover {
   background: rgba(255, 255, 255, 0.04);
-  color: var(--text);
+  color: var(--on-surface);
 }
 
 .admin-tab.active {
@@ -950,8 +950,8 @@ onMounted(() => {
 
 .stat-card {
   padding: 24px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   text-align: center;
 }
@@ -965,14 +965,14 @@ onMounted(() => {
 
 .stat-label {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .dashboard-section-title {
   font-size: 16px;
   font-weight: 600;
   margin: 28px 0 16px;
-  color: var(--text);
+  color: var(--on-surface);
 }
 
 .quick-actions {
@@ -987,12 +987,12 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 20px 12px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.2s;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 13px;
 }
 
@@ -1005,8 +1005,8 @@ onMounted(() => {
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -1016,12 +1016,12 @@ onMounted(() => {
   padding: 12px 16px;
   text-align: left;
   font-size: 13px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--outline-variant);
 }
 
 .admin-table th {
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   background: rgba(255, 255, 255, 0.02);
   white-space: nowrap;
 }
@@ -1060,9 +1060,9 @@ onMounted(() => {
 .action-btn.small {
   padding: 4px 12px;
   font-size: 12px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.15s;
@@ -1082,8 +1082,8 @@ onMounted(() => {
 .action-btn.danger:hover { background: rgba(255,107,107,0.1); }
 
 .section-card {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
@@ -1093,7 +1093,7 @@ onMounted(() => {
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 14px;
-  color: var(--text);
+  color: var(--on-surface);
 }
 
 .create-channel-form {
@@ -1107,10 +1107,10 @@ onMounted(() => {
   flex: 1;
   min-width: 160px;
   padding: 10px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 13px;
   outline: none;
   transition: border-color 0.2s;
@@ -1130,7 +1130,7 @@ onMounted(() => {
   padding: 10px 24px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -1147,11 +1147,11 @@ onMounted(() => {
   display: flex;
   gap: 4px;
   margin-bottom: 16px;
-  background: var(--card);
+  background: var(--surface);
   border-radius: 10px;
   padding: 4px;
   width: fit-content;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
 }
 
 .review-tabs span {
@@ -1161,7 +1161,7 @@ onMounted(() => {
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .review-tabs span.active {
@@ -1193,8 +1193,8 @@ onMounted(() => {
 
 .review-item {
   padding: 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
@@ -1217,19 +1217,19 @@ onMounted(() => {
 
 .review-item-id {
   font-weight: 600;
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 12px;
 }
 
 .review-item-user,
 .review-item-time {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .review-item-text {
   font-size: 14px;
-  color: var(--text);
+  color: var(--on-surface);
   margin: 4px 0 0;
   line-height: 1.6;
   word-break: break-word;
@@ -1241,12 +1241,12 @@ onMounted(() => {
 
 .media-hint {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .report-target {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   margin-top: 2px;
 }
 
@@ -1282,7 +1282,7 @@ onMounted(() => {
 
 .handle-note {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .review-actions {
@@ -1319,10 +1319,10 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: 48px 16px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 14px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 12px;
 }
 
@@ -1335,10 +1335,10 @@ onMounted(() => {
 
 .log-filters input {
   padding: 8px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 13px;
   outline: none;
   width: 140px;
@@ -1351,10 +1351,10 @@ onMounted(() => {
 
 .filter-btn {
   padding: 8px 18px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 10px;
-  background: var(--card);
-  color: var(--text);
+  background: var(--surface);
+  color: var(--on-surface);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
@@ -1372,14 +1372,14 @@ onMounted(() => {
 
 .empty-cell {
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   padding: 32px 16px !important;
 }
 
 .log-time {
   white-space: nowrap;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .log-desc {
@@ -1391,7 +1391,7 @@ onMounted(() => {
 
 .log-ip {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .module-tag {
@@ -1412,10 +1412,10 @@ onMounted(() => {
 
 .filter-select {
   padding: 8px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 13px;
   outline: none;
   cursor: pointer;
@@ -1428,10 +1428,10 @@ onMounted(() => {
 
 .filter-input {
   padding: 8px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 13px;
   outline: none;
   width: 160px;
@@ -1447,7 +1447,7 @@ onMounted(() => {
   border: 1px solid var(--primary);
   border-radius: 6px;
   background: rgba(124, 159, 203, 0.08);
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 13px;
   outline: none;
   width: 120px;
@@ -1556,11 +1556,11 @@ onMounted(() => {
   }
 }
 
-.announcement-form { max-width: 500px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
-.announcement-form input, .announcement-form textarea { padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 14px; outline: none; font-family: inherit; }
+.announcement-form { max-width: 500px; display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 16px; padding: 24px; }
+.announcement-form input, .announcement-form textarea { padding: 12px 16px; border: 1px solid var(--outline-variant); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 14px; outline: none; font-family: inherit; }
 .announcement-form input:focus, .announcement-form textarea:focus { border-color: var(--primary); }
 .announcement-form textarea { resize: vertical; }
-.publish-btn { padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+.publish-btn { padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
 .publish-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .review-gallery-img { width: 120px; height: 80px; object-fit: cover; border-radius: 8px; margin: 8px 0; }
 
@@ -1568,18 +1568,18 @@ onMounted(() => {
 .treehole-content { display: flex; flex-direction: column; gap: 24px; }
 .treehole-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .treehole-filters { display: flex; gap: 12px; align-items: center; }
-.filter-select { padding: 8px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--text); font-size: 14px; outline: none; cursor: pointer; }
+.filter-select { padding: 8px 16px; border: 1px solid var(--outline-variant); border-radius: 12px; background: var(--surface); color: var(--on-surface); font-size: 14px; outline: none; cursor: pointer; }
 .filter-select:focus { border-color: var(--primary); }
-.treehole-item { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.treehole-item { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
 .treehole-item-header { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .treehole-item-id { font-weight: 600; color: var(--primary); font-size: 14px; }
 .treehole-item-status { font-size: 12px; padding: 4px 10px; border-radius: 8px; }
 .treehole-item-status.active { background: rgba(76, 175, 80, 0.1); color: #4caf50; }
 .treehole-item-status.expired { background: rgba(255, 152, 0, 0.1); color: #ff9800; }
 .treehole-item-status.disabled { background: rgba(244, 67, 54, 0.1); color: #f44336; }
-.treehole-item-time { font-size: 12px; color: var(--text-secondary); }
+.treehole-item-time { font-size: 12px; color: var(--on-surface-variant); }
 .treehole-item-expire { font-size: 12px; color: #ff9800; }
-.treehole-item-content { font-size: 15px; line-height: 1.6; color: var(--text); background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; }
-.treehole-item-meta { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); }
-.treehole-item-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--border); }
+.treehole-item-content { font-size: 15px; line-height: 1.6; color: var(--on-surface); background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; }
+.treehole-item-meta { display: flex; gap: 16px; font-size: 13px; color: var(--on-surface-variant); }
+.treehole-item-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--outline-variant); }
 </style>

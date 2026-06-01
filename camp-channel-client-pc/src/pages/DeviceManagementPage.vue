@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="device-page">
     <h1 class="page-title">设备管理</h1>
     <div class="device-list">
@@ -49,11 +49,11 @@ onMounted(() => { fetchDevices() })
 .device-page { max-width: 640px; margin: 0 auto; }
 .page-title { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
 .device-list { display: flex; flex-direction: column; gap: 8px; }
-.device-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }
-.device-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--card); display: flex; align-items: center; justify-content: center; color: var(--primary); }
+.device-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 14px; }
+.device-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--primary); }
 .device-info { flex: 1; }
 .device-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.device-meta { font-size: 12px; color: var(--text-secondary); }
+.device-meta { font-size: 12px; color: var(--on-surface-variant); }
 .device-status { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(74,222,128,0.1); color: #4ade80; }
 .device-status:empty { display: none; }
 .logout-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(255,107,107,0.3); background: rgba(255,107,107,0.05); color: #ff6b6b; font-size: 12px; cursor: pointer; }

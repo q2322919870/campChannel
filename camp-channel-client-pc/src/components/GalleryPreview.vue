@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div v-if="visible" class="preview-overlay" @click.self="$emit('close')">
     <div class="preview-card">
       <button class="close-btn" @click="$emit('close')">
@@ -150,31 +150,31 @@ async function handleReport() {
 <style scoped>
 .preview-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 3000; animation: fadeIn 0.2s; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.preview-card { position: relative; max-width: 520px; width: 90%; max-height: 90vh; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 24px; animation: scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+.preview-card { position: relative; max-width: 520px; width: 90%; max-height: 90vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--card-radius); padding: 24px; animation: scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1); }
 @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .close-btn { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.4); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; z-index: 1; }
 .preview-img { width: 100%; max-height: 50vh; object-fit: contain; border-radius: var(--card-radius); margin-bottom: 16px; }
 .preview-info { margin-bottom: 12px; }
 .preview-author { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
 .author-avatar { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }
-.author-avatar-text { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; }
+.author-avatar-text { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; }
 .preview-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-.preview-desc { font-size: 13px; color: var(--text-secondary); }
+.preview-desc { font-size: 13px; color: var(--on-surface-variant); }
 .interaction-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-.action-btn { display: flex; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 10px; border: none; background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.action-btn { display: flex; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 10px; border: none; background: rgba(255,255,255,0.05); color: var(--on-surface-variant); font-size: 13px; cursor: pointer; transition: all 0.2s; }
 .action-btn:hover { background: rgba(255,255,255,0.1); }
-.action-btn.liked { color: var(--accent); }
+.action-btn.liked { color: var(--secondary); }
 .action-btn.danger { background: rgba(255,107,107,0.12); color: #ff6b6b; }
 .action-btn.danger:hover { background: rgba(255,107,107,0.2); }
 .action-btn.report { background: rgba(255,165,0,0.12); color: #ffa500; }
 .action-btn.report:hover { background: rgba(255,165,0,0.2); }
-.comment-section, .share-section { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 8px; }
+.comment-section, .share-section { border-top: 1px solid var(--outline-variant); padding-top: 12px; margin-top: 8px; }
 .comment-input-row, .share-section { display: flex; gap: 8px; margin-bottom: 8px; }
-.comment-input-row input, .share-section input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; outline: none; }
+.comment-input-row input, .share-section input { flex: 1; padding: 8px 12px; border: 1px solid var(--outline-variant); border-radius: 8px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 13px; outline: none; }
 .comment-input-row input:focus, .share-section input:focus { border-color: var(--primary); }
-.comment-input-row button, .share-section button { padding: 8px 16px; border: none; border-radius: 8px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-size: 13px; cursor: pointer; }
+.comment-input-row button, .share-section button { padding: 8px 16px; border: none; border-radius: 8px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-size: 13px; cursor: pointer; }
 .comment-item { display: flex; gap: 6px; padding: 4px 0; font-size: 13px; }
 .comment-user { font-weight: 600; color: var(--primary); white-space: nowrap; }
-.comment-text { color: var(--text); }
-.no-comments { text-align: center; color: var(--text-secondary); font-size: 12px; padding: 8px; }
+.comment-text { color: var(--on-surface); }
+.no-comments { text-align: center; color: var(--on-surface-variant); font-size: 12px; padding: 8px; }
 </style>

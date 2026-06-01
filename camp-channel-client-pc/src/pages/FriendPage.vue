@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="friend-page">
     <div class="friend-sidebar">
       <div class="sidebar-header">
@@ -187,57 +187,57 @@ onUnmounted(() => {
 
 <style scoped>
 .friend-page { display: flex; height: calc(100vh - 64px); gap: 0; max-width: 1000px; margin: 0 auto; }
-.friend-sidebar { width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 20px 0 0 20px; display: flex; flex-direction: column; flex-shrink: 0; }
+.friend-sidebar { width: 320px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 20px 0 0 20px; display: flex; flex-direction: column; flex-shrink: 0; }
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 16px 12px; }
 .sidebar-header h3 { font-size: 16px; font-weight: 600; }
-.friend-count { font-size: 12px; color: var(--text-secondary); }
+.friend-count { font-size: 12px; color: var(--on-surface-variant); }
 .search-box { padding: 0 16px 12px; }
-.search-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; outline: none; }
+.search-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--outline-variant); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 13px; outline: none; }
 .search-box input:focus { border-color: var(--primary); }
 .friend-list { flex: 1; overflow-y: auto; }
 .friend-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.2s; }
-.friend-item:hover { background: var(--card); }
+.friend-item:hover { background: var(--surface); }
 .friend-item.active { background: rgba(124,159,203,0.08); }
 .friend-avatar-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
-.friend-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; }
+.friend-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; }
 .friend-avatar-img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; display: block; }
-.online-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--card); background: #888; }
+.online-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--surface); background: #888; }
 .online-dot.online { background: #4ade80; }
 .friend-info { flex: 1; min-width: 0; }
 .friend-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.friend-email { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.friend-main { flex: 1; background: var(--card); border: 1px solid var(--border); border-left: none; border-radius: 0 20px 20px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+.friend-email { font-size: 12px; color: var(--on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.friend-main { flex: 1; background: var(--surface); border: 1px solid var(--outline-variant); border-left: none; border-radius: 0 20px 20px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
 .profile-header { text-align: center; }
-.profile-avatar { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; margin: 0 auto 16px; }
+.profile-avatar { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; margin: 0 auto 16px; }
 .profile-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-.profile-header p { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+.profile-header p { font-size: 14px; color: var(--on-surface-variant); margin-bottom: 24px; }
 .profile-actions { display: flex; gap: 12px; justify-content: center; }
 .action-btn { padding: 10px 24px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; }
-.action-btn.small { padding: 6px 12px; font-size: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text-secondary); border-radius: 8px; flex: 1; }
-.action-btn.small:hover { border-color: var(--primary); color: var(--text); }
+.action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
+.action-btn.small { padding: 6px 12px; font-size: 12px; background: var(--surface); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); border-radius: 8px; flex: 1; }
+.action-btn.small:hover { border-color: var(--primary); color: var(--on-surface); }
 .search-actions { display: flex; gap: 8px; padding: 0 16px 12px; }
 .search-users { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 8px; }
-.search-users input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; outline: none; box-sizing: border-box; }
+.search-users input { width: 100%; padding: 8px 12px; border: 1px solid var(--outline-variant); border-radius: 8px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 13px; outline: none; box-sizing: border-box; }
 .search-users input:focus { border-color: var(--primary); }
 .search-users > button { padding: 8px; border: none; border-radius: 8px; background: var(--primary); color: #fff; font-size: 13px; cursor: pointer; }
-.search-result-item { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+.search-result-item { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--outline-variant); border-radius: 8px; font-size: 13px; }
 .search-result-item span:first-child { font-weight: 600; flex: 1; }
-.search-result-item span:nth-child(2) { color: var(--text-secondary); font-size: 11px; }
+.search-result-item span:nth-child(2) { color: var(--on-surface-variant); font-size: 11px; }
 .search-result-item button { padding: 4px 10px; border: none; border-radius: 6px; background: var(--primary); color: #fff; font-size: 12px; cursor: pointer; }
 .pending-section { padding: 0 16px 12px; }
-.pending-section h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); }
-.pending-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.pending-section h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--on-surface-variant); }
+.pending-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--outline-variant); }
 .pending-item:last-child { border-bottom: none; }
-.pending-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.pending-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
 .pending-name { flex: 1; font-size: 13px; }
 .approve-btn { padding: 4px 12px; border: none; border-radius: 6px; background: rgba(74,222,128,0.15); color: #4ade80; font-size: 12px; cursor: pointer; }
 .reject-btn { padding: 4px 12px; border: none; border-radius: 6px; background: rgba(255,107,107,0.15); color: #ff6b6b; font-size: 12px; cursor: pointer; }
-.friend-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-secondary); }
+.friend-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--on-surface-variant); }
 
 @media (max-width: 768px) {
 .friend-page { flex-direction: column; height: calc(100vh - 68px); max-width: 100%; }
 .friend-sidebar { width: 100%; border-radius: 0; max-height: 50vh; }
-.friend-main { border-radius: 0; border-left: 1px solid var(--border); }
+.friend-main { border-radius: 0; border-left: 1px solid var(--outline-variant); }
 }
 </style>

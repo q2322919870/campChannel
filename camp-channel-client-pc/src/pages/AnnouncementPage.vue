@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="announcement-page">
     <div class="page-header">
       <h2>📢 校园公告</h2>
@@ -230,7 +230,7 @@ function checkReveal(id: number, canvas: HTMLCanvasElement) {
   margin: 0 0 4px;
 }
 .subtitle {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 13px;
   margin: 0 0 24px;
 }
@@ -238,12 +238,12 @@ function checkReveal(id: number, canvas: HTMLCanvasElement) {
 .loading-state, .empty-state {
   text-align: center;
   padding: 60px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--border);
+  border: 3px solid var(--outline-variant);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -263,7 +263,7 @@ function checkReveal(id: number, canvas: HTMLCanvasElement) {
 
 .scratch-label, .blindbox-label {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   margin-bottom: 8px;
   font-weight: 500;
 }
@@ -280,7 +280,7 @@ function checkReveal(id: number, canvas: HTMLCanvasElement) {
   position: absolute;
   inset: 0;
   background: var(--card-bg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   padding: 20px;
   display: flex;
@@ -293,7 +293,7 @@ function checkReveal(id: number, canvas: HTMLCanvasElement) {
   font-size: 16px;
 }
 .scratch-content p {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   margin: 0;
   font-size: 14px;
   line-height: 1.6;

@@ -12,7 +12,7 @@
           :class="{ active: themeStore.themeIndex === index }"
           @click="themeStore.setTheme(index)"
         >
-          <div class="theme-preview" :style="{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})` }"></div>
+          <div class="theme-preview" :style="{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }"></div>
           <div class="theme-info">
             <span class="theme-name">{{ theme.name }}</span>
             <span v-if="themeStore.themeIndex === index" class="theme-check">✓</span>
@@ -268,10 +268,10 @@ async function changePassword() {
 .settings-page { max-width: 720px; margin: 0 auto; }
 .page-title { font-size: 28px; font-weight: 700; margin-bottom: 32px; }
 .settings-section { margin-bottom: 32px; }
-.section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-secondary); }
+.section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--on-surface-variant); }
 .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .theme-card {
-  padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 12px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 14px;
   cursor: pointer; transition: all 0.2s;
 }
 .theme-card:hover { border-color: var(--primary); }
@@ -281,16 +281,16 @@ async function changePassword() {
 .theme-name { font-size: 12px; font-weight: 500; }
 .theme-check { color: var(--primary); font-weight: 700; font-size: 14px; }
 
-.settings-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-.setting-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.settings-card { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 16px; overflow: hidden; }
+.setting-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--outline-variant); }
 .setting-item:last-child { border-bottom: none; }
 .setting-label { display: flex; flex-direction: column; gap: 2px; }
 .setting-name { font-size: 14px; font-weight: 500; }
-.setting-desc { font-size: 13px; color: var(--text-secondary); }
-.password-form { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-top: 1px solid var(--border); }
-.password-form input { padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; outline: none; }
+.setting-desc { font-size: 13px; color: var(--on-surface-variant); }
+.password-form { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-top: 1px solid var(--outline-variant); }
+.password-form input { padding: 10px 14px; border: 1px solid var(--outline-variant); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 13px; outline: none; }
 .password-form input:focus { border-color: var(--primary); }
-.pw-btn { padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+.pw-btn { padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
 .pw-error { color: #ff6b6b; font-size: 12px; }
 .logout-btn-full { width: 100%; padding: 14px; border: 1px solid rgba(255,107,107,0.3); border-radius: 14px; background: rgba(255,107,107,0.05); color: #ff6b6b; font-size: 15px; font-weight: 600; cursor: pointer; }
 .logout-btn-full:hover { background: rgba(255,107,107,0.1); }
@@ -298,12 +298,12 @@ async function changePassword() {
 /* Toggle Switch */
 .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 12px; transition: 0.3s; }
+.toggle-slider { position: absolute; inset: 0; background: var(--outline-variant); border-radius: 12px; transition: 0.3s; }
 .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
-.toggle-switch input:checked + .toggle-slider { background: linear-gradient(135deg, var(--primary), var(--accent)); }
+.toggle-switch input:checked + .toggle-slider { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
-.setting-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; cursor: pointer; flex-shrink: 0; }
+.setting-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; cursor: pointer; flex-shrink: 0; }
 .setting-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .avatar-preview-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 3000; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -311,6 +311,6 @@ async function changePassword() {
 @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .avatar-preview-img { width: 100%; max-height: 60vh; object-fit: contain; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.4); margin-bottom: 16px; }
 .avatar-preview-actions { display: flex; gap: 12px; justify-content: center; margin-bottom: 12px; }
-.preview-btn { padding: 10px 24px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
-.close-preview { padding: 8px 24px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text-secondary); font-size: 13px; cursor: pointer; }
+.preview-btn { padding: 10px 24px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+.close-preview { padding: 8px 24px; border: 1px solid var(--outline-variant); border-radius: 10px; background: var(--surface); color: var(--on-surface-variant); font-size: 13px; cursor: pointer; }
 </style>

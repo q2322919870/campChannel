@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="liked-posts-page">
     <h1 class="page-title">赞过的贴</h1>
     <div v-if="loading" class="loading-state">加载中...</div>
@@ -54,16 +54,16 @@ onMounted(() => { fetchLikedPosts() })
 <style scoped>
 .liked-posts-page { max-width: 800px; margin: 0 auto; }
 .page-title { font-size: 28px; font-weight: 700; margin-bottom: 24px; }
-.loading-state, .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); font-size: 15px; }
+.loading-state, .empty-state { text-align: center; padding: 60px 20px; color: var(--on-surface-variant); font-size: 15px; }
 .posts-grid { display: flex; flex-direction: column; gap: 12px; }
-.post-card { padding: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; cursor: pointer; transition: all 0.2s; }
+.post-card { padding: 20px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 16px; cursor: pointer; transition: all 0.2s; }
 .post-card:hover { border-color: var(--primary); }
 .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.post-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; flex-shrink: 0; }
+.post-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; flex-shrink: 0; }
 .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .post-meta { flex: 1; }
 .post-author { font-size: 14px; font-weight: 600; display: block; }
-.post-time { font-size: 11px; color: var(--text-secondary); }
+.post-time { font-size: 11px; color: var(--on-surface-variant); }
 .post-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-.post-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.post-content { font-size: 14px; color: var(--on-surface-variant); line-height: 1.6; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 </style>

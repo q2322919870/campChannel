@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="gradient-bg">
     <div class="gradient-circle circle-1"></div>
     <div class="gradient-circle circle-2"></div>

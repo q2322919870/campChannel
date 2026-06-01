@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 export interface MoodColors {
   primary: string
-  accent: string
+  secondary: string
   glowColor: string
 }
 
@@ -35,7 +35,7 @@ export class MoodShaderEffect {
       uniforms: {
         uTime: { value: 0 },
         uColor1: { value: this.hexToVec3(colors.primary) },
-        uColor2: { value: this.hexToVec3(colors.accent) },
+        uColor2: { value: this.hexToVec3(colors.secondary) },
         uGlow: { value: this.hexToVec3(colors.glowColor) },
         uIntensity: { value: 0.3 },
         uMode: { value: 0 },
@@ -107,7 +107,7 @@ export class MoodShaderEffect {
 
   updateColors(colors: MoodColors) {
     this.material.uniforms.uColor1.value = this.hexToVec3(colors.primary)
-    this.material.uniforms.uColor2.value = this.hexToVec3(colors.accent)
+    this.material.uniforms.uColor2.value = this.hexToVec3(colors.secondary)
     this.material.uniforms.uGlow.value = this.hexToVec3(colors.glowColor)
   }
 

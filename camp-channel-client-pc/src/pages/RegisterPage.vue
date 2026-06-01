@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="register-page">
     <div class="register-bg"></div>
     <div class="register-container">
@@ -145,7 +145,7 @@ async function handleRegister() {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--bg);
+  background: var(--background);
   position: relative;
   overflow: hidden;
 }
@@ -155,8 +155,8 @@ async function handleRegister() {
   inset: 0;
   background: 
     radial-gradient(ellipse at 20% 50%, var(--primary) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, var(--accent) 0%, transparent 50%),
-    radial-gradient(ellipse at 40% 80%, var(--primary-light) 0%, transparent 50%);
+    radial-gradient(ellipse at 80% 20%, var(--secondary) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 80%, var(--on-primary-container) 0%, transparent 50%);
   opacity: 0.08;
   pointer-events: none;
 }
@@ -164,9 +164,9 @@ async function handleRegister() {
 .register-container {
   width: 100%;
   max-width: 480px;
-  background: var(--card);
+  background: var(--surface);
   backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: var(--card-radius);
   padding: 40px 32px;
   box-shadow: var(--card-shadow);
@@ -189,7 +189,7 @@ async function handleRegister() {
   width: 64px;
   height: 64px;
   margin: 0 auto 16px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   border-radius: var(--radius);
   display: flex;
   align-items: center;
@@ -201,12 +201,12 @@ async function handleRegister() {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 8px;
-  color: var(--text);
+  color: var(--on-surface);
 }
 
 .register-subtitle {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .register-form-wrapper {
@@ -234,15 +234,15 @@ async function handleRegister() {
 .field-label {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text);
+  color: var(--on-surface);
 }
 
 .field-input {
   padding: 12px 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 15px;
   outline: none;
   transition: all 0.2s;
@@ -253,19 +253,19 @@ async function handleRegister() {
 }
 
 .field-input:focus {
-  border-color: var(--accent);
+  border-color: var(--secondary);
   background: rgba(255, 255, 255, 0.05);
   box-shadow: 0 0 0 3px rgba(3, 218, 198, 0.1);
 }
 
 .field-input::placeholder {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .email-input-group {
   display: flex;
   align-items: center;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.03);
   overflow: hidden;
@@ -277,7 +277,7 @@ async function handleRegister() {
 }
 
 .email-input-group:focus-within {
-  border-color: var(--accent);
+  border-color: var(--secondary);
   background: rgba(255, 255, 255, 0.05);
   box-shadow: 0 0 0 3px rgba(3, 218, 198, 0.1);
 }
@@ -294,12 +294,12 @@ async function handleRegister() {
 
 .email-suffix {
   padding: 12px 16px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 14px;
   white-space: nowrap;
   user-select: none;
   background: rgba(255, 255, 255, 0.05);
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--outline-variant);
 }
 
 .code-row {
@@ -344,12 +344,12 @@ async function handleRegister() {
   align-items: flex-start;
   gap: 8px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   cursor: pointer;
 }
 
 .checkbox-label input[type="checkbox"] {
-  accent-color: var(--accent);
+  accent-color: var(--secondary);
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -362,12 +362,12 @@ async function handleRegister() {
 }
 
 .checkbox-text a:hover {
-  color: var(--accent);
+  color: var(--secondary);
   text-decoration: underline;
 }
 
 .error-msg {
-  color: var(--accent);
+  color: var(--secondary);
   font-size: 13px;
   text-align: center;
 }
@@ -376,7 +376,7 @@ async function handleRegister() {
   padding: 14px;
   border: none;
   border-radius: var(--button-radius);
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: #fff;
   font-size: 16px;
   font-weight: 600;
@@ -418,7 +418,7 @@ async function handleRegister() {
   text-align: center;
   margin-top: 24px;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .login-link a {
@@ -428,7 +428,7 @@ async function handleRegister() {
 }
 
 .login-link a:hover {
-  color: var(--accent);
+  color: var(--secondary);
   text-decoration: underline;
 }
 

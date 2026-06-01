@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="favourites-page">
     <h2>我的收藏</h2>
     
@@ -149,7 +149,7 @@ h2 {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--border);
+  border: 3px solid var(--outline-variant);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -164,7 +164,7 @@ h2 {
   flex-direction: column;
   align-items: center;
   padding: 80px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .empty svg {
@@ -190,8 +190,8 @@ h2 {
 
 .post-card {
   padding: 20px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
@@ -213,7 +213,7 @@ h2 {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -241,7 +241,7 @@ h2 {
 
 .time {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .remove-btn {
@@ -262,7 +262,7 @@ h2 {
 .post-content {
   font-size: 14px;
   line-height: 1.6;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -274,7 +274,7 @@ h2 {
   display: flex;
   gap: 16px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .post-stats span {
@@ -286,7 +286,7 @@ h2 {
 .loading-more {
   text-align: center;
   padding: 20px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 14px;
 }
 </style>

@@ -4,15 +4,26 @@ import { ThemeRenderer } from './ThemeRenderer'
 
 export interface ThemeColors {
   primary: string
-  primaryLight: string
-  accent: string
-  bg: string
-  card: string
-  text: string
-  textSecondary: string
-  border: string
-  gradientStart: string
-  gradientEnd: string
+  primaryContainer: string
+  onPrimaryContainer: string
+  secondary: string
+  secondaryContainer: string
+  tertiary: string
+  tertiaryContainer: string
+  surface: string
+  surfaceVariant: string
+  surfaceTint: string
+  background: string
+  onSurface: string
+  onSurfaceVariant: string
+  outline: string
+  outlineVariant: string
+  error: string
+  errorContainer: string
+  scrim: string
+  inverseSurface: string
+  inverseOnSurface: string
+  inversePrimary: string
   glowColor: string
 }
 

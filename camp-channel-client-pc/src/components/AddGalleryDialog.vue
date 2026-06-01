@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div v-if="visible" class="dialog-overlay" @click.self="$emit('close')">
     <div class="dialog-card">
       <h3>添加画作到画廊</h3>
@@ -80,19 +80,19 @@ async function submit() {
 
 <style scoped>
 .dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-.dialog-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 440px; max-width: 90vw; max-height: 90vh; overflow-y: auto; }
+.dialog-card { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 20px; padding: 28px; width: 440px; max-width: 90vw; max-height: 90vh; overflow-y: auto; }
 .dialog-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
-.upload-area { width: 100%; height: 200px; border: 2px dashed var(--border); border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 16px; overflow: hidden; transition: border-color 0.2s; }
+.upload-area { width: 100%; height: 200px; border: 2px dashed var(--outline-variant); border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 16px; overflow: hidden; transition: border-color 0.2s; }
 .upload-area:hover { border-color: var(--primary); }
-.upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 14px; }
+.upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--on-surface-variant); font-size: 14px; }
 .preview-img { width: 100%; height: 100%; object-fit: cover; }
-.gallery-input, .gallery-textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 14px; outline: none; margin-bottom: 12px; box-sizing: border-box; }
+.gallery-input, .gallery-textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--outline-variant); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 14px; outline: none; margin-bottom: 12px; box-sizing: border-box; }
 .gallery-input:focus, .gallery-textarea:focus { border-color: var(--primary); }
 .gallery-textarea { resize: vertical; font-family: inherit; }
 .error-msg { color: #ff6b6b; font-size: 13px; margin-bottom: 12px; }
 .dialog-actions { display: flex; gap: 12px; justify-content: flex-end; }
 .btn-cancel, .btn-submit { padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
-.btn-cancel { border: 1px solid var(--border); background: var(--card); color: var(--text-secondary); }
-.btn-submit { border: none; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; }
+.btn-cancel { border: 1px solid var(--outline-variant); background: var(--surface); color: var(--on-surface-variant); }
+.btn-submit { border: none; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
 .btn-submit:disabled { opacity: 0.5; cursor: default; }
 </style>

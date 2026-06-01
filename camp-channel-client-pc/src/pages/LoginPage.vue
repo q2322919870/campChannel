@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="login-page">
     <div class="login-container">
       <div class="brand-section">
@@ -117,9 +117,9 @@ async function handleLogin() {
   max-width: 960px;
   width: 100%;
   min-height: 560px;
-  background: var(--card);
+  background: var(--surface);
   backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: var(--card-radius);
   overflow: hidden;
   box-shadow: var(--card-shadow);
@@ -135,9 +135,9 @@ async function handleLogin() {
 .brand-content { max-width: 320px; }
 .brand-icon { color: var(--primary); margin-bottom: 24px; }
 .brand-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-.brand-desc { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; }
+.brand-desc { color: var(--on-surface-variant); font-size: 14px; margin-bottom: 32px; }
 .brand-features { display: flex; flex-direction: column; gap: 16px; }
-.feature-item { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--text-secondary); }
+.feature-item { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--on-surface-variant); }
 .feature-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
 .form-section {
   flex: 1;
@@ -148,29 +148,29 @@ async function handleLogin() {
 }
 .form-card { width: 100%; max-width: 340px; }
 .form-title { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
-.form-subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; }
+.form-subtitle { color: var(--on-surface-variant); font-size: 14px; margin-bottom: 32px; }
 .login-form { display: flex; flex-direction: column; gap: 20px; }
 .remember-row { display: flex; align-items: center; margin-top: -8px; }
-.remember-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+.remember-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--on-surface-variant); cursor: pointer; }
 .remember-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
 .input-group { display: flex; flex-direction: column; gap: 8px; }
-.input-group label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+.input-group label { font-size: 13px; font-weight: 500; color: var(--on-surface-variant); }
 .input-group input {
   padding: 12px 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: var(--radius);
   background: rgba(255,255,255,0.03);
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s;
 }
 .input-group input:focus { border-color: var(--primary); }
-.input-group input::placeholder { color: var(--text-secondary); }
+.input-group input::placeholder { color: var(--on-surface-variant); }
 .email-input-wrapper {
   display: flex;
   align-items: center;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.03);
   overflow: hidden;
@@ -187,7 +187,7 @@ async function handleLogin() {
   background: transparent;
   flex: 1;
   min-width: 0;
-  color: var(--text);
+  color: var(--on-surface);
 }
 .email-prefix:focus {
   border: none;
@@ -196,18 +196,18 @@ async function handleLogin() {
 }
 .email-suffix {
   padding: 12px 16px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 14px;
   white-space: nowrap;
   user-select: none;
   background: rgba(124, 159, 203, 0.08);
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--outline-variant);
 }
 .login-btn {
   padding: 14px;
   border: none;
   border-radius: var(--button-radius);
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: #fff;
   font-size: 16px;
   font-weight: 600;
@@ -217,9 +217,9 @@ async function handleLogin() {
 .login-btn:hover { opacity: 0.9; }
 .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .error-msg { color: #ff6b6b; font-size: 13px; }
-.register-link { text-align: center; margin-top: 24px; font-size: 14px; color: var(--text-secondary); }
+.register-link { text-align: center; margin-top: 24px; font-size: 14px; color: var(--on-surface-variant); }
 .email-me { text-align: center; margin-top: 12px; }
-.email-me a { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 13px; transition: color 0.2s; }
+.email-me a { display: inline-flex; align-items: center; gap: 6px; color: var(--on-surface-variant); font-size: 13px; transition: color 0.2s; }
 .email-me a:hover { color: var(--primary); }
 .email-me img { width: 14px; height: 14px; }
 

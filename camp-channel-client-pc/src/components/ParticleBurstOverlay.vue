@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <canvas ref="burstCanvas" class="particle-burst-canvas"></canvas>
 </template>
 

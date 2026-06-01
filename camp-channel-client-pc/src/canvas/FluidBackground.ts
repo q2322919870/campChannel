@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 export interface FluidColors {
   primary: string
-  accent: string
+  secondary: string
   glowColor: string
 }
 
@@ -24,7 +24,7 @@ export class FluidBackground {
     this.renderer.setSize(window.innerWidth, window.innerHeight)
 
     const c1 = this.hexToVec3(colors.primary)
-    const c2 = this.hexToVec3(colors.accent)
+    const c2 = this.hexToVec3(colors.secondary)
     const c3 = this.hexToVec3(colors.glowColor)
 
     this.material = new THREE.ShaderMaterial({
@@ -114,7 +114,7 @@ export class FluidBackground {
 
   updateColors(colors: FluidColors) {
     this.material.uniforms.uColor1.value = this.hexToVec3(colors.primary)
-    this.material.uniforms.uColor2.value = this.hexToVec3(colors.accent)
+    this.material.uniforms.uColor2.value = this.hexToVec3(colors.secondary)
     this.material.uniforms.uColor3.value = this.hexToVec3(colors.glowColor)
   }
 

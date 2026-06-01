@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="tree-hole-page">
     <div class="page-header">
       <h2>🌙 树洞告白墙</h2>
@@ -403,7 +403,7 @@ function formatTime(time: string): string {
   margin: 0 0 4px;
 }
 .subtitle {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 13px;
   margin: 0 0 20px;
 }
@@ -428,7 +428,7 @@ function formatTime(time: string): string {
   margin-top: 8px;
 }
 .char-count {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 12px;
 }
 .btn-primary {
@@ -449,12 +449,12 @@ function formatTime(time: string): string {
 .loading-state, .empty-state {
   text-align: center;
   padding: 60px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--border);
+  border: 3px solid var(--outline-variant);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -473,7 +473,7 @@ function formatTime(time: string): string {
   border-radius: 14px;
   overflow: hidden;
   background: var(--card-bg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   min-height: 100px;
 }
 
@@ -507,7 +507,7 @@ function formatTime(time: string): string {
 }
 .like-count {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 .card-text {
   color: var(--text-primary);
@@ -517,7 +517,7 @@ function formatTime(time: string): string {
 }
 .card-time {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 .reveal-hint {
   position: absolute;

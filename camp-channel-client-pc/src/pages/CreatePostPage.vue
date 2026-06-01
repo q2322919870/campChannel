@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="create-post-page">
     <div class="create-post-card">
       <h1 class="page-title">发布帖子</h1>
@@ -144,33 +144,33 @@ onMounted(() => { fetchChannels() })
 
 <style scoped>
 .create-post-page { max-width: 640px; margin: 0 auto; }
-.create-post-card { padding: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 24px; }
+.create-post-card { padding: 32px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 24px; }
 .page-title { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
-.user-info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-.user-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; }
+.user-info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--outline-variant); }
+.user-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; }
 .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .user-name { font-size: 14px; font-weight: 600; }
 .post-form { display: flex; flex-direction: column; gap: 20px; }
 .form-group { display: flex; flex-direction: column; gap: 8px; }
 .form-group label { font-size: 14px; font-weight: 500; }
 .form-group select, .form-group input, .form-group textarea {
-  padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px;
-  background: rgba(255,255,255,0.03); color: var(--text); font-size: 14px; outline: none;
+  padding: 12px 16px; border: 1px solid var(--outline-variant); border-radius: 12px;
+  background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 14px; outline: none;
   font-family: inherit;
 }
 .form-group select:focus, .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); }
 .form-group textarea { resize: vertical; min-height: 120px; }
-.char-count { text-align: right; font-size: 12px; color: var(--text-secondary); }
+.char-count { text-align: right; font-size: 12px; color: var(--on-surface-variant); }
 .image-upload-area { display: flex; flex-wrap: wrap; gap: 8px; }
 .image-preview { position: relative; width: 80px; height: 80px; border-radius: 10px; overflow: hidden; }
 .image-preview img { width: 100%; height: 100%; object-fit: cover; }
 .remove-img { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.upload-btn { width: 80px; height: 80px; border: 2px dashed var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; }
+.upload-btn { width: 80px; height: 80px; border: 2px dashed var(--outline-variant); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--on-surface-variant); transition: all 0.2s; }
 .upload-btn:hover { border-color: var(--primary); color: var(--primary); }
 .error-msg { color: #ff6b6b; font-size: 13px; }
 .form-actions { display: flex; gap: 12px; justify-content: flex-end; }
 .btn { padding: 12px 28px; border-radius: 12px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.btn.cancel { background: var(--card); border: 1px solid var(--border); color: var(--text-secondary); }
-.btn.submit { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; }
+.btn.cancel { background: var(--surface); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); }
+.btn.submit { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
 .btn.submit:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

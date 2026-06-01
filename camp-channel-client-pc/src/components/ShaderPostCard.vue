@@ -21,7 +21,7 @@ const themeStore = useThemeStore()
 let effect: MoodShaderEffect | null = null
 
 function themeToColors(theme: any): MoodColors {
-  return { primary: theme.primary || '#7C9FCB', accent: theme.accent || '#F2B5D4', glowColor: theme.glowColor || '#7C9FCB' }
+  return { primary: theme.primary || '#D0BCFF', secondary: theme.secondary || '#CCC2DC', glowColor: theme.primary || '#D0BCFF' }
 }
 
 function onEnter() {

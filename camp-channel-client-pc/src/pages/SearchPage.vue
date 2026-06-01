@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="search-page">
     <div class="search-header">
       <div class="search-bar">
@@ -191,14 +191,14 @@ onMounted(() => {
   display: flex;
   gap: 12px;
   padding: 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   align-items: center;
 }
 
 .search-icon {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   flex-shrink: 0;
 }
 
@@ -206,13 +206,13 @@ onMounted(() => {
   flex: 1;
   border: none;
   background: transparent;
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 16px;
   outline: none;
 }
 
 .search-bar input::placeholder {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .search-bar button {
@@ -246,13 +246,13 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 80px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--border);
+  border: 3px solid var(--outline-variant);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -269,7 +269,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 80px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .empty svg {
@@ -279,15 +279,15 @@ onMounted(() => {
 
 .recent-searches {
   padding: 24px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
 }
 
 .recent-searches h3 {
   font-size: 16px;
   margin-bottom: 16px;
-  color: var(--text);
+  color: var(--on-surface);
 }
 
 .tags {
@@ -313,7 +313,7 @@ onMounted(() => {
 
 .empty-hint {
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   padding: 40px 0;
 }
 
@@ -325,8 +325,8 @@ onMounted(() => {
 
 .post-card {
   padding: 20px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.2s;
@@ -363,7 +363,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -392,7 +392,7 @@ onMounted(() => {
 
 .time {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .post-content {
@@ -412,13 +412,13 @@ onMounted(() => {
 .post-content p {
   font-size: 14px;
   line-height: 1.6;
-  color: var(--text);
+  color: var(--on-surface);
 }
 
 .post-stats {
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 </style>

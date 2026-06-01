@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <WebGLBackground />
   <div class="app-layout" v-if="showLayout">
     <NavSidebar v-if="!isMobile" />

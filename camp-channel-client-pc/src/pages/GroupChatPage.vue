@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="group-chat-page">
     <div class="chat-header">
       <h2>{{ channelName }}</h2>
@@ -279,15 +279,15 @@ onUnmounted(() => {
   height: calc(100vh - 140px);
   display: flex;
   flex-direction: column;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 20px;
   overflow: hidden;
 }
 
 .chat-header {
   padding: 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--outline-variant);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -307,7 +307,7 @@ onUnmounted(() => {
 
 .member-count {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .chat-messages {
@@ -334,7 +334,7 @@ onUnmounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -368,7 +368,7 @@ onUnmounted(() => {
   font-size: 14px;
   line-height: 1.5;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
 }
 
 .message-item.self .message-bubble {
@@ -379,7 +379,7 @@ onUnmounted(() => {
 .message-recalled {
   padding: 8px 16px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-style: italic;
 }
 
@@ -396,7 +396,7 @@ onUnmounted(() => {
 
 .message-status {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .status-read {
@@ -405,34 +405,34 @@ onUnmounted(() => {
 }
 
 .status-sent {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   opacity: 0.5;
 }
 
 .status-recalled {
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-style: italic;
 }
 
 .message-time {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .chat-input-bar {
   display: flex;
   gap: 8px;
   padding: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--outline-variant);
 }
 
 .chat-input-bar input {
   flex: 1;
   padding: 12px 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 14px;
   outline: none;
 }
@@ -458,8 +458,8 @@ onUnmounted(() => {
 .context-menu {
   position: fixed;
   z-index: 1000;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 10px;
   padding: 4px;
   min-width: 140px;
@@ -474,7 +474,7 @@ onUnmounted(() => {
   border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
-  color: var(--text);
+  color: var(--on-surface);
   transition: background 0.15s;
 }
 
@@ -484,7 +484,7 @@ onUnmounted(() => {
 
 .members-panel {
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--outline-variant);
   max-height: 200px;
   overflow-y: auto;
 }
@@ -500,10 +500,10 @@ onUnmounted(() => {
 
 .mute-btn {
   padding: 4px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 6px;
   background: transparent;
-  color: var(--text);
+  color: var(--on-surface);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
@@ -522,9 +522,9 @@ onUnmounted(() => {
 .action-btn.secondary {
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text);
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  color: var(--on-surface);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;

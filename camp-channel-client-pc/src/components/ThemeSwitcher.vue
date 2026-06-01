@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="theme-switcher" :class="{ open: isOpen }">
     <button class="toggle-btn" @click="isOpen = !isOpen">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -20,7 +20,7 @@
           :class="{ active: themeStore.themeIndex === index }"
           @click="themeStore.setTheme(index)"
         >
-          <div class="theme-preview" :style="{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})` }"></div>
+          <div class="theme-preview" :style="{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }"></div>
           <span class="theme-name">{{ theme.name }}</span>
         </div>
       </div>
@@ -48,10 +48,10 @@ const themeStore = useThemeStore()
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--card);
+  background: var(--surface);
   backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  color: var(--text);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -68,9 +68,9 @@ const themeStore = useThemeStore()
   width: 340px;
   max-height: 480px;
   overflow-y: auto;
-  background: rgba(15, 18, 25, 0.85);
+  background: var(--surface);
   backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: var(--card-radius);
   padding: 16px;
   box-shadow: var(--card-shadow);
@@ -87,12 +87,12 @@ const themeStore = useThemeStore()
 .close-btn {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   cursor: pointer;
   padding: 4px;
   border-radius: 6px;
 }
-.close-btn:hover { background: var(--card); }
+.close-btn:hover { background: var(--surface); }
 
 .theme-grid {
   display: grid;
@@ -110,8 +110,8 @@ const themeStore = useThemeStore()
   cursor: pointer;
   transition: all 0.2s;
 }
-.theme-item:hover { background: var(--card); }
-.theme-item.active { background: var(--card); }
+.theme-item:hover { background: var(--surface); }
+.theme-item.active { background: var(--surface); }
 
 .theme-preview {
   width: 100%;
@@ -123,7 +123,7 @@ const themeStore = useThemeStore()
 
 .theme-name {
   font-size: 10px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   text-align: center;
   line-height: 1.2;
 }

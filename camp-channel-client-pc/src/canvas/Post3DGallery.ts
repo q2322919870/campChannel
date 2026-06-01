@@ -29,7 +29,7 @@ export class Post3DGallery {
   private onTouchMoveBound: ((e: TouchEvent) => void) | null = null
   private onTouchEndBound: ((e: TouchEvent) => void) | null = null
 
-  constructor(container: HTMLElement, items: Gallery3DItem[], colors: { primary: string; accent: string }) {
+  constructor(container: HTMLElement, items: Gallery3DItem[], colors: { primary: string; secondary: string }) {
     this.items = items
     this.scene = new THREE.Scene()
     const w = container.clientWidth
@@ -47,7 +47,7 @@ export class Post3DGallery {
 
     const pColor = new THREE.Color(colors.primary)
     this.pColor = pColor
-    const aColor = new THREE.Color(colors.accent)
+    const aColor = new THREE.Color(colors.secondary)
 
     items.forEach((item, i) => {
       const angle = (Math.PI * 2 * i) / items.length

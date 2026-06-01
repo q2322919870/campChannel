@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="home-page">
     <div class="home-header">
       <div class="header-row">
@@ -358,7 +358,7 @@ onUnmounted(() => {
 .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .page-title { font-size: 28px; font-weight: 700; margin: 0; }
 .header-actions { display: flex; gap: 8px; }
-.search-btn, .hot-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.search-btn, .hot-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .search-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(124,159,203,0.1); }
 .hot-btn:hover { border-color: #ff6b35; color: #ff6b35; background: rgba(255,107,53,0.1); }
 .channel-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
@@ -366,9 +366,9 @@ onUnmounted(() => {
   flex-shrink: 0;
   padding: 8px 16px;
   border-radius: var(--card-radius);
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface-variant);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
@@ -376,7 +376,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
 }
-.channel-tab:hover { border-color: var(--primary); color: var(--text); }
+.channel-tab:hover { border-color: var(--primary); color: var(--on-surface); }
 .channel-tab.active { background: rgba(124,159,203,0.15); border-color: var(--primary); color: var(--primary); font-weight: 600; }
 .tab-badge { background: var(--primary); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; }
 
@@ -384,9 +384,9 @@ onUnmounted(() => {
 .posts-grid { display: flex; flex-direction: column; gap: 12px; }
 .post-card {
   padding: 20px;
-  background: var(--card);
+  background: var(--surface);
   backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
@@ -415,7 +415,7 @@ onUnmounted(() => {
 .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .post-avatar {
   width: 36px; height: 36px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 700; color: #fff;
   overflow: hidden;
@@ -423,34 +423,34 @@ onUnmounted(() => {
 .post-avatar-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
 .post-meta { flex: 1; display: flex; flex-direction: column; }
 .post-author { font-size: 14px; font-weight: 600; }
-.post-time { font-size: 11px; color: var(--text-secondary); }
-.post-channel { font-size: 11px; padding: 4px 10px; border-radius: 10px; background: var(--card); color: var(--primary); }
+.post-time { font-size: 11px; color: var(--on-surface-variant); }
+.post-channel { font-size: 11px; padding: 4px 10px; border-radius: 10px; background: var(--surface); color: var(--primary); }
 .role-badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
 .role-badge.role-owner { background: rgba(240, 173, 78, 0.2); color: #f0ad4e; }
 .role-badge.role-admin { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
 .role-badge.role-member { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.5); }
 .post-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-.post-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+.post-content { font-size: 14px; color: var(--on-surface-variant); line-height: 1.6; margin-bottom: 12px; }
 .post-images { display: flex; gap: 8px; margin-bottom: 12px; }
 .post-images img { width: 120px; height: 80px; border-radius: 8px; object-fit: cover; }
 .post-actions { display: flex; gap: 16px; }
-.action-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-secondary); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
-.action-btn:hover { background: var(--card); color: var(--text); }
-.action-btn.liked { color: var(--accent); }
-.loading-spinner { text-align: center; padding: 40px; color: var(--text-secondary); }
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); font-size: 15px; }
+.action-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--on-surface-variant); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
+.action-btn:hover { background: var(--surface); color: var(--on-surface); }
+.action-btn.liked { color: var(--secondary); }
+.loading-spinner { text-align: center; padding: 40px; color: var(--on-surface-variant); }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--on-surface-variant); font-size: 15px; }
 .fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 100; display: flex; flex-direction: column; align-items: center; }
 .fab-menu { display: flex; flex-direction: column-reverse; align-items: center; gap: 8px; margin-bottom: 8px; opacity: 0; transform: translateY(20px); pointer-events: none; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); }
 .fab-menu.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
-.fab-item { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); backdrop-filter: blur(12px); color: var(--text); cursor: pointer; font-size: 13px; white-space: nowrap; transition: all 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.fab-item { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 14px; border: 1px solid var(--outline-variant); background: var(--surface); backdrop-filter: blur(12px); color: var(--on-surface); cursor: pointer; font-size: 13px; white-space: nowrap; transition: all 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
 .fab-item:hover { border-color: var(--primary); transform: translateX(-4px); }
 .fab-item span { font-weight: 500; }
 .fab-item.refresh.spinning svg { animation: spin 0.6s ease-in-out; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.fab-main { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: all 0.3s; }
+.fab-main { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: all 0.3s; }
 .fab-main:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(0,0,0,0.4); }
 .floating-page-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; animation: fadeIn 0.2s; }
-.floating-page-card { background: rgba(15,18,25,0.8); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: var(--card-radius); box-shadow: var(--card-shadow); padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; animation: scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+.floating-page-card { background: rgba(15,18,25,0.8); backdrop-filter: blur(20px); border: 1px solid var(--outline-variant); border-radius: var(--card-radius); box-shadow: var(--card-shadow); padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; animation: scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1); }
 
 @media (max-width: 768px) {
 .home-page { max-width: 100%; }

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="badge-showcase glass-card" v-if="badges.length > 0 || !loading">
     <div class="badge-header">
       <span class="badge-icon-header">🏆</span>
@@ -94,14 +94,14 @@ function getBadgeStyle(index: number) {
 .badge-loading, .badge-empty {
   text-align: center;
   padding: 16px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   font-size: 13px;
 }
 
 .spinner-sm {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--border);
+  border: 2px solid var(--outline-variant);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -154,7 +154,7 @@ function getBadgeStyle(index: number) {
 
 .badge-name {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   max-width: 60px;
   text-align: center;
   overflow: hidden;

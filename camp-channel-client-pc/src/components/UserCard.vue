@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <teleport to="body">
     <div class="user-card-overlay" v-if="visible" @click.self="$emit('close')">
       <div class="user-card">
@@ -117,20 +117,20 @@ fetchProfile()
 
 <style scoped>
 .user-card-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-.user-card { width: 360px; max-height: 540px; overflow-y: auto; padding: 24px; background: var(--card); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: 20px; }
+.user-card { width: 360px; max-height: 540px; overflow-y: auto; padding: 24px; background: var(--surface); backdrop-filter: blur(24px); border: 1px solid var(--outline-variant); border-radius: 20px; }
 .card-header { text-align: center; margin-bottom: 16px; }
-.card-avatar { width: 72px; height: 72px; border-radius: 18px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #fff; margin: 0 auto 12px; overflow: hidden; cursor: pointer; }
+.card-avatar { width: 72px; height: 72px; border-radius: 18px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #fff; margin: 0 auto 12px; overflow: hidden; cursor: pointer; }
 .card-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .card-header h3 { font-size: 18px; font-weight: 600; }
-.card-email { font-size: 12px; color: var(--text-secondary); }
+.card-email { font-size: 12px; color: var(--on-surface-variant); }
 .card-actions { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
 .action-btn { padding: 10px 24px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-.action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; }
+.action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
 .action-btn.outline { border: 1px solid var(--primary); background: none; color: var(--primary); }
-.card-posts h4 { font-size: 14px; margin-bottom: 8px; color: var(--text-secondary); }
+.card-posts h4 { font-size: 14px; margin-bottom: 8px; color: var(--on-surface-variant); }
 .post-item { padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 6px; cursor: pointer; }
 .post-item:hover { background: rgba(255,255,255,0.06); }
-.post-text { font-size: 13px; color: var(--text); margin-bottom: 6px; }
+.post-text { font-size: 13px; color: var(--on-surface); margin-bottom: 6px; }
 /* 9-grid thumbnail layout */
 .post-images-grid { display: grid; gap: 3px; max-width: 246px; }
 .post-images-grid.grid-count-1 { grid-template-columns: 1fr; }
@@ -144,7 +144,7 @@ fetchProfile()
 .post-images-grid.grid-count-9 { grid-template-columns: 1fr 1fr 1fr; }
 .grid-image-cell { width: 80px; height: 80px; overflow: hidden; border-radius: 6px; }
 .grid-image-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.no-posts { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 13px; }
+.no-posts { text-align: center; padding: 20px; color: var(--on-surface-variant); font-size: 13px; }
 .preview-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 3000; cursor: pointer; }
 .preview-img { max-width: 80vw; max-height: 80vh; border-radius: 16px; }
 </style>

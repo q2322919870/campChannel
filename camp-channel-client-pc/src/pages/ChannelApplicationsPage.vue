@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="channel-apps-page">
     <h1 class="page-title">频道申请处理</h1>
     <div v-if="loading" class="loading-state">加载中...</div>
@@ -59,14 +59,14 @@ onMounted(() => { fetchApplications() })
 <style scoped>
 .channel-apps-page { max-width: 640px; margin: 0 auto; }
 .page-title { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
-.loading-state, .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); font-size: 15px; }
+.loading-state, .empty-state { text-align: center; padding: 60px 20px; color: var(--on-surface-variant); font-size: 15px; }
 .app-list { display: flex; flex-direction: column; gap: 8px; }
-.app-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }
-.app-avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.app-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 14px; }
+.app-avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
 .app-info { flex: 1; }
 .app-username { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.app-channel { font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
-.app-time { font-size: 11px; color: var(--text-secondary); }
+.app-channel { font-size: 12px; color: var(--on-surface-variant); margin-bottom: 2px; }
+.app-time { font-size: 11px; color: var(--on-surface-variant); }
 .app-actions { display: flex; gap: 6px; }
 .app-actions button { padding: 6px 16px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
 .approve-btn { background: rgba(74,222,128,0.15); color: #4ade80; }

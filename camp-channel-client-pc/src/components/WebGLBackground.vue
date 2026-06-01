@@ -13,7 +13,7 @@ const themeStore = useThemeStore()
 let canvasEl: HTMLCanvasElement | null = null
 
 function themeToColors(theme: any): FluidColors {
-  return { primary: theme.primary || '#7C9FCB', accent: theme.accent || '#F2B5D4', glowColor: theme.glowColor || '#7C9FCB' }
+  return { primary: theme.primary || '#D0BCFF', secondary: theme.secondary || '#CCC2DC', glowColor: theme.primary || '#D0BCFF' }
 }
 
 onMounted(() => {
@@ -28,7 +28,7 @@ onMounted(() => {
   } catch (err) {
     console.warn('WebGL init failed, falling back to CSS background', err)
     if (containerRef.value) {
-      containerRef.value.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--bg, #0f1219);'
+      containerRef.value.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--background, #141218);'
     }
   }
 })

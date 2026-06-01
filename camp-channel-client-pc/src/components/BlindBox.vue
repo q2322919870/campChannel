@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="blind-box" @click="flip">
     <div class="blind-box-inner" :class="{ flipped: isFlipped }">
       <!-- Front (mystery) -->
@@ -94,7 +94,7 @@ function flip() {
 
 .blind-box-back {
   background: var(--card-bg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline-variant);
   transform: rotateY(180deg);
   color: var(--text-primary);
 }
@@ -110,7 +110,7 @@ function flip() {
 }
 .reveal-content {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   text-align: center;
   margin: 0;
   line-height: 1.6;

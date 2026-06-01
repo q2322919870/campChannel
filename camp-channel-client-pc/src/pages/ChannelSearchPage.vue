@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="channel-search-page">
     <div class="search-header">
       <div class="page-header">
@@ -120,42 +120,42 @@ onMounted(() => { search() })
 .search-header { margin-bottom: 24px; }
 .page-title { font-size: 28px; font-weight: 700; margin-bottom: 16px; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.create-channel-btn { padding: 10px 20px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-.create-channel-form { padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+.create-channel-btn { padding: 10px 20px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.create-channel-form { padding: 16px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
 .create-channel-form h3 { font-size: 14px; margin-bottom: 4px; }
-.create-channel-form input { padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; outline: none; }
+.create-channel-form input { padding: 10px 14px; border: 1px solid var(--outline-variant); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 13px; outline: none; }
 .create-channel-form input:focus { border-color: var(--primary); }
-.create-channel-form button { padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-weight: 600; cursor: pointer; }
+.create-channel-form button { padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-weight: 600; cursor: pointer; }
 .search-box { display: flex; gap: 8px; }
 .search-box input {
-  flex: 1; padding: 14px 18px; border: 1px solid var(--border); border-radius: 14px;
-  background: rgba(255,255,255,0.03); color: var(--text); font-size: 15px; outline: none;
+  flex: 1; padding: 14px 18px; border: 1px solid var(--outline-variant); border-radius: 14px;
+  background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 15px; outline: none;
 }
 .search-box input:focus { border-color: var(--primary); }
 .search-btn {
-  width: 48px; height: 48px; border-radius: 14px; border: 1px solid var(--border);
-  background: var(--card); color: var(--text); cursor: pointer; display: flex;
+  width: 48px; height: 48px; border-radius: 14px; border: 1px solid var(--outline-variant);
+  background: var(--surface); color: var(--on-surface); cursor: pointer; display: flex;
   align-items: center; justify-content: center; transition: all 0.2s;
 }
 .search-btn:hover { border-color: var(--primary); color: var(--primary); }
-.loading-state, .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); font-size: 15px; }
+.loading-state, .empty-state { text-align: center; padding: 60px 20px; color: var(--on-surface-variant); font-size: 15px; }
 .channel-list { display: flex; flex-direction: column; gap: 12px; }
 .channel-card {
   display: flex; align-items: center; gap: 16px; padding: 20px;
-  background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+  background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 18px;
   transition: all 0.2s;
 }
 .channel-card:hover { border-color: var(--primary); }
 .channel-avatar {
   width: 52px; height: 52px; border-radius: 14px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
 .channel-info { flex: 1; min-width: 0; }
 .channel-name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
-.channel-code { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-.channel-desc { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.channel-code { font-size: 12px; color: var(--on-surface-variant); margin-bottom: 4px; }
+.channel-desc { font-size: 13px; color: var(--on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .join-btn {
   padding: 10px 20px; border-radius: 10px; border: 1px solid var(--primary);
   background: rgba(124,159,203,0.1); color: var(--primary); font-size: 13px;

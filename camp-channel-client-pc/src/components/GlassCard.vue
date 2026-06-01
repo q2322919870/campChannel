@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="glass-card" :style="cardStyle">
     <slot></slot>
   </div>

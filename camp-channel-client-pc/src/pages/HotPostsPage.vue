@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="hot-posts-page">
     <div class="page-header">
       <h1>
@@ -169,7 +169,7 @@ onMounted(() => {
 
 .subtitle {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .posts-container {
@@ -182,13 +182,13 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 80px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--border);
+  border: 3px solid var(--outline-variant);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -205,7 +205,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 80px 0;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .empty svg {
@@ -221,8 +221,8 @@ onMounted(() => {
 
 .post-card {
   padding: 20px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
@@ -292,7 +292,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -321,7 +321,7 @@ onMounted(() => {
 
 .time {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .post-content {
@@ -341,14 +341,14 @@ onMounted(() => {
 .post-content p {
   font-size: 14px;
   line-height: 1.6;
-  color: var(--text);
+  color: var(--on-surface);
 }
 
 .post-stats {
   display: flex;
   gap: 16px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
 }
 
 .stat {

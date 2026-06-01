@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <nav class="sidebar">
     <div class="sidebar-inner">
       <div class="nav-items">
@@ -143,7 +143,7 @@ function isActive(path: string): boolean {
   background: rgba(15, 18, 25, 0.6);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--outline-variant);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -174,12 +174,12 @@ function isActive(path: string): boolean {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--on-surface-variant);
   transition: all 0.2s;
   position: relative;
 }
-.nav-item:hover { color: var(--text); background: var(--card); }
-.nav-item.active { color: var(--primary); background: var(--card); }
+.nav-item:hover { color: var(--on-surface); background: var(--surface); }
+.nav-item.active { color: var(--primary); background: var(--surface); }
 .nav-item.active::before {
   content: '';
   position: absolute;

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div ref="containerRef" class="post-3d-gallery" @wheel.prevent>
     <div v-if="loading" class="gallery-loading">加载3D画廊...</div>
     <div v-else-if="!items.length" class="gallery-empty">
@@ -91,5 +91,5 @@ onUnmounted(() => {
 
 <style scoped>
 .post-3d-gallery { width: 100%; height: 360px; position: relative; overflow: hidden; border-radius: 20px; background: transparent; }
-.gallery-loading, .gallery-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary); font-size: 14px; }
+.gallery-loading, .gallery-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--on-surface-variant); font-size: 14px; }
 </style>

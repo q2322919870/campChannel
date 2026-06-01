@@ -9,11 +9,11 @@ export class ThemeRenderer {
   ) {
     const gradient = ctx.createLinearGradient(0, 0, width, height)
 
-    const start = this.hexToRgba(colors.gradientStart, 1)
-    const end = this.hexToRgba(colors.gradientEnd, 1)
+    const start = this.hexToRgba(colors.primary, 1)
+    const end = this.hexToRgba(colors.secondary, 1)
 
     gradient.addColorStop(0, `rgba(${start.r}, ${start.g}, ${start.b}, ${start.a})`)
-    gradient.addColorStop(0.5, this.blendColors(colors.gradientStart, colors.gradientEnd, 0.5))
+    gradient.addColorStop(0.5, this.blendColors(colors.primary, colors.secondary, 0.5))
     gradient.addColorStop(1, `rgba(${end.r}, ${end.g}, ${end.b}, ${end.a})`)
 
     ctx.fillStyle = gradient

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="profile-page">
     <!-- Weather effects canvas overlay -->
     <canvas ref="weatherCanvas" class="weather-canvas"></canvas>
@@ -162,20 +162,20 @@ function initWeatherEffects() {
 <style scoped>
 .profile-page { max-width: 600px; margin: 0 auto; padding: 40px 0; position: relative; }
 .weather-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
-.profile-header { display: flex; gap: 24px; align-items: center; padding: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; margin-bottom: 16px; }
+.profile-header { display: flex; gap: 24px; align-items: center; padding: 32px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 20px; margin-bottom: 16px; }
 .avatar-wrapper { position: relative; cursor: pointer; flex-shrink: 0; }
-.profile-avatar { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; overflow: hidden; }
+.profile-avatar { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; overflow: hidden; }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .no-avatar { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; }
 .profile-info { flex: 1; }
 .profile-name { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-.profile-email { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
+.profile-email { font-size: 14px; color: var(--on-surface-variant); margin-bottom: 16px; }
 .profile-stats { display: flex; gap: 24px; }
 .stat-item { text-align: center; }
 .stat-value { display: block; font-size: 22px; font-weight: 700; color: var(--primary); }
-.stat-label { font-size: 12px; color: var(--text-secondary); }
+.stat-label { font-size: 12px; color: var(--on-surface-variant); }
 .profile-nav { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.2s; color: var(--text); }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 14px; cursor: pointer; transition: all 0.2s; color: var(--on-surface); }
 .nav-item:hover { border-color: var(--primary); transform: translateX(4px); }
 .logout-btn { width: 100%; padding: 14px; border: 1px solid rgba(255,107,107,0.3); border-radius: 14px; background: rgba(255,107,107,0.05); color: #ff6b6b; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .logout-btn:hover { background: rgba(255,107,107,0.1); }
@@ -186,6 +186,6 @@ function initWeatherEffects() {
 @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .avatar-preview-img { width: 100%; max-height: 60vh; object-fit: contain; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.4); margin-bottom: 16px; }
 .avatar-preview-actions { display: flex; gap: 12px; justify-content: center; margin-bottom: 12px; }
-.preview-btn { padding: 10px 24px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
-.close-preview { padding: 8px 24px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text-secondary); font-size: 13px; cursor: pointer; }
+.preview-btn { padding: 10px 24px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+.close-preview { padding: 8px 24px; border: 1px solid var(--outline-variant); border-radius: 10px; background: var(--surface); color: var(--on-surface-variant); font-size: 13px; cursor: pointer; }
 </style>
