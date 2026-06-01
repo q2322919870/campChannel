@@ -67,7 +67,8 @@ class _Gallery3DCarouselState extends State<Gallery3DCarousel>
   void _onMomentum() {
     if (!mounted || _dragging) return;
     setState(() {
-      _targetRotation += _lastVelocity;
+      _rotation += _lastVelocity;
+      _targetRotation = _rotation;
       _lastVelocity *= 0.95;
       if (_lastVelocity.abs() < 0.001) {
         _momentumController.stop();
@@ -87,7 +88,8 @@ class _Gallery3DCarouselState extends State<Gallery3DCarousel>
         return;
       }
       setState(() {
-        _targetRotation += 0.003;
+        _rotation += 0.003;
+        _targetRotation = _rotation;
       });
     });
   }
@@ -103,11 +105,14 @@ class _Gallery3DCarouselState extends State<Gallery3DCarousel>
     _lastDragX = details.globalPosition.dx;
     _autoRotateTimer?.cancel();
     _momentumController.stop();
+    // Sync rotation to target so dragging starts from current position
+    _rotation = _targetRotation;
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
     final delta = details.globalPosition.dx - _lastDragX;
-    _targetRotation += delta * 0.012;
+    _rotation += delta * 0.012;
+    _targetRotation = _rotation;
     _lastDragX = details.globalPosition.dx;
     _lastVelocity = delta * 0.012;
     if (mounted) setState(() {});
@@ -208,12 +213,32 @@ class _Gallery3DCarouselState extends State<Gallery3DCarousel>
                         fit: StackFit.expand,
                         children: [
                           Image.network(
-                            ApiClient.processImageUrl(widget.items[i].imageUrl),
+                            widget.items[i].imageUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: Colors.black26,
-                              child: const Icon(Icons.image, color: Colors.white38, size: 32),
-                            ),
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: Colors.black26,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                    strokeWidth: 2,
+                                    color: widget.glowColor,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint('Gallery image load error: $error');
+                              debugPrint('Image URL: ${widget.items[i].imageUrl}');
+                              return Container(
+                                color: Colors.black26,
+                                child: const Icon(Icons.image, color: Colors.white38, size: 32),
+                              );
+                            },
                           ),
                           if (widget.items[i].title != null)
                             Positioned(

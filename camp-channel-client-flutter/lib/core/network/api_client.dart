@@ -57,9 +57,8 @@ class ApiClient {
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     final base = StorageService.getApiBaseUrl() ?? _getDefaultBaseUrl();
     // base 是 http://host:port/api，图片路径是 /uploads/...
-    // 需要去掉 /api 后缀得到 http://host:port
-    final serverRoot = base.endsWith('/api') ? base.substring(0, base.length - 4) : base;
-    return '$serverRoot$url';
+    // 因为 Spring Boot 配置了 context-path: /api，静态资源也需要 /api 前缀
+    return '$base$url';
   }
 
   Future<Response<T>> get<T>(
