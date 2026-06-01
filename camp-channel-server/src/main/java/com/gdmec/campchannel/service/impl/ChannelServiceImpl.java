@@ -416,6 +416,42 @@ public class ChannelServiceImpl extends ServiceImpl<ChannelMapper, Channel> impl
         channelMemberMapper.updateById(target);
     }
 
+    @Override
+    public void ensurePublicChannelJoined(Long userId, List<Channel> channels) {
+        try {
+            Channel publicChannel = getOne(
+                new QueryWrapper<Channel>().eq("channel_code", "CH-PUBLIC-001").eq("status", 1)
+            );
+            if (publicChannel == null) return;
+
+            boolean alreadyJoined = channels.stream().anyMatch(c -> c.getId().equals(publicChannel.getId()));
+            if (!alreadyJoined) {
+                ChannelMember existing = channelMemberMapper.selectOne(
+                    new QueryWrapper<ChannelMember>()
+                        .eq("channel_id", publicChannel.getId())
+                        .eq("user_id", userId)
+                );
+                if (existing == null) {
+                    ChannelMember cm = new ChannelMember();
+                    cm.setChannelId(publicChannel.getId());
+                    cm.setUserId(userId);
+                    cm.setRole("member");
+                    cm.setStatus(1);
+                    cm.setApplyTime(LocalDateTime.now());
+                    cm.setApproveTime(LocalDateTime.now());
+                    channelMemberMapper.insert(cm);
+                } else if (existing.getStatus() != 1) {
+                    existing.setStatus(1);
+                    existing.setApproveTime(LocalDateTime.now());
+                    channelMemberMapper.updateById(existing);
+                }
+                channels.add(0, publicChannel);
+            }
+        } catch (Exception e) {
+            // 静默失败，不影响其他频道显示
+        }
+    }
+
     private String generateChannelCode() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         Random random = new Random();

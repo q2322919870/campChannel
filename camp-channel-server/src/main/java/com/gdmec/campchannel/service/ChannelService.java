@@ -77,4 +77,9 @@ public interface ChannelService extends IService<Channel> {
      * 禁言/取消禁言频道成员
      */
     void muteMember(Long channelId, Long targetUserId, Long operatorId, boolean muted);
+
+    /**
+     * 确保公共频道已加入，如果未加入则自动加入并添加到返回列表
+     */
+    void ensurePublicChannelJoined(Long userId, List<Channel> channels);
 }

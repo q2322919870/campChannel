@@ -49,6 +49,8 @@ public class ChannelController {
     @Operation(summary = "获取我的频道列表")
     public Result<List<Channel>> getMyChannels(@AuthenticationPrincipal SecurityUser currentUser) {
         List<Channel> channels = channelService.getUserChannels(currentUser.getId());
+        // 确保公共频道始终在列表中
+        channelService.ensurePublicChannelJoined(currentUser.getId(), channels);
         return Result.success(channels);
     }
 
