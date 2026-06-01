@@ -1,0 +1,46 @@
+// android/build.gradle
+
+buildscript {
+    ext.kotlin_version = '1.9.22' // 兼容 Java 21
+    repositories {
+        // 🔥 阿里云镜像（放在最前面！优先使用）
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        
+        // 原有配置
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        // ✅ 兼容 Java 21 + Gradle 8.4 的 AGP 版本
+        classpath 'com.android.tools.build:gradle:8.3.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        // 🔥 同样添加阿里云镜像
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        
+        // 原有配置
+        google()
+        mavenCentral()
+    }
+}
+
+// 以下保持你原有的配置不变
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
