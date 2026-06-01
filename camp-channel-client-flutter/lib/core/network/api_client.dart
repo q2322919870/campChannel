@@ -43,7 +43,7 @@ class ApiClient {
   static String _getDefaultBaseUrl() {
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.110.126:8080/api';
+        return 'http://10.50.30.104:8080/api';
       }
     } catch (_) {}
     return 'http://localhost:8080/api';
