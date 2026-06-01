@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/network/api_client.dart';
 import '../core/services/storage_service.dart';
+import '../core/theme/app_theme.dart';
+import '../core/theme/md3_theme.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -93,6 +96,122 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  /// 显示主题选择对话框
+  void _showThemePicker() {
+    final themeProvider = context.read<ThemeProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerLow,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 顶部手柄指示器
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 32,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colorScheme.onSurfaceVariant.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('选择主题配色', style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  Text('Material Design 3 动态色彩系统', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
+            // 主题列表
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                itemCount: themeProvider.md3Themes.length,
+                itemBuilder: (ctx, index) {
+                  final md3Theme = themeProvider.md3Themes[index];
+                  final isSelected = themeProvider.themeIndex == index;
+                  return _buildMD3ThemeTile(ctx, md3Theme, index, isSelected);
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMD3ThemeTile(BuildContext context, MD3ThemeConfig config, int index, bool isSelected) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: isSelected ? colorScheme.secondaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            context.read<ThemeProvider>().setTheme(index);
+            Navigator.pop(context);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // 颜色预览圆
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        config.seedColor,
+                        config.seedColor.withOpacity(0.6),
+                      ],
+                    ),
+                  ),
+                  child: Icon(
+                    isSelected ? Icons.check_circle : Icons.circle,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(config.name, style: Theme.of(context).textTheme.titleMedium),
+                      Text(config.isDark ? '暗色模式' : '亮色模式',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Icon(Icons.check, color: colorScheme.onSecondaryContainer),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -103,6 +222,12 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _buildSectionHeader(context, '外观'),
+          const SizedBox(height: 8),
+          _buildMenuTile(context, '主题配色',
+              context.watch<ThemeProvider>().md3Themes[context.watch<ThemeProvider>().themeIndex].name,
+              onTap: _showThemePicker),
+          const SizedBox(height: 24),
           _buildSectionHeader(context, '通知设置'),
           const SizedBox(height: 8),
           _buildSwitchTile(context, '推送通知', '接收新消息、评论等推送', _pushEnabled, (v) => setState(() => _pushEnabled = v)),

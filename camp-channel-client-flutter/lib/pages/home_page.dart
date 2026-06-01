@@ -203,22 +203,13 @@ class _HomePageState extends State<HomePage> {
                 child: GestureDetector(
                   onTap: () => _showAnnouncementDialog(_announcements.first),
                   child: Container(
-                    width: 48,
-                    height: 48,
+                    width: 56,
+                    height: 56,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [colorScheme.secondary, colorScheme.primary],
-                      ),
+                      color: colorScheme.secondaryContainer,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.primary.withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
-                    child: const Icon(Icons.card_giftcard, color: Colors.white, size: 22),
+                    child: Icon(Icons.card_giftcard, color: colorScheme.onSecondaryContainer, size: 24),
                   ),
                 ),
               ),
@@ -228,9 +219,6 @@ class _HomePageState extends State<HomePage> {
           builder: (context, userProvider, _) {
             final unreadCount = userProvider.unreadCount;
             return NavigationBar(
-              backgroundColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              shadowColor: Colors.transparent,
               selectedIndex: _currentIndex,
               onDestinationSelected: (i) {
                 setState(() => _currentIndex = i);
@@ -240,8 +228,8 @@ class _HomePageState extends State<HomePage> {
                   curve: Curves.easeInOut,
                 );
               },
-              height: 64,
-              labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+              height: 80,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
               destinations: [
                 const NavigationDestination(
                   icon: Icon(Icons.explore_outlined),

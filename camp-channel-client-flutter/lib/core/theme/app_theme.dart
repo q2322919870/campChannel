@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'theme_data.dart';
+import 'md3_theme.dart';
 import '../services/storage_service.dart';
 
 class ThemeProvider extends ChangeNotifier {
@@ -20,14 +20,23 @@ class ThemeProvider extends ChangeNotifier {
 
   int get themeIndex => _themeIndex;
   ThemeMode get themeMode => _themeMode;
-  ThemeConfig get currentConfig => themeConfigs[_themeIndex];
-  ThemeData get lightTheme => currentConfig.lightTheme;
-  ThemeData get darkTheme => currentConfig.darkTheme;
+  
+  /// 获取当前主题数据
+  ThemeData get lightTheme {
+    final md3Config = md3ThemeConfigs[_themeIndex % md3ThemeConfigs.length];
+    return md3Config.theme;
+  }
+  
+  ThemeData get darkTheme {
+    final md3Config = md3ThemeConfigs[_themeIndex % md3ThemeConfigs.length];
+    return md3Config.theme;
+  }
 
-  List<ThemeConfig> get allThemes => themeConfigs;
+  /// 所有可用的 MD3 主题
+  List<MD3ThemeConfig> get md3Themes => md3ThemeConfigs;
 
   void setTheme(int index) {
-    if (index < 0 || index >= themeConfigs.length) return;
+    if (index < 0 || index >= md3ThemeConfigs.length) return;
     _themeIndex = index;
     StorageService.saveThemeIndex(index);
     notifyListeners();

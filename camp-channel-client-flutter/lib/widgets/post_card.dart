@@ -49,79 +49,62 @@ class PostCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
+        child: Material(
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
-          color: theme.cardColor.withOpacity(0.85),
-          border: Border.all(
-            color: isPinned 
-                ? colorScheme.primary.withOpacity(0.3) 
-                : colorScheme.onSurface.withOpacity(0.05),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: _getBlurFilter(theme),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isPinned)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      margin: const EdgeInsets.only(bottom: 8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.push_pin, size: 12, color: colorScheme.primary),
-                          const SizedBox(width: 4),
-                          Text(
-                            '置顶',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.primary,
-                            ),
+          elevation: 0,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isPinned)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.push_pin, size: 14, color: colorScheme.onPrimaryContainer),
+                        const SizedBox(width: 6),
+                        Text(
+                          '置顶',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onPrimaryContainer,
                           ),
-                        ],
-                      ),
-                    ),
-                  _buildHeader(context),
-                  const SizedBox(height: 12),
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    content,
-                    style: theme.textTheme.bodyMedium,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
+                _buildHeader(context),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
-                  if (images != null && images!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _buildImageGrid(context),
-                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  content,
+                  style: theme.textTheme.bodyMedium,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (images != null && images!.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  _buildActions(context),
+                  _buildImageGrid(context),
                 ],
-              ),
+                const SizedBox(height: 12),
+                _buildActions(context),
+              ],
             ),
           ),
         ),

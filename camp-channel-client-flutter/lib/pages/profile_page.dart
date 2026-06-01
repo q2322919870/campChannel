@@ -602,9 +602,9 @@ class ThemeSwitcherWidget extends StatelessWidget {
               mainAxisSpacing: 12,
               childAspectRatio: 0.75,
             ),
-            itemCount: themeProvider.allThemes.length,
+            itemCount: themeProvider.md3Themes.length,
             itemBuilder: (context, index) {
-              final config = themeProvider.allThemes[index];
+              final config = themeProvider.md3Themes[index];
               final isSelected = themeProvider.themeIndex == index;
               return GestureDetector(
                 onTap: () => themeProvider.setTheme(index),
@@ -614,12 +614,16 @@ class ThemeSwitcherWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected ? config.primary : Colors.transparent,
+                      color: isSelected ? config.seedColor : Colors.transparent,
                       width: 2.5,
                     ),
-                    boxShadow: isSelected
-                        ? [BoxShadow(color: config.primary.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))]
-                        : [],
+                    boxShadow: [
+                      BoxShadow(
+                        color: config.seedColor.withOpacity(isSelected ? 0.4 : 0.0),
+                        blurRadius: isSelected ? 12 : 0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(isSelected ? 13.5 : 16),
@@ -628,15 +632,18 @@ class ThemeSwitcherWidget extends StatelessWidget {
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(colors: [config.primary, config.accent],
-                                  begin: Alignment.topLeft, end: Alignment.bottomRight),
+                              gradient: LinearGradient(
+                                colors: [config.seedColor, config.seedColor.withOpacity(0.6)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                             ),
                             child: isSelected
                                 ? Center(
                                     child: Container(
                                       padding: const EdgeInsets.all(6),
                                       decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                      child: Icon(Icons.check, color: config.primary, size: 18),
+                                      child: Icon(Icons.check, color: config.seedColor, size: 18),
                                     ),
                                   )
                                 : null,
@@ -650,11 +657,11 @@ class ThemeSwitcherWidget extends StatelessWidget {
                             config.name,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                               color: colorScheme.onSurface,
                             ),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
