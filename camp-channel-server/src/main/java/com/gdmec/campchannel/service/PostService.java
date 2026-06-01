@@ -20,7 +20,7 @@ public interface PostService extends IService<Post> {
     /**
      * 获取帖子详情
      */
-    Post getPostById(Long postId);
+    Post getPostById(Long postId, Long currentUserId);
 
     /**
      * 获取用户点赞过的帖子

@@ -173,8 +173,10 @@ public class PostController {
 
     @GetMapping("/{postId}")
     @Operation(summary = "获取帖子详情")
-    public Result<Post> getPostById(@PathVariable Long postId) {
-        Post post = postService.getPostById(postId);
+    public Result<Post> getPostById(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal SecurityUser currentUser) {
+        Post post = postService.getPostById(postId, currentUser.getId());
         if (post == null) {
             return Result.failed(com.gdmec.campchannel.common.api.ErrorCode.BAD_REQUEST, "帖子不存在");
         }

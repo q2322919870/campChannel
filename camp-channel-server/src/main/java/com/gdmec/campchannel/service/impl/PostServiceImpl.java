@@ -206,9 +206,22 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     }
 
     @Override
-    public Post getPostById(Long postId) {
+    public Post getPostById(Long postId, Long currentUserId) {
         Post post = getById(postId);
         if (post == null) return null;
+        
+        // 附加用户在频道中的角色信息
+        if (post.getChannelId() != null && currentUserId != null) {
+            ChannelMember member = channelMemberMapper.selectOne(
+                    new QueryWrapper<ChannelMember>()
+                            .eq("channel_id", post.getChannelId())
+                            .eq("user_id", currentUserId)
+                            .eq("status", 1)
+                            .last("LIMIT 1"));
+            String role = member != null ? member.getRole() : "member";
+            post.setUserChannelRole(role);
+        }
+        
         maskAnonymous(post);
         return post;
     }
