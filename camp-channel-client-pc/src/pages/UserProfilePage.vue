@@ -53,8 +53,10 @@
               <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="8.5" cy="7" r="4"/>
               <polyline v-if="isFollowing" points="17 11 19 13 23 9"/>
-              <line v-else x1="12" y1="5" x2="12" y2="19"/>
-              <line v-else x1="5" y1="12" x2="19" y2="12"/>
+              <template v-else>
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </template>
             </svg>
             {{ isFollowing ? '已关注' : '关注' }}
           </button>

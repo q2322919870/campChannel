@@ -112,8 +112,6 @@ class PageTransitionManager {
     element.style.opacity = '0'
     element.style.transform = `scale(${props.scale?.[0] || 1})`
     
-    await this.wait(50)
-    
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.opacity = '1'
     element.style.transform = `scale(${props.scale?.[1] || 1})`
@@ -145,8 +143,6 @@ class PageTransitionManager {
       : `translateX(${translateValue})`
     element.style.opacity = '0'
     
-    await this.wait(50)
-    
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.transform = 'translateX(0) translateY(0)'
     element.style.opacity = '1'
@@ -163,8 +159,6 @@ class PageTransitionManager {
     element.style.transform = `scale(${scale}) rotate(${rotate}deg)`
     element.style.opacity = '0'
     
-    await this.wait(50)
-    
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.transform = 'scale(1) rotate(0deg)'
     element.style.opacity = '1'
@@ -179,8 +173,6 @@ class PageTransitionManager {
     
     element.style.transform = `rotate(${rotate}deg) scale(0.9)`
     element.style.opacity = '0'
-    
-    await this.wait(50)
     
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.transform = 'rotate(0deg) scale(1)'
@@ -198,8 +190,6 @@ class PageTransitionManager {
     element.style.transform = `rotate${axis}(${angle}deg)`
     element.style.opacity = '0'
     
-    await this.wait(50)
-    
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.transform = 'rotateY(0deg) rotateX(0deg)'
     element.style.opacity = '1'
@@ -216,8 +206,6 @@ class PageTransitionManager {
     element.style.transform = `scale(${scale})`
     element.style.opacity = String(opacity)
     
-    await this.wait(50)
-    
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.transform = `scale(${props.scale?.[1] || 1})`
     element.style.opacity = String(props.opacity?.[1] || 1)
@@ -232,8 +220,6 @@ class PageTransitionManager {
     
     element.style.filter = `blur(${blur}px)`
     element.style.opacity = '0'
-    
-    await this.wait(50)
     
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.filter = `blur(${props.blur?.[1] || 0}px)`
@@ -252,8 +238,6 @@ class PageTransitionManager {
     element.style.transform = `scale(${scale})`
     element.style.opacity = '0'
     
-    await this.wait(50)
-    
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.borderRadius = props.borderRadius?.[1] || '0%'
     element.style.transform = `scale(${props.scale?.[1] || 1})`
@@ -270,8 +254,6 @@ class PageTransitionManager {
     element.style.transform = `translateX(${sign * 100}px) skewX(${sign * 10}deg)`
     element.style.opacity = '0'
     
-    await this.wait(50)
-    
     element.style.transition = `all ${effect.duration}ms ${effect.easing}`
     element.style.transform = 'translateX(0) skewX(0deg)'
     element.style.opacity = '1'
@@ -286,8 +268,6 @@ class PageTransitionManager {
     
     element.style.transform = `scale(${scales[0]})`
     element.style.opacity = '0'
-    
-    await this.wait(50)
     
     element.style.transition = `transform ${effect.duration}ms ${effect.easing}, opacity ${effect.duration / 2}ms ease-out`
     element.style.opacity = '1'

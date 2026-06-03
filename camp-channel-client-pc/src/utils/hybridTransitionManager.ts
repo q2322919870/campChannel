@@ -22,26 +22,10 @@ class HybridTransitionManager {
       return
     }
 
-    // Before navigation starts
+    // BeforeNavigation starts - disabled transitions for instant navigation
     router.beforeEach((to: any, from: any, next: any) => {
-      if (this.isAnimating) {
-        next(false)
-        return
-      }
-
-      // Skip transition for same page or initial load
-      if (!from.path || from.path === to.path) {
-        next()
-        return
-      }
-
-      const themeStore = useThemeStore()
-      this.currentConfig = getHybridTransition(themeStore.themeIndex)
-      
-      // Start hybrid transition
-      this.startHybridTransition(() => {
-        next()
-      })
+      // Skip all transitions, navigate immediately
+      next()
     })
   }
 

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="friend-page">
     <div class="friend-sidebar">
       <div class="sidebar-header">
@@ -192,7 +192,7 @@ onUnmounted(() => {
 .sidebar-header h3 { font-size: 16px; font-weight: 600; }
 .friend-count { font-size: 12px; color: var(--on-surface-variant); }
 .search-box { padding: 0 16px 12px; }
-.search-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--outline-variant); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 13px; outline: none; }
+.search-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--outline-variant); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 13px; outline: none; box-sizing: border-box; }
 .search-box input:focus { border-color: var(--primary); }
 .friend-list { flex: 1; overflow-y: auto; }
 .friend-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.2s; }
