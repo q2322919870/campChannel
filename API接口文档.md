@@ -1,7 +1,7 @@
 # Camp Channel API 接口文档
 
-> 版本：V2.0
-> 基础URL：`http://localhost:8080/api`
+> 版本：V3.0
+> 基础URL：`http://10.50.30.104:8080/api`
 > 认证方式：JWT Token，通过请求头 `Authorization: Bearer <token>` 传递
 
 ---
@@ -23,6 +23,9 @@
 - [14. 上传模块](#14-上传模块)
 - [15. 管理员模块](#15-管理员模块)
 - [16. WebSocket实时通信](#16-websocket实时通信)
+- [17. 草稿箱模块](#17-草稿箱模块)
+- [18. 群聊消息模块](#18-群聊消息模块)
+- [19. 关注模块](#19-关注模块)
 
 ---
 
@@ -154,6 +157,27 @@ GET /api/users/{userId}/profile
 Authorization: Bearer <token>
 ```
 **响应：** 包含用户信息、是否好友关系、用户最近20条帖子
+```json
+{
+  "code": 200,
+  "data": {
+    "id": 1,
+    "username": "xxx",
+    "email": "xxx@stu.gdmec.edu.cn",
+    "avatar": "/uploads/avatars/xxx.jpg",
+    "isFriend": false,
+    "posts": [
+      {
+        "id": 123,
+        "topic": "帖子标题",
+        "content": "帖子内容",
+        "images": ["/uploads/images/xxx.jpg"],
+        "createTime": "2026-06-03T10:00:00"
+      }
+    ]
+  }
+}
+```
 
 ### 2.5 更新个人资料
 ```
@@ -285,7 +309,72 @@ Authorization: Bearer <token>
 
 ### 3.12 搜索帖子
 ```
-GET /api/posts/search?keyword=关键词
+GET /api/posts/search?keyword=关键词&page=1&size=20
+Authorization: Bearer <token>
+```
+
+### 3.13 增加浏览量
+```
+GET /api/posts/{postId}/view
+```
+
+### 3.14 编辑帖子
+```
+PUT /api/posts/{postId}
+Authorization: Bearer <token>
+```
+**请求体：**
+```json
+{
+  "content": "更新后的内容",
+  "images": ["url1"],
+  "videoUrl": "视频URL（可选）"
+}
+```
+**说明：** 仅作者可编辑，会自动递增 `editCount` 并记录 `lastEditTime`
+
+### 3.15 置顶/取消置顶帖子
+```
+POST /api/posts/{postId}/pin
+Authorization: Bearer <token>
+```
+**响应：**
+```json
+{
+  "code": 200,
+  "data": {
+    "isPinned": true,
+    "message": "已置顶"
+  }
+}
+```
+
+### 3.16 记录解开告白
+```
+POST /api/posts/{postId}/reveal
+Authorization: Bearer <token>
+```
+**说明：** 用于匿名树洞/告白帖子的解开状态记录，跨设备同步
+
+### 3.17 获取指定用户的帖子
+```
+GET /api/posts/user/{userId}?page=1&size=20
+```
+
+### 3.18 检查收藏状态
+```
+GET /api/posts/{postId}/favourite/status
+Authorization: Bearer <token>
+```
+**响应：**
+```json
+{
+  "code": 200,
+  "data": {
+    "isFavourited": true,
+    "count": 5
+  }
+}
 ```
 
 ---
@@ -516,13 +605,30 @@ Authorization: Bearer <token>
 ### 6.2 获取评论列表
 ```
 GET /api/posts/{postId}/comments?page=1&size=20
+Authorization: Bearer <token>
 ```
+**响应：** 每条评论包含 `likeCount`、`isLiked`（当前用户是否已点赞）字段
 
 ### 6.3 删除评论
 ```
 DELETE /api/posts/{postId}/comments/{commentId}
 Authorization: Bearer <token>
 ```
+
+### 6.4 评论点赞/取消点赞
+```
+POST /api/posts/{postId}/comments/{commentId}/like
+Authorization: Bearer <token>
+```
+**响应：**
+```json
+{
+  "code": 200,
+  "message": "点赞成功",
+  "data": true
+}
+```
+**说明：** `data` 为 `true` 表示已点赞，`false` 表示已取消点赞。切换式操作，无需传参
 
 ---
 
@@ -735,29 +841,61 @@ Authorization: Bearer <token>
 
 **基础路径：** `/api/notifications`
 
-### 10.1 获取通知列表
+### 10.1 获取未读通知列表
 ```
-GET /api/notifications?page=1&size=20
+GET /api/notifications/unread
 Authorization: Bearer <token>
 ```
+**响应：** 返回未读通知列表
 
-### 10.2 标记通知已读
+### 10.2 获取未读通知数
+```
+GET /api/notifications/unread/count
+Authorization: Bearer <token>
+```
+**响应：** `data` 为未读通知数量（整数）
+
+### 10.3 获取通知历史（支持分类过滤）
+```
+GET /api/notifications/history?page=1&size=20&category=
+Authorization: Bearer <token>
+```
+**参数说明：**
+- `page`: 页码，默认1
+- `size`: 每页数量，默认20
+- `category`: 通知分类（可选），可选值：`system`（系统）、`interaction`（互动）、`chat`（聊天）
+
+**响应：** 返回通知列表，每项包含：
+```json
+{
+  "id": 1,
+  "userId": 1,
+  "type": "like",
+  "category": "interaction",
+  "title": "点赞通知",
+  "content": "xxx 赞了你的帖子",
+  "relatedId": "123",
+  "isRead": 0,
+  "createTime": "2026-06-03T10:00:00"
+}
+```
+
+### 10.4 标记通知已读
 ```
 POST /api/notifications/{notificationId}/read
 Authorization: Bearer <token>
 ```
 
-### 10.3 标记全部已读
+### 10.5 标记全部已读
 ```
 POST /api/notifications/read-all
 Authorization: Bearer <token>
 ```
 
-### 10.4 获取未读通知数
-```
-GET /api/notifications/unread/count
-Authorization: Bearer <token>
-```
+**通知分类说明：**
+- `system`: 系统通知（如公告、系统消息）
+- `interaction`: 互动通知（如点赞、评论、@提及、关注）
+- `chat`: 聊天相关通知（如新消息、好友请求）
 
 ---
 
@@ -1099,3 +1237,156 @@ channel.stream.listen((data) {
   // 处理消息
 });
 ```
+
+---
+
+## 17. 草稿箱模块
+
+**基础路径：** `/api/drafts`
+
+### 17.1 保存草稿（新增或更新）
+```
+POST /api/drafts
+Authorization: Bearer <token>
+```
+**请求体：**
+```json
+{
+  "id": null,
+  "channelId": 1,
+  "content": "草稿内容",
+  "images": "url1,url2",
+  "videoUrl": "视频URL（可选）",
+  "topic": "话题",
+  "isAnonymous": false
+}
+```
+**说明：** `id` 为 null 时新建草稿，非 null 时更新已有草稿。`images` 为逗号分隔的图片URL字符串。
+
+### 17.2 获取草稿列表
+```
+GET /api/drafts?page=1&size=20
+Authorization: Bearer <token>
+```
+**响应：** 返回当前用户的所有草稿列表，包含 `channelName` 字段
+
+### 17.3 获取单个草稿详情
+```
+GET /api/drafts/{draftId}
+Authorization: Bearer <token>
+```
+
+### 17.4 删除草稿
+```
+DELETE /api/drafts/{draftId}
+Authorization: Bearer <token>
+```
+
+### 17.5 发布草稿
+```
+POST /api/drafts/{draftId}/publish
+Authorization: Bearer <token>
+```
+**说明：** 将草稿内容发布为正式帖子，发布成功后自动删除草稿
+
+---
+
+## 18. 群聊消息模块
+
+**基础路径：** `/api/group-messages`
+
+### 18.1 发送群聊消息
+```
+POST /api/group-messages
+Authorization: Bearer <token>
+```
+**请求体：**
+```json
+{
+  "channelId": 1,
+  "content": "消息文字内容",
+  "mediaUrl": "媒体URL（图片/视频时填写）",
+  "msgType": 1
+}
+```
+**msgType 类型说明：**
+| 值 | 说明 |
+|----|------|
+| 1 | 文字消息 |
+| 2 | 图片消息 |
+| 3 | 视频消息 |
+
+### 18.2 获取频道群聊消息
+```
+GET /api/group-messages/{channelId}?page=1&size=50
+```
+**响应：** 返回该频道的群聊消息列表（分页），每条消息包含 `username`、`avatar` 字段
+
+### 18.3 撤回群聊消息
+```
+DELETE /api/group-messages/{messageId}
+Authorization: Bearer <token>
+```
+**说明：** 仅发送者可撤回自己的消息，撤回后 `status` 变为 2（已撤回）
+
+---
+
+## 19. 关注模块
+
+**基础路径：** `/api/follow`
+
+### 19.1 关注/取消关注用户
+```
+POST /api/follow/{userId}/toggle
+Authorization: Bearer <token>
+```
+**响应：**
+```json
+{
+  "code": 200,
+  "message": "关注成功",
+  "data": true
+}
+```
+**说明：** `data` 为 `true` 表示已关注，`false` 表示已取消关注。切换式操作，不能关注自己
+
+### 19.2 获取粉丝列表
+```
+GET /api/follow/{userId}/followers?page=1&size=20
+```
+**响应：** 返回粉丝列表，每项包含 `followerId`、`followerUsername`、`followerAvatar`
+
+### 19.3 获取关注列表
+```
+GET /api/follow/{userId}/following?page=1&size=20
+```
+**响应：** 返回关注列表，每项包含 `followingId`、`username`、`avatar`
+
+### 19.4 获取粉丝数和关注数
+```
+GET /api/follow/{userId}/counts
+```
+**响应：**
+```json
+{
+  "code": 200,
+  "data": {
+    "followerCount": 10,
+    "followingCount": 5
+  }
+}
+```
+
+### 19.5 检查是否已关注
+```
+GET /api/follow/{userId}/is-following
+Authorization: Bearer <token>
+```
+**响应：** `data` 为 `true` 表示已关注，`false` 表示未关注
+
+### 19.6 获取关注动态
+```
+GET /api/follow/feed?page=1&size=20
+Authorization: Bearer <token>
+```
+**响应：** 返回当前用户关注的人的帖子列表，按时间倒序

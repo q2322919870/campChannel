@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:camp_channel_client_flutter/core/network/api_client.dart';
 import '../core/services/storage_service.dart';
 
 class CreatePostPage extends StatefulWidget {
-  const CreatePostPage({super.key});
+  final Map<String, dynamic>? editData;
+  const CreatePostPage({super.key, this.editData});
 
   @override
   State<CreatePostPage> createState() => _CreatePostPageState();
@@ -19,10 +21,21 @@ class _CreatePostPageState extends State<CreatePostPage> {
   bool _isSavingDraft = false;
   List<Map<String, dynamic>> _channels = [];
 
+  bool get _isEditMode => widget.editData != null && widget.editData!['postId'] != null;
+
   @override
   void initState() {
     super.initState();
     _fetchChannels();
+    if (_isEditMode) {
+      final d = widget.editData!;
+      _contentController.text = d['content']?.toString() ?? '';
+      _topicController.text = d['topic']?.toString() ?? '';
+      if (d['channelId'] != null) _selectedChannelId = d['channelId'].toString();
+      if (d['images'] != null && d['images'] is List) {
+        _imageUrls.addAll(List<String>.from(d['images']));
+      }
+    }
   }
 
   @override
@@ -56,12 +69,20 @@ class _CreatePostPageState extends State<CreatePostPage> {
         finalContent += ' ${_mentionController.text.trim()}';
       }
       final apiClient = ApiClient();
-      final res = await apiClient.post('/posts', data: {
-        'channelId': int.parse(_selectedChannelId!),
-        'content': finalContent,
-        'images': _imageUrls.isEmpty ? null : _imageUrls,
-      });
-      if (res.data['code'] == 200 && mounted) Navigator.pop(context);
+      Response res;
+      if (_isEditMode) {
+        res = await apiClient.put('/posts/${widget.editData!['postId']}', data: {
+          'content': finalContent,
+          'images': _imageUrls.isEmpty ? null : _imageUrls,
+        });
+      } else {
+        res = await apiClient.post('/posts', data: {
+          'channelId': int.parse(_selectedChannelId!),
+          'content': finalContent,
+          'images': _imageUrls.isEmpty ? null : _imageUrls,
+        });
+      }
+      if (res.data['code'] == 200 && mounted) Navigator.pop(context, true);
     } catch (_) {}
     if (mounted) setState(() => _isLoading = false);
   }
@@ -97,12 +118,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('发布帖子'), actions: [
-        TextButton.icon(
-          onPressed: _isSavingDraft ? null : _saveDraft,
-          icon: const Icon(Icons.drafts_outlined, size: 18),
-          label: Text(_isSavingDraft ? '保存中...' : '存草稿', style: TextStyle(color: colorScheme.secondary)),
-        ),
+      appBar: AppBar(title: Text(_isEditMode ? '编辑帖子' : '发布帖子'), actions: [
+        if (!_isEditMode)
+          TextButton.icon(
+            onPressed: _isSavingDraft ? null : _saveDraft,
+            icon: const Icon(Icons.drafts_outlined, size: 18),
+            label: Text(_isSavingDraft ? '保存中...' : '存草稿', style: TextStyle(color: colorScheme.secondary)),
+          ),
         TextButton(
           onPressed: _isLoading ? null : _submit,
           child: Text(_isLoading ? '发布中...' : '发布', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600)),

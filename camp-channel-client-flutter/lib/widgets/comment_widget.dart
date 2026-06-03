@@ -6,10 +6,12 @@ class CommentWidget extends StatelessWidget {
   final String content;
   final DateTime? timestamp;
   final int likeCount;
+  final bool isLiked;
   final String? avatarUrl;
   final List<CommentWidget>? replies;
   final bool isOwn;
   final VoidCallback? onAvatarTap;
+  final VoidCallback? onLikeTap;
 
   const CommentWidget({
     super.key,
@@ -17,10 +19,12 @@ class CommentWidget extends StatelessWidget {
     required this.content,
     this.timestamp,
     this.likeCount = 0,
+    this.isLiked = false,
     this.avatarUrl,
     this.replies,
     this.isOwn = false,
     this.onAvatarTap,
+    this.onLikeTap,
   });
 
   @override
@@ -138,36 +142,26 @@ class CommentWidget extends StatelessWidget {
                       style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
                     ),
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.favorite_border,
-                          size: 14,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          likeCount.toString(),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: theme.colorScheme.onSurface.withOpacity(0.4),
+                    GestureDetector(
+                      onTap: onLikeTap,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                            size: 14,
+                            color: isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurface.withOpacity(0.4),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Icon(
-                          Icons.reply,
-                          size: 14,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '回复',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: theme.colorScheme.onSurface.withOpacity(0.4),
+                          const SizedBox(width: 4),
+                          Text(
+                            likeCount.toString(),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isLiked ? theme.colorScheme.primary : theme.colorScheme.onSurface.withOpacity(0.4),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),

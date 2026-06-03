@@ -11,9 +11,23 @@
           <p class="card-email">{{ profile.email || '' }}</p>
         </div>
 
+        <div class="card-stats" v-if="followerCount || followingCount">
+          <div class="stat-item">
+            <span class="stat-num">{{ followerCount }}</span>
+            <span class="stat-label">粉丝</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">{{ followingCount }}</span>
+            <span class="stat-label">关注</span>
+          </div>
+        </div>
+
         <div class="card-actions">
           <button v-if="profile.isFriend" class="action-btn primary" @click="startChat">发消息</button>
           <button v-else class="action-btn outline" @click="addFriend">加好友</button>
+          <button v-if="profile.id !== currentUserId" class="action-btn" :class="isFollowing ? 'outline' : 'primary'" @click="toggleFollow">
+            {{ isFollowing ? '已关注' : '关注' }}
+          </button>
         </div>
 
         <div class="card-posts">
@@ -40,13 +54,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api/client'
+import { useAuthStore } from '../stores/auth'
 
 const props = defineProps<{ visible: boolean; userId: number }>()
 const emit = defineEmits<{ close: [] }>()
 const router = useRouter()
+const authStore = useAuthStore()
+const currentUserId = computed(() => authStore.user?.id || 0)
 
 const profile = reactive({
   id: 0,
@@ -57,6 +74,9 @@ const profile = reactive({
   isFriend: false,
 })
 const showPreview = ref(false)
+const isFollowing = ref(false)
+const followerCount = ref(0)
+const followingCount = ref(0)
 
 async function fetchProfile() {
   // Don't fetch if userId is invalid
@@ -94,6 +114,29 @@ async function fetchProfile() {
       }
     } catch {}
   }
+  // Fetch follow status and counts
+  try {
+    const followRes = await api.get(`/follow/${props.userId}/is-following`)
+    if (followRes.data.code === 200) isFollowing.value = followRes.data.data || false
+  } catch {}
+  try {
+    const countRes = await api.get(`/follow/${props.userId}/counts`)
+    if (countRes.data.code === 200) {
+      followerCount.value = countRes.data.data.followerCount || 0
+      followingCount.value = countRes.data.data.followingCount || 0
+    }
+  } catch {}
+}
+
+async function toggleFollow() {
+  try {
+    const res = await api.post(`/follow/${props.userId}/toggle`)
+    if (res.data.code === 200) {
+      isFollowing.value = res.data.data
+      followerCount.value += res.data.data ? 1 : -1
+      if (followerCount.value < 0) followerCount.value = 0
+    }
+  } catch (e: any) { alert(e.response?.data?.message || '操作失败') }
 }
 
 function previewAvatar() {
@@ -123,7 +166,11 @@ fetchProfile()
 .card-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .card-header h3 { font-size: 18px; font-weight: 600; }
 .card-email { font-size: 12px; color: var(--on-surface-variant); }
-.card-actions { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+.card-actions { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+.card-stats { display: flex; justify-content: center; gap: 24px; margin-bottom: 12px; }
+.stat-item { text-align: center; }
+.stat-num { display: block; font-size: 16px; font-weight: 700; }
+.stat-label { font-size: 11px; color: var(--on-surface-variant); }
 .action-btn { padding: 10px 24px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
 .action-btn.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
 .action-btn.outline { border: 1px solid var(--primary); background: none; color: var(--primary); }

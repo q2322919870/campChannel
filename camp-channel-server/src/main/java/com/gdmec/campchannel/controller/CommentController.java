@@ -44,9 +44,11 @@ public class CommentController {
     public Result<List<Comment>> getComments(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal SecurityUser currentUser) {
         
-        List<Comment> comments = commentService.getPostComments(postId, page, size);
+        Long currentUserId = currentUser != null ? currentUser.getId() : null;
+        List<Comment> comments = commentService.getPostComments(postId, page, size, currentUserId);
         return Result.success(comments);
     }
 
@@ -59,6 +61,17 @@ public class CommentController {
         
         commentService.deleteComment(commentId, currentUser.getId());
         return Result.success("删除成功", null);
+    }
+
+    @PostMapping("/{commentId}/like")
+    @Operation(summary = "评论点赞/取消点赞")
+    public Result<Boolean> toggleCommentLike(
+            @PathVariable Long postId,
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal SecurityUser currentUser) {
+        
+        boolean liked = commentService.toggleCommentLike(commentId, currentUser.getId());
+        return Result.success(liked ? "点赞成功" : "取消点赞成功", liked);
     }
 
     @Data

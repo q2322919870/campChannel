@@ -7,7 +7,9 @@ import com.gdmec.campchannel.common.exception.BusinessException;
 import com.gdmec.campchannel.common.filter.SensitiveWordFilter;
 import com.gdmec.campchannel.common.utils.RedisUtils;
 import com.gdmec.campchannel.entity.Comment;
+import com.gdmec.campchannel.entity.CommentLike;
 import com.gdmec.campchannel.entity.Post;
+import com.gdmec.campchannel.mapper.CommentLikeMapper;
 import com.gdmec.campchannel.mapper.CommentMapper;
 import com.gdmec.campchannel.mapper.PostMapper;
 import com.gdmec.campchannel.entity.User;
@@ -22,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,6 +48,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private CommentLikeMapper commentLikeMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -140,7 +147,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
-    public List<Comment> getPostComments(Long postId, int page, int size) {
+    public List<Comment> getPostComments(Long postId, int page, int size, Long currentUserId) {
         QueryWrapper<Comment> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("post_id", postId)
                 .eq("status", 1)
@@ -152,16 +159,62 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         
         List<Comment> comments = list(queryWrapper);
         
-        // Populate username and avatar for each comment
+        // Batch fetch liked comment ids for current user
+        Set<Long> likedCommentIds = new java.util.HashSet<>();
+        if (currentUserId != null && !comments.isEmpty()) {
+            List<Long> commentIds = comments.stream().map(Comment::getId).collect(Collectors.toList());
+            QueryWrapper<CommentLike> likeQuery = new QueryWrapper<>();
+            likeQuery.eq("user_id", currentUserId).in("comment_id", commentIds);
+            List<CommentLike> likes = commentLikeMapper.selectList(likeQuery);
+            likedCommentIds = likes.stream().map(CommentLike::getCommentId).collect(Collectors.toSet());
+        }
+        
+        // Populate username, avatar, likeCount, isLiked for each comment
         for (Comment comment : comments) {
             User user = userMapper.selectById(comment.getUserId());
             if (user != null) {
                 comment.setUsername(user.getUsername());
                 comment.setAvatar(user.getAvatar());
             }
+            if (comment.getLikeCount() == null) {
+                comment.setLikeCount(0);
+            }
+            comment.setIsLiked(likedCommentIds.contains(comment.getId()));
         }
         
         return comments;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean toggleCommentLike(Long commentId, Long userId) {
+        Comment comment = getById(commentId);
+        if (comment == null || comment.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "评论不存在");
+        }
+
+        QueryWrapper<CommentLike> query = new QueryWrapper<>();
+        query.eq("comment_id", commentId).eq("user_id", userId);
+        CommentLike existing = commentLikeMapper.selectOne(query);
+
+        if (existing != null) {
+            // Unlike
+            commentLikeMapper.deleteById(existing.getId());
+            int newCount = Math.max(0, (comment.getLikeCount() != null ? comment.getLikeCount() : 0) - 1);
+            comment.setLikeCount(newCount);
+            updateById(comment);
+            return false;
+        } else {
+            // Like
+            CommentLike like = new CommentLike();
+            like.setCommentId(commentId);
+            like.setUserId(userId);
+            commentLikeMapper.insert(like);
+            int newCount = (comment.getLikeCount() != null ? comment.getLikeCount() : 0) + 1;
+            comment.setLikeCount(newCount);
+            updateById(comment);
+            return true;
+        }
     }
 
     @Override

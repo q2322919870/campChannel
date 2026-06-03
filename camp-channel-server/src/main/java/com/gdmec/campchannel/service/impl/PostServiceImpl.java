@@ -348,6 +348,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             post.setVideoUrl(videoUrl);
         }
 
+        // Track edit count and last edit time
+        post.setEditCount(post.getEditCount() != null ? post.getEditCount() + 1 : 1);
+        post.setLastEditTime(java.time.LocalDateTime.now());
+
         updateById(post);
     }
 

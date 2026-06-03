@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../core/network/api_client.dart';
 import '../core/services/storage_service.dart';
 import '../widgets/comment_widget.dart';
 import '../widgets/user_card.dart';
+import 'create_post_page.dart';
 
 class PostDetailPage extends StatefulWidget {
   const PostDetailPage({super.key});
@@ -222,6 +224,40 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
+  void _editPost() {
+    if (_post == null) return;
+    // Parse images from JSON string to list
+    List<String> imageList = [];
+    final rawImages = _post!['images'];
+    if (rawImages is List) {
+      imageList = rawImages.map((e) => e.toString()).toList();
+    } else if (rawImages is String && rawImages.isNotEmpty) {
+      try {
+        final parsed = (rawImages.startsWith('['))
+            ? (json.decode(rawImages) as List).map((e) => e.toString()).toList()
+            : rawImages.split(',');
+        imageList = parsed;
+      } catch (_) {}
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePostPage(editData: {
+          'postId': _post!['id'],
+          'content': _post!['content'] ?? '',
+          'topic': _post!['topic'] ?? '',
+          'channelId': _post!['channelId'],
+          'images': imageList,
+        }),
+      ),
+    ).then((result) {
+      if (result == true && mounted) {
+        // Reload post data after editing
+        _loadPost();
+      }
+    });
+  }
+
   void _sharePost() {
     if (_post == null) return;
     
@@ -257,6 +293,26 @@ class _PostDetailPageState extends State<PostDetailPage> {
     );
   }
 
+
+  Future<void> _toggleCommentLike(int commentId, int index) async {
+    final postId = _post?['id']?.toString();
+    if (postId == null) return;
+    try {
+      final response = await _apiClient.post('/posts/$postId/comments/$commentId/like');
+      final result = response.data;
+      if (result != null && result['code'] == 200 && result['data'] != null) {
+        final liked = result['data'] as bool;
+        if (mounted) {
+          setState(() {
+            final c = _comments[index];
+            final currentLikes = (c['likeCount'] as int?) ?? 0;
+            c['isLiked'] = liked;
+            c['likeCount'] = liked ? currentLikes + 1 : (currentLikes > 0 ? currentLikes - 1 : 0);
+          });
+        }
+      }
+    } catch (_) {}
+  }
 
   Future<void> _reportPost() async {
     final postId = _post?['id']?.toString();
@@ -372,6 +428,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
             tooltip: '更多',
             onSelected: (value) {
               switch (value) {
+                case 'edit':
+                  _editPost();
+                  break;
                 case 'favourite':
                   _toggleFavourite();
                   break;
@@ -393,6 +452,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
               if (isOwnPost) {
                 return [
+                  const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit_outlined, size: 20), SizedBox(width: 8), Text('编辑帖子')])),
                   const PopupMenuItem(value: 'delete', child: Text('删除帖子')),
                 ];
               } else {
@@ -518,6 +578,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     content,
                     style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
                   ),
+                  if ((_post?['editCount'] ?? 0) > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        '(已编辑)',
+                        style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withOpacity(0.4), fontStyle: FontStyle.italic),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -604,14 +672,24 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   Text('在评论中使用 @用户名 可以提及他人',
                       style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withOpacity(0.4))),
                   const SizedBox(height: 8),
-                  ..._comments.map((c) => Padding(
+                  ..._comments.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final c = entry.value;
+                    return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: CommentWidget(
                       username: c['username']?.toString() ?? c['user']?.toString() ?? '匿名',
                       content: c['content']?.toString() ?? '',
-                      likeCount: c['likes'] ?? c['likeCount'] ?? 0,
+                      likeCount: c['likeCount'] ?? 0,
+                      isLiked: c['isLiked'] == true,
                       avatarUrl: ApiClient.processImageUrl(c['avatar'] as String?),
                       isOwn: c['userId']?.toString() == StorageService.getUserId()?.toString(),
+                      onLikeTap: () {
+                        final commentId = c['id'];
+                        if (commentId != null) {
+                          _toggleCommentLike(commentId is int ? commentId : int.tryParse(commentId.toString()) ?? 0, i);
+                        }
+                      },
                       onAvatarTap: () {
                         final uid = c['userId'] is int ? c['userId'] as int : int.tryParse(c['userId']?.toString() ?? '');
                         if (uid != null && uid > 0) {
@@ -627,7 +705,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           ? DateTime.tryParse(c['createdAt'].toString())
                           : null,
                     ),
-                  )),
+                  );
+                  }),
                 ],
               ),
             ),

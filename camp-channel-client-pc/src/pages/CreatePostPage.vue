@@ -1,7 +1,7 @@
 ﻿<template>
   <div class="create-post-page">
     <div class="create-post-card">
-      <h1 class="page-title">发布帖子</h1>
+      <h1 class="page-title">{{ isEditMode ? '编辑帖子' : '发布帖子' }}</h1>
 
       <div class="user-info-row">
         <div class="user-avatar">
@@ -54,11 +54,11 @@
 
         <div class="form-actions">
           <button type="button" class="btn cancel" @click="$router.back()">取消</button>
-          <button type="button" class="btn draft" @click="saveDraft" :disabled="savingDraft || !content.trim()">
+          <button v-if="!isEditMode" type="button" class="btn draft" @click="saveDraft" :disabled="savingDraft || !content.trim()">
             {{ savingDraft ? '保存中...' : '存草稿' }}
           </button>
           <button type="submit" class="btn submit" :disabled="loading || !channelId || !content.trim()">
-            {{ loading ? '发布中...' : '发布' }}
+            {{ loading ? (isEditMode ? '保存中...' : '发布中...') : (isEditMode ? '保存' : '发布') }}
           </button>
         </div>
       </form>
@@ -68,13 +68,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { api } from '../api/client'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.user)
+const editId = computed(() => route.query.editId as string || '')
+const isEditMode = computed(() => !!editId.value)
 const channels = ref<any[]>([])
 const channelId = ref('')
 const content = ref('')
@@ -125,25 +128,57 @@ async function handleSubmit() {
     finalContent += ' ' + mentionInput.value.trim()
   }
   try {
-    const res = await api.post('/posts', {
-      channelId: Number(channelId.value),
-      content: finalContent,
-      images: images.value.length > 0 ? images.value : null,
-      videoUrl: null,
-    })
-    if (res.data.code === 200) {
-      router.push('/home')
+    let res
+    if (isEditMode.value) {
+      res = await api.put(`/posts/${editId.value}`, {
+        content: finalContent,
+        images: images.value.length > 0 ? images.value : null,
+      })
     } else {
-      error.value = res.data.message || '发布失败'
+      res = await api.post('/posts', {
+        channelId: Number(channelId.value),
+        content: finalContent,
+        images: images.value.length > 0 ? images.value : null,
+        videoUrl: null,
+      })
+    }
+    if (res.data.code === 200) {
+      router.back()
+    } else {
+      error.value = res.data.message || (isEditMode.value ? '保存失败' : '发布失败')
     }
   } catch (e: any) {
-    error.value = e.response?.data?.message || '发布失败'
+    error.value = e.response?.data?.message || (isEditMode.value ? '保存失败' : '发布失败')
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => { fetchChannels() })
+onMounted(async () => {
+  await fetchChannels()
+  if (isEditMode.value) {
+    // Load post data for editing
+    try {
+      const res = await api.get(`/posts/${editId.value}`)
+      if (res.data.code === 200 && res.data.data) {
+        const p = res.data.data
+        content.value = p.content || ''
+        topic.value = p.topic || ''
+        if (p.channelId) channelId.value = String(p.channelId)
+        if (p.images) {
+          try {
+            const imgs = typeof p.images === 'string' ? JSON.parse(p.images) : p.images
+            if (Array.isArray(imgs)) {
+              images.value = imgs.map((url: string) =>
+                url.startsWith('http') || url.startsWith('/') ? url : '/uploads/images/' + url
+              )
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (e) {}
+  }
+})
 
 async function saveDraft() {
   if (!content.value.trim()) return

@@ -15,10 +15,15 @@ public interface CommentService extends IService<Comment> {
     /**
      * 获取帖子的评论列表
      */
-    List<Comment> getPostComments(Long postId, int page, int size);
+    List<Comment> getPostComments(Long postId, int page, int size, Long currentUserId);
 
     /**
      * 删除评论（仅作者或帖子作者可删）
      */
     void deleteComment(Long commentId, Long userId);
+
+    /**
+     * 评论点赞/取消点赞
+     */
+    boolean toggleCommentLike(Long commentId, Long userId);
 }

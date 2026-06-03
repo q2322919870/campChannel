@@ -27,6 +27,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/search', name: 'Search', component: () => import('../pages/SearchPage.vue'), meta: { requiresAuth: true } },
   { path: '/hot-posts', name: 'HotPosts', component: () => import('../pages/HotPostsPage.vue'), meta: { requiresAuth: true } },
   { path: '/drafts', name: 'Drafts', component: () => import('../pages/DraftsPage.vue'), meta: { requiresAuth: true } },
+  { path: '/user/:id', name: 'UserProfile', component: () => import('../pages/UserProfilePage.vue'), meta: { requiresAuth: true } },
+  { path: '/follow-list', name: 'FollowList', component: () => import('../pages/FollowListPage.vue'), meta: { requiresAuth: true } },
+  { path: '/following-feed', name: 'FollowingFeed', component: () => import('../pages/FollowingFeedPage.vue'), meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

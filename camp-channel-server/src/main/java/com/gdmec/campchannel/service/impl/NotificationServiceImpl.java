@@ -92,4 +92,19 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         
         return list(queryWrapper);
     }
+
+    @Override
+    public List<Notification> getNotificationHistoryByCategory(Long userId, String category, int page, int size) {
+        QueryWrapper<Notification> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        if (category != null && !category.isEmpty()) {
+            queryWrapper.eq("category", category);
+        }
+        queryWrapper.orderByDesc("create_time");
+        
+        int offset = (page - 1) * size;
+        queryWrapper.last("LIMIT " + offset + ", " + size);
+        
+        return list(queryWrapper);
+    }
 }

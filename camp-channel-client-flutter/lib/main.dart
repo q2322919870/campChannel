@@ -24,6 +24,9 @@ import 'pages/group_chat_page.dart';
 import 'pages/search_page.dart';
 import 'pages/hot_posts_page.dart';
 import 'pages/draft_list_page.dart';
+import 'pages/following_feed_page.dart';
+import 'pages/follow_list_page.dart';
+import 'pages/user_profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -126,6 +129,16 @@ class _CampChannelAppState extends State<CampChannelApp> {
               '/search': (context) => const SearchPage(),
               '/hot_posts': (context) => const HotPostsPage(),
               '/drafts': (context) => const DraftListPage(),
+              '/following_feed': (context) => const FollowingFeedPage(),
+              '/follow_list': (context) => const FollowListPage(),
+              '/user_profile': (context) {
+                final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+                return UserProfilePage(
+                  userId: args?['userId'] as int? ?? 0,
+                  username: args?['username'] as String?,
+                  avatarUrl: args?['avatarUrl'] as String?,
+                );
+              },
             },
           );
         },

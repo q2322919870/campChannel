@@ -19,6 +19,13 @@
       </div>
       <div v-if="channelTabs.length > 0" class="channel-tabs">
         <span
+          class="channel-tab"
+          :class="{ active: currentTab === 'following' }"
+          @click="switchChannel('following')"
+        >
+          👥 关注
+        </span>
+        <span
           v-for="tab in channelTabs"
           :key="tab.id"
           class="channel-tab"
@@ -277,8 +284,44 @@ function sharePost(post: any) {
   }
 }
 
+async function fetchFollowingFeed() {
+  loading.value = true
+  try {
+    const res = await api.get('/follow/feed', { params: { page: 1, size: 20 } })
+    if (res.data.code === 200 && Array.isArray(res.data.data)) {
+      posts.value = res.data.data.map((p: any) => ({
+        ...p,
+        id: p.id,
+        title: p.topic || '帖子',
+        content: p.content || '',
+        author: p.username || '用户',
+        userId: p.userId || 0,
+        avatar: p.avatar || '',
+        time: p.createTime || '',
+        channelName: '',
+        channelId: p.channelId || 0,
+        isLiked: p.isLiked || false,
+        likeCount: p.likeCount || 0,
+        commentCount: p.commentCount || 0,
+        images: p.images ? (typeof p.images === 'string' ? JSON.parse(p.images) : p.images).map((url: string) => 
+          url.startsWith('http') || url.startsWith('/') ? url : '/uploads/images/' + url
+        ) : [],
+      }))
+    }
+  } catch (e) {
+    posts.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
 function switchChannel(channelId: string) {
-  router.push(`/channel/${channelId}`)
+  if (channelId === 'following') {
+    currentTab.value = 'following'
+    fetchFollowingFeed()
+  } else {
+    router.push(`/channel/${channelId}`)
+  }
 }
 
 function viewPost(postId: number) {

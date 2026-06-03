@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS `post` (
     `like_count` INT DEFAULT 0 COMMENT '点赞数',
     `comment_count` INT DEFAULT 0 COMMENT '评论数',
     `is_pinned` TINYINT DEFAULT 0 COMMENT '是否置顶: 0-否, 1-是',
+    `edit_count` INT DEFAULT 0 COMMENT '编辑次数',
+    `last_edit_time` DATETIME COMMENT '最后编辑时间',
     `is_anonymous` TINYINT DEFAULT 0 COMMENT '是否匿名: 0-否, 1-是',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',
     `expire_time` DATETIME COMMENT '过期时间, NULL表示永不过期',
@@ -98,6 +100,7 @@ CREATE TABLE IF NOT EXISTS `comment` (
     `content` TEXT NOT NULL COMMENT '评论内容',
     `parent_id` BIGINT COMMENT '父评论ID (二级评论自关联)',
     `status` TINYINT DEFAULT 1 COMMENT '状态: 1-正常, 0-待审核, 2-已删除',
+    `like_count` INT DEFAULT 0 COMMENT '点赞数',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '评论时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX `idx_post_id` (`post_id`),
@@ -139,6 +142,7 @@ CREATE TABLE IF NOT EXISTS `notification` (
     `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
     `user_id` BIGINT NOT NULL COMMENT '接收用户ID',
     `type` VARCHAR(50) NOT NULL COMMENT '通知类型: friend_request, friend_approved, comment, like, mention, channel_approved',
+    `category` VARCHAR(20) DEFAULT 'interaction' COMMENT '通知分类: system, interaction, chat',
     `title` VARCHAR(100) COMMENT '通知标题',
     `content` TEXT COMMENT '通知内容',
     `related_id` VARCHAR(100) COMMENT '关联业务ID',
@@ -327,3 +331,25 @@ INSERT IGNORE INTO `badge` (`name`, `icon`, `description`, `condition_type`, `co
 ('社区之星', '🌟', '累计获得500个赞', 'like_count', 500),
 ('活跃作者', '📝', '发布10篇帖子', 'post_count', 10),
 ('高产达人', '📚', '发布50篇帖子', 'post_count', 50);
+
+-- 20. 评论点赞表 (comment_like)
+CREATE TABLE IF NOT EXISTS `comment_like` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+    `comment_id` BIGINT NOT NULL COMMENT '评论ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '点赞时间',
+    UNIQUE KEY `uk_cl_comment_user` (`comment_id`, `user_id`),
+    INDEX `idx_cl_comment_id` (`comment_id`),
+    INDEX `idx_cl_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评论点赞表';
+
+-- 21. 用户关注表 (follow)
+CREATE TABLE IF NOT EXISTS `follow` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+    `follower_id` BIGINT NOT NULL COMMENT '关注者ID',
+    `following_id` BIGINT NOT NULL COMMENT '被关注者ID',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '关注时间',
+    UNIQUE KEY `uk_follow` (`follower_id`, `following_id`),
+    INDEX `idx_follow_follower` (`follower_id`),
+    INDEX `idx_follow_following` (`following_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户关注表';

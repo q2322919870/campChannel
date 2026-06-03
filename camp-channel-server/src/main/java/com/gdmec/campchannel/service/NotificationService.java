@@ -31,4 +31,9 @@ public interface NotificationService extends IService<Notification> {
      * 获取通知历史（分页，包含已读和未读）
      */
     List<Notification> getNotificationHistory(Long userId, int page, int size);
+
+    /**
+     * 获取通知历史（分页，支持按分类过滤）
+     */
+    List<Notification> getNotificationHistoryByCategory(Long userId, String category, int page, int size);
 }

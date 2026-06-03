@@ -46,12 +46,95 @@ class _UserCardState extends State<UserCard> {
   bool _isLoadingPosts = true;
   bool _isFriend = false;
   bool _isLoadingFriendStatus = true;
+  bool _isFollowing = false;
+  bool _isLoadingFollowStatus = true;
+  int _followerCount = 0;
+  int _followingCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchPosts();
     _checkFriendStatus();
+    _checkFollowStatus();
+    _fetchFollowCounts();
+  }
+
+  Future<void> _checkFollowStatus() async {
+    final currentUserId = StorageService.getUserId();
+    if (currentUserId == widget.userId) {
+      if (mounted) setState(() => _isLoadingFollowStatus = false);
+      return;
+    }
+    try {
+      final response = await _apiClient.get('/follow/${widget.userId}/is-following');
+      final result = response.data;
+      if (result != null && result['code'] == 200 && result['data'] != null) {
+        if (mounted) {
+          setState(() {
+            _isFollowing = result['data'] as bool;
+            _isLoadingFollowStatus = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingFollowStatus = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingFollowStatus = false);
+    }
+  }
+
+  Future<void> _fetchFollowCounts() async {
+    try {
+      final response = await _apiClient.get('/follow/${widget.userId}/counts');
+      final result = response.data;
+      if (result != null && result['code'] == 200 && result['data'] != null) {
+        final data = result['data'] as Map<String, dynamic>;
+        if (mounted) {
+          setState(() {
+            _followerCount = data['followerCount'] ?? 0;
+            _followingCount = data['followingCount'] ?? 0;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleFollow() async {
+    try {
+      final response = await _apiClient.post('/follow/${widget.userId}/toggle');
+      final result = response.data;
+      if (result != null && result['code'] == 200 && result['data'] != null) {
+        final followed = result['data'] as bool;
+        if (mounted) {
+          setState(() {
+            _isFollowing = followed;
+            _followerCount += followed ? 1 : -1;
+            if (_followerCount < 0) _followerCount = 0;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(followed ? '已关注' : '已取消关注'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.response?.data?['message'] ?? '操作失败'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _checkFriendStatus() async {
@@ -231,6 +314,46 @@ class _UserCardState extends State<UserCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Follower / Following counts
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/follow_list', arguments: {
+                      'userId': widget.userId,
+                      'username': widget.username,
+                      'tab': 'followers',
+                    });
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('$_followerCount', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('粉丝', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/follow_list', arguments: {
+                      'userId': widget.userId,
+                      'username': widget.username,
+                      'tab': 'following',
+                    });
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('$_followingCount', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('关注', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 OutlinedButton.icon(
                   onPressed: () {
                     Navigator.pushNamed(context, '/chat_detail', arguments: {
@@ -246,17 +369,16 @@ class _UserCardState extends State<UserCard> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Only show "Add Friend" button if:
-                // 1. Not viewing own card
-                // 2. Not already friends
-                // 3. Friend status has been loaded
-                if (widget.userId != StorageService.getUserId() && !_isLoadingFriendStatus && !_isFriend)
+                // Follow / Unfollow button
+                if (widget.userId != StorageService.getUserId() && !_isLoadingFollowStatus)
                   ElevatedButton.icon(
-                    onPressed: _addFriend,
-                    icon: const Icon(Icons.person_add, size: 18),
-                    label: const Text('加好友'),
+                    onPressed: _toggleFollow,
+                    icon: Icon(_isFollowing ? Icons.person_remove : Icons.person_add, size: 18),
+                    label: Text(_isFollowing ? '已关注' : '关注'),
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      backgroundColor: _isFollowing ? colorScheme.surface : null,
+                      foregroundColor: _isFollowing ? colorScheme.primary : null,
                     ),
                   ),
               ],

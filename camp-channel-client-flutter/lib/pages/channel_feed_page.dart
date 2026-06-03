@@ -191,16 +191,50 @@ class _ChannelFeedPageState extends State<ChannelFeedPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: _channels.length + 1,
+              itemCount: _channels.length + 2,
               itemBuilder: (context, index) {
-                final isAll = index == 0;
-                final isActive = isAll ? _activeChannelId == null : _activeChannelId == _channels[index - 1]['id'];
+                // First item: Following tab
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/following_feed'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: colorScheme.secondary.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.people_outline, size: 14, color: colorScheme.secondary),
+                            const SizedBox(width: 4),
+                            Text(
+                              '关注',
+                              style: TextStyle(
+                                color: colorScheme.secondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                final isAll = index == 1;
+                final isActive = isAll ? _activeChannelId == null : _activeChannelId == _channels[index - 2]['id'];
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
-                        _activeChannelId = isAll ? null : _channels[index - 1]['id'] as int?;
+                        _activeChannelId = isAll ? null : _channels[index - 2]['id'] as int?;
                       });
                       _fetchPosts();
                     },
@@ -218,7 +252,7 @@ class _ChannelFeedPageState extends State<ChannelFeedPage> {
                       ),
                       child: Center(
                         child: Text(
-                          isAll ? '全部' : _channels[index - 1]['name']?.toString() ?? '',
+                          isAll ? '全部' : _channels[index - 2]['name']?.toString() ?? '',
                           style: TextStyle(
                             color: isActive ? Colors.white : colorScheme.onSurface.withOpacity(0.7),
                             fontSize: 13,

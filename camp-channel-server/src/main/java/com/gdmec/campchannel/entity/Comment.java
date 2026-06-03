@@ -25,6 +25,8 @@ public class Comment {
 
     private Integer status;
 
+    private Integer likeCount;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
@@ -34,4 +36,7 @@ public class Comment {
 
     @TableField(exist = false)
     private String avatar;
+
+    @TableField(exist = false)
+    private Boolean isLiked;
 }

@@ -16,6 +16,7 @@
         </div>
         <h1 class="post-title">{{ post.title }}</h1>
         <p class="post-content">{{ post.content }}</p>
+        <div v-if="post.editCount > 0" class="edited-tag">(已编辑)</div>
         <div v-if="post.isPinned" class="pin-indicator">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
           此帖已被置顶
@@ -32,6 +33,9 @@
           <button v-if="canPinPost" class="action-btn" :class="{ pinned: post.isPinned }" @click="togglePin">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
             {{ post.isPinned ? '取消置顶' : '置顶' }}
+          </button>
+          <button v-if="currentUserId === post.userId" class="action-btn" @click="editPost">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
           <button v-if="currentUserId === post.userId" class="action-btn danger" @click="deletePost">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -62,8 +66,14 @@
               <span v-if="c.userId === currentUserId" class="me-badge">(我)</span>
             </div>
             <p class="comment-text">{{ c.content }}</p>
-            <span class="comment-time">{{ c.time || '' }}</span>
-            <button v-if="currentUserId === c.userId" class="delete-comment" @click="deleteComment(c.id)">删除</button>
+            <div class="comment-actions">
+              <span class="comment-time">{{ c.time || '' }}</span>
+              <button class="comment-like-btn" :class="{ liked: c.isLiked }" @click="toggleCommentLike(c)">
+                <svg width="14" height="14" viewBox="0 0 24 24" :fill="c.isLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                {{ c.likeCount || 0 }}
+              </button>
+              <button v-if="currentUserId === c.userId" class="delete-comment" @click="deleteComment(c.id)">删除</button>
+            </div>
           </div>
         </div>
         <div v-if="comments.length === 0" class="no-comments">暂无评论，快来抢沙发</div>
@@ -76,13 +86,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api/client'
 import { useAuthStore } from '../stores/auth'
 import ReportDialog from '../components/ReportDialog.vue'
 import UserCard from '../components/UserCard.vue'
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const currentUserId = computed(() => authStore.user?.id || 0)
 const canPinPost = computed(() => {
@@ -162,6 +173,8 @@ async function fetchComments() {
         avatar: c.avatar || '',
         userId: c.userId || 0,
         time: c.createTime || '',
+        likeCount: c.likeCount || 0,
+        isLiked: c.isLiked || false,
       }))
     }
   } catch (e) {}
@@ -252,10 +265,25 @@ async function deletePost() {
   }
 }
 
+function editPost() {
+  router.push({ path: '/create-post', query: { editId: route.params.id as string } })
+}
+
 async function deleteComment(commentId: number) {
   try {
     await api.delete(`/posts/${route.params.id}/comments/${commentId}`)
     comments.value = comments.value.filter(c => c.id !== commentId)
+  } catch (e) {}
+}
+
+async function toggleCommentLike(c: any) {
+  try {
+    const res = await api.post(`/posts/${route.params.id}/comments/${c.id}/like`)
+    if (res.data.code === 200) {
+      const liked = res.data.data as boolean
+      c.isLiked = liked
+      c.likeCount = liked ? (c.likeCount || 0) + 1 : Math.max(0, (c.likeCount || 0) - 1)
+    }
   } catch (e) {}
 }
 
@@ -280,6 +308,7 @@ onMounted(() => {
 .role-badge.role-member { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.5); }
 .post-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
 .post-content { font-size: 15px; line-height: 1.8; color: var(--on-surface-variant); margin-bottom: 20px; }
+.edited-tag { font-size: 12px; color: var(--on-surface-variant); opacity: 0.5; font-style: italic; margin-bottom: 12px; }
 .pin-indicator { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(240, 173, 78, 0.1); border: 1px solid rgba(240, 173, 78, 0.3); border-radius: 10px; color: #f0ad4e; font-size: 13px; font-weight: 500; margin-bottom: 16px; }
 .post-actions { display: flex; gap: 8px; border-top: 1px solid var(--outline-variant); padding-top: 16px; }
 .action-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: none; border: none; color: var(--on-surface-variant); font-size: 14px; cursor: pointer; border-radius: 10px; transition: all 0.2s; }
@@ -303,5 +332,9 @@ onMounted(() => {
 .me-badge { font-size: 10px; color: #fff; background: #e74c3c; padding: 1px 6px; border-radius: 4px; margin-left: 4px; font-weight: 700; vertical-align: middle; }
 .comment-text { font-size: 14px; color: var(--on-surface-variant); margin-bottom: 4px; }
 .comment-time { font-size: 11px; color: var(--on-surface-variant); }
+.comment-actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.comment-like-btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: var(--on-surface-variant); font-size: 12px; cursor: pointer; padding: 2px 6px; border-radius: 6px; transition: all 0.2s; }
+.comment-like-btn:hover { color: var(--secondary); background: rgba(255, 107, 107, 0.08); }
+.comment-like-btn.liked { color: var(--secondary); }
 .no-comments { text-align: center; padding: 32px; color: var(--on-surface-variant); font-size: 14px; }
 </style>

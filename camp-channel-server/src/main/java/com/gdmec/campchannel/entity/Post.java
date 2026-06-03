@@ -48,6 +48,10 @@ public class Post {
      */
     private Integer isPinned;
 
+    private Integer editCount;
+
+    private LocalDateTime lastEditTime;
+
     private LocalDateTime createTime;
 
     private LocalDateTime expireTime;

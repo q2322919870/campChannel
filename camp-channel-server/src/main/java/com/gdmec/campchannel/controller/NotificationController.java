@@ -64,9 +64,17 @@ public class NotificationController {
     public Result<List<Notification>> getNotificationHistory(
             @AuthenticationPrincipal SecurityUser currentUser,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String category) {
 
-        List<Notification> notifications = notificationService.getNotificationHistory(currentUser.getId(), page, size);
+        List<Notification> notifications;
+        if (category != null && !category.isEmpty()) {
+            notifications = notificationService.getNotificationHistoryByCategory(
+                    currentUser.getId(), category, page, size);
+        } else {
+            notifications = notificationService.getNotificationHistory(
+                    currentUser.getId(), page, size);
+        }
         return Result.success(notifications);
     }
 }
