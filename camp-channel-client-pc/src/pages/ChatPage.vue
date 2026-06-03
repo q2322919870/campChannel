@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="chat-page">
     <div class="chat-sidebar">
       <div class="chat-search">
@@ -32,13 +32,9 @@
       <template v-if="selectedConv">
         <div class="chat-header">{{ selectedConv.name }}</div>
         <div class="chat-messages" ref="messagesRef">
-          <div v-for="msg in messages" :key="msg.id" class="message-item" :class="{ self: msg.isSelf }">
-            <!-- Recalled message -->
-            <div v-if="msg.status === 5" class="message-recalled">
-              {{ msg.isSelf ? '你撤回了一条消息' : '对方撤回了一条消息' }}
-            </div>
+          <div v-for="msg in visibleMessages" :key="msg.id" class="message-item" :class="{ self: msg.isSelf }">
             <!-- Image message -->
-            <div v-else-if="msg.type === 2" class="message-media" @click="previewImage(msg.content)">
+            <div v-if="msg.type === 2" class="message-media" @click="previewImage(msg.content)">
               <img :src="resolveUrl(msg.content)" class="msg-image" loading="lazy" />
             </div>
             <!-- Video message -->
@@ -49,16 +45,19 @@
             <div v-else class="message-bubble">{{ msg.content }}</div>
             <div class="message-meta">
               <span v-if="msg.isSelf" class="message-status">
-                <span v-if="msg.status === 5 || msg.status === 2" class="status-recalled">已撤回</span>
+                <template v-if="msg.status === 3 || msg.isRead">
+                  <span class="status-read" title="已读">&#10003;&#10003;</span>
+                </template>
+                <template v-else-if="msg.status === 2">
+                  <span class="status-delivered" title="已送达">&#10003;&#10003;</span>
+                </template>
                 <template v-else>
-                  <span v-if="msg.status === 3 || msg.isRead" class="status-read" title="已读">&#10003;&#10003;</span>
-                  <span v-else-if="msg.status === 2" class="status-delivered" title="已送达">&#10003;&#10003;</span>
-                  <span v-else class="status-sent" title="已发送">&#10003;</span>
+                  <span class="status-sent" title="已发送">&#10003;</span>
                 </template>
               </span>
               <span class="message-time">{{ msg.createTime || '' }}</span>
             </div>
-            <button v-if="msg.isSelf && msg.status !== 2" class="recall-btn" @click="recallMessage(msg.id)">撤回</button>
+            <button v-if="msg.isSelf && canRecall(msg)" class="recall-btn" @click="recallMessage(msg.id)">撤回</button>
           </div>
         </div>
         <div class="chat-input-bar">
@@ -118,6 +117,11 @@ const messagesRef = ref<HTMLDivElement>()
 
 const filteredConversations = computed(() =>
   conversations.value.filter(c => (c.name || '').includes(searchQuery.value))
+)
+
+// Filter out recalled messages (status 5 = recalled)
+const visibleMessages = computed(() =>
+  messages.value.filter(m => m.status !== 5)
 )
 
 let stompClient: any = null
@@ -184,52 +188,73 @@ function getMsgPreview(data: any): string {
 }
 
 function handleIncomingMessage(data: any) {
+  console.log('[handleIncomingMessage] Received:', data)
   const isFromOther = data.senderId !== myId.value
   const convId = isFromOther ? data.senderId : data.receiverId
-  const preview = getMsgPreview(data)
+  const isRecalled = data.status === 5
+  console.log('[handleIncomingMessage] convId:', convId, 'isRecalled:', isRecalled)
+  const preview = isRecalled ? '对方撤回了一条消息' : getMsgPreview(data)
 
-  // Update or add conversation
-  let conv = conversations.value.find(c => c.id === convId)
-  if (conv) {
+  // Always update message status if it exists (for recall notifications)
+  const existing = messages.value.find(m => m.id === data.id)
+  if (existing) {
+    existing.status = data.status || existing.status
+    existing.isRead = data.isRead !== undefined ? data.isRead : existing.isRead
+    console.log('[handleIncomingMessage] Updated existing message status to:', existing.status)
+  }
+
+  // If currently chatting with this person, add new messages
+  if (activeChat.value === convId) {
+    if (!existing && !isRecalled) {
+      messages.value.push({
+        id: data.id,
+        content: data.content,
+        type: data.type || 1,
+        createTime: formatTime(data.createTime),
+        rawTime: data.createTime,
+        isSelf: !isFromOther,
+        isRead: data.isRead || false,
+        status: data.status || 1,
+      })
+    }
+    scrollToBottom()
+    // Mark as read
+    markAllAsRead(convId)
+  }
+
+  // Update conversation list - replace entire array to force Vue reactivity
+  const convIdx = conversations.value.findIndex(c => c.id === convId)
+  console.log('[handleIncomingMessage] convIdx:', convIdx, 'total convs:', conversations.value.length)
+  
+  const newConversations = [...conversations.value]
+  if (convIdx >= 0) {
+    // Update existing conversation
+    const conv = { ...newConversations[convIdx] }
     conv.lastMsg = preview
     conv.time = formatTime(data.createTime)
-    if (isFromOther && activeChat.value !== convId) {
+    if (isFromOther && activeChat.value !== convId && !isRecalled) {
       conv.unread = (conv.unread || 0) + 1
     }
-    // Move to top
-    const idx = conversations.value.indexOf(conv)
-    conversations.value.splice(idx, 1)
-    conversations.value.unshift(conv)
+    // Remove and add to top
+    newConversations.splice(convIdx, 1)
+    newConversations.unshift(conv)
   } else {
     // New conversation
-    conversations.value.unshift({
+    newConversations.unshift({
       id: convId,
       name: data.username || '用户' + convId,
       avatar: data.avatar || '',
       lastMsg: preview,
       time: formatTime(data.createTime),
-      unread: isFromOther && activeChat.value !== convId ? 1 : 0,
+      unread: isFromOther && activeChat.value !== convId && !isRecalled ? 1 : 0,
       online: false,
       senderId: data.senderId,
     })
     fetchOnlineStatus()
   }
-
-  // If currently chatting with this person, add message
-  if (activeChat.value === convId) {
-    messages.value.push({
-      id: data.id,
-      content: data.content,
-      type: data.type || 1,
-      createTime: formatTime(data.createTime),
-      isSelf: !isFromOther,
-      isRead: data.isRead || false,
-      status: data.status || 1,
-    })
-    scrollToBottom()
-    // Mark as read
-    markAllAsRead(convId)
-  }
+  
+  conversations.value = newConversations
+  console.log('[handleIncomingMessage] conversations updated, first item lastMsg:', conversations.value[0]?.lastMsg)
 }
 
 function handleOnlineStatus(userId: number, online: boolean) {
@@ -302,6 +327,7 @@ async function selectConversation(conv: any) {
         content: m.content || '',
         type: m.type || 1,
         createTime: formatTime(m.createTime) || '',
+        rawTime: m.createTime,
         isSelf: m.senderId === myId.value,
         isRead: m.isRead === 1,
         status: m.status || 1,
@@ -336,6 +362,7 @@ async function sendMessage() {
         content: msg.content || content,
         type: 1,
         createTime: formatTime(msg.createTime) || '刚刚',
+        rawTime: msg.createTime || new Date().toISOString(),
         isSelf: true,
         isRead: false,
         status: msg.status || 1,
@@ -397,6 +424,7 @@ async function uploadAndSendMedia(file: File, endpoint: string, type: number) {
           content: msg.content || url,
           type,
           createTime: formatTime(msg.createTime) || '刚刚',
+          rawTime: msg.createTime || new Date().toISOString(),
           isSelf: true,
           isRead: false,
           status: msg.status || 1,
@@ -420,11 +448,18 @@ function previewImage(url: string) {
   showPreview.value = true
 }
 
+function canRecall(msg: any): boolean {
+  if (!msg.rawTime) return false
+  const msgTime = new Date(msg.rawTime).getTime()
+  const now = Date.now()
+  return (now - msgTime) <= 2 * 60 * 1000 // 2 minutes
+}
+
 async function recallMessage(messageId: number) {
   try {
     await api.post(`/chat/messages/${messageId}/recall`)
     const msg = messages.value.find(m => m.id === messageId)
-    if (msg) msg.status = 2
+    if (msg) msg.status = 5
   } catch (e: any) {
     window.alert(e.response?.data?.message || '撤回失败')
   }

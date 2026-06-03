@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="group-chat-page">
     <div class="chat-header">
       <h2>{{ channelName }}</h2>
@@ -28,17 +28,14 @@
     </div>
 
     <div class="chat-messages" ref="messagesRef">
-      <div v-for="msg in messages" :key="msg.id" class="message-item" :class="{ self: msg.isSelf }" @contextmenu.prevent="showContextMenu($event, msg)">
+      <div v-for="msg in visibleMessages" :key="msg.id" class="message-item" :class="{ self: msg.isSelf }" @contextmenu.prevent="showContextMenu($event, msg)">
         <div class="message-avatar">
           <img v-if="msg.avatar" :src="msg.avatar" />
           <span v-else>{{ (msg.username || '?').charAt(0) }}</span>
         </div>
         <div class="message-content">
           <div class="message-author" v-if="!msg.isSelf">{{ msg.username }}</div>
-          <div v-if="msg.status === 2" class="message-recalled">
-            {{ msg.isSelf ? '你撤回了一条消息' : `${msg.username} 撤回了一条消息` }}
-          </div>
-          <div v-else-if="msg.msgType === 2 && msg.mediaUrl" class="message-media">
+          <div v-if="msg.msgType === 2 && msg.mediaUrl" class="message-media">
             <img :src="resolveUrl(msg.mediaUrl)" class="msg-image" @click="previewImage(resolveUrl(msg.mediaUrl))" />
           </div>
           <div v-else-if="msg.msgType === 3 && msg.mediaUrl" class="message-media">
@@ -46,16 +43,17 @@
           </div>
           <div v-else>
             <div class="message-bubble">{{ msg.content }}</div>
-            <div class="message-meta">
-              <span v-if="msg.isSelf" class="message-status">
-                <span v-if="msg.status === 5 || msg.status === 2" class="status-recalled">已撤回</span>
-                <template v-else>
-                  <span v-if="msg.isRead" class="status-read" title="已读">&#10003;&#10003;</span>
-                  <span v-else class="status-sent" title="已发送">&#10003;</span>
-                </template>
-              </span>
-              <span class="message-time">{{ msg.createTime }}</span>
-            </div>
+          </div>
+          <div class="message-meta">
+            <span v-if="msg.isSelf" class="message-status">
+              <template v-if="msg.isRead">
+                <span class="status-read" title="已读">&#10003;&#10003;</span>
+              </template>
+              <template v-else>
+                <span class="status-sent" title="已发送">&#10003;</span>
+              </template>
+            </span>
+            <span class="message-time">{{ msg.createTime }}</span>
           </div>
         </div>
       </div>
@@ -107,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client/dist/sockjs'
@@ -129,6 +127,11 @@ const isUploading = ref(false)
 const showPreview = ref(false)
 const imagePreviewUrl = ref('')
 
+// Filter out recalled messages (status 2 = recalled)
+const visibleMessages = computed(() =>
+  messages.value.filter(m => m.status !== 2)
+)
+
 let stompClient: Client | null = null
 let contextMenuTarget: any = null
 
@@ -140,6 +143,8 @@ const contextMenu = ref({
 
 function showContextMenu(event: MouseEvent, msg: any) {
   if (msg.status === 2) return
+  if (!msg.isSelf) return
+  if (!canRecall(msg)) return
   contextMenuTarget = msg
   contextMenu.value = {
     visible: true,
@@ -209,7 +214,8 @@ async function fetchMessages() {
       messages.value = res.data.data.map((msg: any) => ({
         ...msg,
         isSelf: msg.senderId === myId,
-        createTime: formatTime(msg.createTime)
+        createTime: formatTime(msg.createTime),
+        rawTime: msg.createTime,
       })).reverse()
       await nextTick()
       scrollToBottom()
@@ -235,7 +241,8 @@ function connectWebSocket() {
         messages.value.push({
           ...data,
           isSelf: data.senderId === myId,
-          createTime: formatTime(data.createTime)
+          createTime: formatTime(data.createTime),
+          rawTime: data.createTime,
         })
         nextTick(() => scrollToBottom())
       })
@@ -278,6 +285,13 @@ function resolveUrl(url: string): string {
 function previewImage(url: string) {
   imagePreviewUrl.value = url
   showPreview.value = true
+}
+
+function canRecall(msg: any): boolean {
+  if (!msg.rawTime) return false
+  const msgTime = new Date(msg.rawTime).getTime()
+  const now = Date.now()
+  return (now - msgTime) <= 2 * 60 * 1000 // 2 minutes
 }
 
 async function uploadAndSendMedia(file: File, endpoint: string, msgType: number) {

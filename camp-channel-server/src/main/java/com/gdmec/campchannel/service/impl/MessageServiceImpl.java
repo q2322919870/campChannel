@@ -101,6 +101,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                         .and(w -> w.eq("sender_id", userId).eq("receiver_id", friendId))
                         .or(w -> w.eq("sender_id", friendId).eq("receiver_id", userId))
                 )
+                .ne("status", 5) // 过滤已撤回的消息
                 .orderByDesc("create_time");
 
         int offset = (page - 1) * size;
@@ -108,11 +109,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
         List<Message> messages = list(queryWrapper);
 
-        // Mark messages from friend as read
+        // Mark messages from friend as read (but don't override recalled status)
         for (Message msg : messages) {
             if (msg.getReceiverId().equals(userId) && (msg.getIsRead() == null || msg.getIsRead() == 0)) {
                 msg.setIsRead(1);
-                msg.setStatus(3); // 3=已读
+                // Only update status if not recalled (status 5)
+                if (msg.getStatus() != 5) {
+                    msg.setStatus(3); // 3=已读
+                }
                 msg.setReadTime(LocalDateTime.now());
                 msg.setReadAt(LocalDateTime.now());
                 updateById(msg);
@@ -141,14 +145,58 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             }
         }
 
-        message.setStatus(2);
-        updateById(message);
+        // Use update wrapper to only update status field
+        com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<Message> updateWrapper = 
+            new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+        updateWrapper.eq("id", messageId)
+                .set("status", 5)
+                .set("is_read", 1);
+        update(updateWrapper);
+        
+        log.info("Message recalled: id={}, senderId={}, receiverId={}", messageId, message.getSenderId(), message.getReceiverId());
+
+        // Push recall notification to both sender and receiver via WebSocket
+        try {
+            Map<String, Object> recallMsg = new HashMap<>();
+            recallMsg.put("id", message.getId());
+            recallMsg.put("senderId", message.getSenderId());
+            recallMsg.put("receiverId", message.getReceiverId());
+            recallMsg.put("content", message.getContent());
+            recallMsg.put("type", message.getType());
+            recallMsg.put("status", 5); // 5=已撤回
+            recallMsg.put("isRead", 1);
+            recallMsg.put("createTime", message.getCreateTime());
+            User sender = userMapper.selectById(message.getSenderId());
+            if (sender != null) {
+                recallMsg.put("username", sender.getUsername());
+                recallMsg.put("avatar", sender.getAvatar());
+            }
+            
+            // Push to sender (for their own UI update)
+            log.info("Pushing recall to sender: {}", message.getSenderId());
+            messagingTemplate.convertAndSendToUser(
+                    message.getSenderId().toString(), "/queue/messages", recallMsg);
+            recallMsg.put("type", "new_message");
+            RawWebSocketHandler.pushToUser(message.getSenderId(), recallMsg);
+            
+            // Push to receiver (for their UI update)
+            recallMsg.remove("type");
+            Long otherId = message.getReceiverId();
+            log.info("Pushing recall to receiver: {}", otherId);
+            messagingTemplate.convertAndSendToUser(
+                    otherId.toString(), "/queue/messages", recallMsg);
+            recallMsg.put("type", "new_message");
+            RawWebSocketHandler.pushToUser(otherId, recallMsg);
+        } catch (Exception e) {
+            log.warn("Failed to push recall notification via WebSocket: {}", e.getMessage());
+        }
     }
 
     @Override
     public List<Message> getConversations(Long userId) {
         List<Message> allMessages = list(new QueryWrapper<Message>()
                 .and(w -> w.eq("sender_id", userId).or().eq("receiver_id", userId))
+                .ne("status", 5) // 过滤已撤回的消息
                 .orderByDesc("create_time"));
 
         Map<Long, Message> conversationMap = new HashMap<>();
