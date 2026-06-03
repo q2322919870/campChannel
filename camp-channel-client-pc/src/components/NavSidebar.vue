@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <nav class="sidebar">
     <div class="sidebar-inner">
       <div class="nav-items">
@@ -147,7 +147,9 @@ function isActive(path: string): boolean {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 0;
+  padding: 16px 0 16px 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .sidebar-inner {
