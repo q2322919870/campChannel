@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface GalleryService extends IService<Gallery> {
 
-    Gallery addGallery(Long userId, String imageUrl, String title, String description, Long channelId);
+    Gallery addGallery(Long userId, String imageUrl, String videoUrl, Integer mediaType, String title, String description, Long channelId);
 
     List<Gallery> getGalleryList(int page, int size, Long channelId);
 

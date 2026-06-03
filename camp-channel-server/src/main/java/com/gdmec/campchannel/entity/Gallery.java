@@ -19,6 +19,13 @@ public class Gallery {
 
     private String imageUrl;
 
+    /**
+     * 媒体类型: 1-图片, 2-视频
+     */
+    private Integer mediaType;
+
+    private String videoUrl;
+
     private String title;
 
     private String description;

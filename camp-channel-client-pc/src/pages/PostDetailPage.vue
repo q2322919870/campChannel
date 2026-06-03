@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<template>
+﻿﻿﻿﻿﻿﻿﻿<template>
   <div class="post-detail">
     <div class="post-main">
       <div class="post-card">
@@ -16,6 +16,12 @@
         </div>
         <h1 class="post-title">{{ post.title }}</h1>
         <p class="post-content">{{ post.content }}</p>
+        <div v-if="post.images && post.images.length" class="post-images">
+          <img v-for="(img, i) in post.images" :key="i" :src="img" />
+        </div>
+        <div v-if="post.videoUrls && post.videoUrls.length" class="post-videos">
+          <video v-for="(vid, i) in post.videoUrls" :key="i" :src="vid" class="post-video" controls />
+        </div>
         <div v-if="post.editCount > 0" class="edited-tag">(已编辑)</div>
         <div v-if="post.isPinned" class="pin-indicator">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
@@ -129,6 +135,9 @@ async function fetchPost() {
         time: postData.createTime || '',
         images: postData.images ? (typeof postData.images === 'string' ? JSON.parse(postData.images) : postData.images).map((url: string) => 
           url.startsWith('http') || url.startsWith('/') ? url : '/uploads/images/' + url
+        ) : [],
+        videoUrls: postData.videoUrls ? (typeof postData.videoUrls === 'string' ? JSON.parse(postData.videoUrls) : postData.videoUrls).map((url: string) => 
+          url.startsWith('http') || url.startsWith('/') ? url : '/uploads/videos/' + url
         ) : [],
       }
     }
@@ -308,6 +317,10 @@ onMounted(() => {
 .role-badge.role-member { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.5); }
 .post-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
 .post-content { font-size: 15px; line-height: 1.8; color: var(--on-surface-variant); margin-bottom: 20px; }
+.post-images { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.post-images img { max-width: 200px; max-height: 200px; border-radius: 12px; object-fit: cover; }
+.post-videos { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.post-video { width: 100%; max-width: 600px; border-radius: 12px; background: #000; }
 .edited-tag { font-size: 12px; color: var(--on-surface-variant); opacity: 0.5; font-style: italic; margin-bottom: 12px; }
 .pin-indicator { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(240, 173, 78, 0.1); border: 1px solid rgba(240, 173, 78, 0.3); border-radius: 10px; color: #f0ad4e; font-size: 13px; font-weight: 500; margin-bottom: 16px; }
 .post-actions { display: flex; gap: 8px; border-top: 1px solid var(--outline-variant); padding-top: 16px; }

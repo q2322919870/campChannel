@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="create-post-page">
     <div class="create-post-card">
       <h1 class="page-title">{{ isEditMode ? '编辑帖子' : '发布帖子' }}</h1>
@@ -27,17 +27,20 @@
         </div>
 
         <div class="form-group">
-          <label>图片（选填，最多9张）</label>
-          <div class="image-upload-area">
-            <div v-for="(url, i) in images" :key="i" class="image-preview">
-              <img :src="url" />
-              <button type="button" class="remove-img" @click="images.splice(i, 1)">×</button>
+          <label>图片和视频（选填，最多9个）</label>
+          <div class="media-upload-area">
+            <div v-for="(item, i) in mediaItems" :key="i" class="media-preview">
+              <img v-if="item.type === 'image'" :src="item.url" />
+              <video v-else :src="item.url" class="video-preview" />
+              <span class="media-type-badge">{{ item.type === 'image' ? '图' : '视频' }}</span>
+              <button type="button" class="remove-media" @click="mediaItems.splice(i, 1)">×</button>
             </div>
-            <label v-if="images.length < 9" class="upload-btn">
-              <input type="file" accept="image/*" multiple @change="handleImageUpload" hidden />
+            <label v-if="mediaItems.length < 9" class="upload-btn">
+              <input type="file" accept="image/*,video/*" multiple @change="handleMediaUpload" hidden />
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </label>
           </div>
+          <span class="media-count">{{ mediaItems.length }}/9</span>
         </div>
 
         <div class="form-group">
@@ -72,6 +75,11 @@ import { useRouter, useRoute } from 'vue-router'
 import { api } from '../api/client'
 import { useAuthStore } from '../stores/auth'
 
+interface MediaItem {
+  type: 'image' | 'video'
+  url: string
+}
+
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
@@ -81,7 +89,7 @@ const isEditMode = computed(() => !!editId.value)
 const channels = ref<any[]>([])
 const channelId = ref('')
 const content = ref('')
-const images = ref<string[]>([])
+const mediaItems = ref<MediaItem[]>([])
 const topic = ref('')
 const mentionInput = ref('')
 const loading = ref(false)
@@ -97,20 +105,36 @@ async function fetchChannels() {
   } catch (e) {}
 }
 
-async function handleImageUpload(e: Event) {
+async function handleMediaUpload(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files?.length) return
   for (const file of Array.from(input.files)) {
+    if (mediaItems.value.length >= 9) break
+
+    const isVideo = file.type.startsWith('video/')
+    if (isVideo && file.size > 5 * 1024 * 1024) {
+      error.value = `视频 ${file.name} 超过5MB限制`
+      continue
+    }
+
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await api.post('/upload/image', formData, {
+      const endpoint = isVideo ? '/upload/video' : '/upload/image'
+      const res = await api.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       if (res.data.code === 200 && res.data.data?.url) {
-        if (images.value.length < 9) images.value.push(res.data.data.url)
+        if (mediaItems.value.length < 9) {
+          mediaItems.value.push({
+            type: isVideo ? 'video' : 'image',
+            url: res.data.data.url
+          })
+        }
       }
-    } catch (e) {}
+    } catch (e: any) {
+      error.value = e.response?.data?.message || `${isVideo ? '视频' : '图片'}上传失败`
+    }
   }
   input.value = ''
 }
@@ -127,19 +151,24 @@ async function handleSubmit() {
   if (mentionInput.value.trim()) {
     finalContent += ' ' + mentionInput.value.trim()
   }
+
+  const images = mediaItems.value.filter(m => m.type === 'image').map(m => m.url)
+  const videoUrls = mediaItems.value.filter(m => m.type === 'video').map(m => m.url)
+
   try {
     let res
     if (isEditMode.value) {
       res = await api.put(`/posts/${editId.value}`, {
         content: finalContent,
-        images: images.value.length > 0 ? images.value : null,
+        images: images.length > 0 ? images : null,
+        videoUrls: videoUrls.length > 0 ? videoUrls : null,
       })
     } else {
       res = await api.post('/posts', {
         channelId: Number(channelId.value),
         content: finalContent,
-        images: images.value.length > 0 ? images.value : null,
-        videoUrl: null,
+        images: images.length > 0 ? images : null,
+        videoUrls: videoUrls.length > 0 ? videoUrls : null,
       })
     }
     if (res.data.code === 200) {
@@ -157,7 +186,6 @@ async function handleSubmit() {
 onMounted(async () => {
   await fetchChannels()
   if (isEditMode.value) {
-    // Load post data for editing
     try {
       const res = await api.get(`/posts/${editId.value}`)
       if (res.data.code === 200 && res.data.data) {
@@ -169,9 +197,25 @@ onMounted(async () => {
           try {
             const imgs = typeof p.images === 'string' ? JSON.parse(p.images) : p.images
             if (Array.isArray(imgs)) {
-              images.value = imgs.map((url: string) =>
-                url.startsWith('http') || url.startsWith('/') ? url : '/uploads/images/' + url
-              )
+              imgs.forEach((url: string) => {
+                mediaItems.value.push({
+                  type: 'image',
+                  url: url.startsWith('http') || url.startsWith('/') ? url : '/uploads/images/' + url
+                })
+              })
+            }
+          } catch (_) {}
+        }
+        if (p.videoUrls) {
+          try {
+            const vids = typeof p.videoUrls === 'string' ? JSON.parse(p.videoUrls) : p.videoUrls
+            if (Array.isArray(vids)) {
+              vids.forEach((url: string) => {
+                mediaItems.value.push({
+                  type: 'video',
+                  url: url.startsWith('http') || url.startsWith('/') ? url : '/uploads/videos/' + url
+                })
+              })
             }
           } catch (_) {}
         }
@@ -188,7 +232,7 @@ async function saveDraft() {
     const res = await api.post('/drafts', {
       channelId: channelId.value ? Number(channelId.value) : null,
       content: content.value.trim(),
-      images: images.value.length > 0 ? images.value.join(',') : null,
+      images: mediaItems.value.length > 0 ? mediaItems.value.map(m => m.url).join(',') : null,
       topic: topic.value.trim() || null,
     })
     if (res.data.code === 200) {
@@ -223,11 +267,12 @@ async function saveDraft() {
 }
 .form-group select:focus, .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); }
 .form-group textarea { resize: vertical; min-height: 120px; }
-.char-count { text-align: right; font-size: 12px; color: var(--on-surface-variant); }
-.image-upload-area { display: flex; flex-wrap: wrap; gap: 8px; }
-.image-preview { position: relative; width: 80px; height: 80px; border-radius: 10px; overflow: hidden; }
-.image-preview img { width: 100%; height: 100%; object-fit: cover; }
-.remove-img { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.char-count, .media-count { text-align: right; font-size: 12px; color: var(--on-surface-variant); }
+.media-upload-area { display: flex; flex-wrap: wrap; gap: 8px; }
+.media-preview { position: relative; width: 80px; height: 80px; border-radius: 10px; overflow: hidden; }
+.media-preview img, .media-preview .video-preview { width: 100%; height: 100%; object-fit: cover; }
+.media-type-badge { position: absolute; bottom: 2px; left: 2px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 4px; }
+.remove-media { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .upload-btn { width: 80px; height: 80px; border: 2px dashed var(--outline-variant); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--on-surface-variant); transition: all 0.2s; }
 .upload-btn:hover { border-color: var(--primary); color: var(--primary); }
 .error-msg { color: #ff6b6b; font-size: 13px; }

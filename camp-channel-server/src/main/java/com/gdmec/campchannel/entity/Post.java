@@ -25,6 +25,8 @@ public class Post {
 
     private String videoUrl;
 
+    private String videoUrls;
+
     private String topic;
 
     private String mentionedUsers;

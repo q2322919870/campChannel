@@ -10,7 +10,7 @@ public interface PostService extends IService<Post> {
     /**
      * 发布帖子（含限流风控与敏感词过滤）
      */
-    Post createPost(Long channelId, Long userId, String content, List<String> images, String videoUrl, boolean isAnonymous);
+    Post createPost(Long channelId, Long userId, String content, List<String> images, List<String> videoUrls, boolean isAnonymous);
 
     /**
      * 获取频道帖子流（按时间倒序分页）
@@ -45,7 +45,7 @@ public interface PostService extends IService<Post> {
     /**
      * 编辑帖子
      */
-    void updatePost(Long postId, Long userId, String content, List<String> images, String videoUrl);
+    void updatePost(Long postId, Long userId, String content, List<String> images, List<String> videoUrls);
 
     /**
      * 置顶/取消置顶帖子

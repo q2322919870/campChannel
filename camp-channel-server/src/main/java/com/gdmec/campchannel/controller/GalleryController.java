@@ -28,7 +28,7 @@ public class GalleryController {
     @Operation(summary = "添加画作")
     public Result<Gallery> addGallery(@RequestBody AddGalleryRequest request,
                                        @AuthenticationPrincipal SecurityUser currentUser) {
-        Gallery g = galleryService.addGallery(currentUser.getId(), request.getImageUrl(), request.getTitle(), request.getDescription(), request.getChannelId());
+        Gallery g = galleryService.addGallery(currentUser.getId(), request.getImageUrl(), request.getVideoUrl(), request.getMediaType(), request.getTitle(), request.getDescription(), request.getChannelId());
         return Result.success("添加成功", g);
     }
 
@@ -147,6 +147,8 @@ public class GalleryController {
     @Data
     public static class AddGalleryRequest {
         private String imageUrl;
+        private String videoUrl;
+        private Integer mediaType;
         private String title;
         private String description;
         private Long channelId;

@@ -57,9 +57,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Post createPost(Long channelId, Long userId, String content, List<String> images, String videoUrl, boolean isAnonymous) {
+    public Post createPost(Long channelId, Long userId, String content, List<String> images, List<String> videoUrls, boolean isAnonymous) {
         if (!StringUtils.hasText(content)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "帖子内容不能为空");
+        }
+
+        // 验证媒体总数不超过9个
+        int imageCount = images != null ? images.size() : 0;
+        int videoCount = videoUrls != null ? videoUrls.size() : 0;
+        if (imageCount + videoCount > 9) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "图片和视频总数不能超过9个");
         }
 
         // Rate limiting with fallback
@@ -99,7 +106,16 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             }
         }
         
-        post.setVideoUrl(videoUrl);
+        // Serialize video URLs safely
+        if (videoUrls != null && !videoUrls.isEmpty()) {
+            try {
+                post.setVideoUrls(objectMapper.writeValueAsString(videoUrls));
+            } catch (JsonProcessingException e) {
+                log.error("视频数据序列化失败: {}", e.getMessage());
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "视频数据序列化失败");
+            }
+        }
+        
         post.setIsAnonymous(isAnonymous);
         
         // 树洞告白设置24小时过期时间
@@ -172,14 +188,24 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             queryWrapper.last("LIMIT " + offset + ", " + size);
             
             List<Post> posts = list(queryWrapper);
+            
+            // 空值检查
+            if (posts == null || posts.isEmpty()) {
+                log.info("频道 {} 没有帖子", channelId);
+                return new java.util.ArrayList<>();
+            }
 
             // 附加用户在频道中的角色信息
             List<ChannelMember> members = channelMemberMapper.selectList(
                     new QueryWrapper<ChannelMember>()
                             .eq("channel_id", channelId)
                             .eq("status", 1));
-            Map<Long, String> userRoleMap = members.stream()
-                    .collect(Collectors.toMap(ChannelMember::getUserId, ChannelMember::getRole, (a, b) -> a));
+            
+            Map<Long, String> userRoleMap = new java.util.HashMap<>();
+            if (members != null && !members.isEmpty()) {
+                userRoleMap = members.stream()
+                        .collect(Collectors.toMap(ChannelMember::getUserId, ChannelMember::getRole, (a, b) -> a));
+            }
 
             for (Post post : posts) {
                 String role = userRoleMap.get(post.getUserId());
@@ -196,7 +222,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                             new QueryWrapper<PostLike>()
                                     .in("post_id", postIds)
                                     .eq("user_id", currentUserId));
-                    Set<Long> likedPostIds = likes.stream().map(PostLike::getPostId).collect(Collectors.toSet());
+                    Set<Long> likedPostIds = likes != null ? 
+                            likes.stream().map(PostLike::getPostId).collect(Collectors.toSet()) : 
+                            new java.util.HashSet<>();
                     for (Post post : posts) {
                         post.setIsLiked(likedPostIds.contains(post.getId()));
                     }
@@ -316,7 +344,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updatePost(Long postId, Long userId, String content, List<String> images, String videoUrl) {
+    public void updatePost(Long postId, Long userId, String content, List<String> images, List<String> videoUrls) {
         Post post = getById(postId);
         if (post == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "帖子不存在");
@@ -328,6 +356,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         if (post.getStatus() == 2) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "已删除的帖子无法编辑");
+        }
+
+        // 验证媒体总数不超过9个
+        int imageCount = images != null ? images.size() : 0;
+        int videoCount = videoUrls != null ? videoUrls.size() : 0;
+        if (imageCount + videoCount > 9) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "图片和视频总数不能超过9个");
         }
 
         if (StringUtils.hasText(content)) {
@@ -349,8 +384,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             }
         }
 
-        if (videoUrl != null) {
-            post.setVideoUrl(videoUrl);
+        if (videoUrls != null) {
+            try {
+                post.setVideoUrls(objectMapper.writeValueAsString(videoUrls));
+            } catch (JsonProcessingException e) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "视频数据序列化失败");
+            }
         }
 
         // Track edit count and last edit time

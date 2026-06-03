@@ -255,11 +255,14 @@ Authorization: Bearer <token>
 {
   "channelId": 1,
   "content": "帖子内容",
-  "images": ["url1", "url2"],
-  "videoUrl": "视频URL（可选）",
+  "images": ["图片URL1", "图片URL2"],
+  "videoUrls": ["视频URL1", "视频URL2"],
   "isAnonymous": false
 }
 ```
+**说明：**
+- `images` 和 `videoUrls` 可以混合使用，总数不能超过9个
+- 视频文件大小不能超过5MB
 
 ### 3.4 获取频道帖子
 ```
@@ -327,11 +330,14 @@ Authorization: Bearer <token>
 ```json
 {
   "content": "更新后的内容",
-  "images": ["url1"],
-  "videoUrl": "视频URL（可选）"
+  "images": ["图片URL1"],
+  "videoUrls": ["视频URL1"]
 }
 ```
-**说明：** 仅作者可编辑，会自动递增 `editCount` 并记录 `lastEditTime`
+**说明：**
+- 仅作者可编辑，会自动递增 `editCount` 并记录 `lastEditTime`
+- `images` 和 `videoUrls` 可以混合使用，总数不能超过9个
+- 视频文件大小不能超过5MB
 
 ### 3.15 置顶/取消置顶帖子
 ```
@@ -672,12 +678,19 @@ Authorization: Bearer <token>
 **请求体：**
 ```json
 {
-  "imageUrl": "画作URL",
+  "imageUrl": "图片URL",
+  "videoUrl": "视频URL",
+  "mediaType": 1,
   "title": "画作标题",
   "description": "画作描述",
   "channelId": 1
 }
 ```
+**说明：**
+- `mediaType`: 1-图片, 2-视频
+- 发布视频时，`videoUrl` 必填，`imageUrl` 可为空
+- 发布图片时，`imageUrl` 必填，`videoUrl` 可为空
+- 视频文件大小不能超过5MB
 
 ### 8.2 获取画廊列表
 ```
@@ -993,6 +1006,21 @@ POST /api/upload/video
 Authorization: Bearer <token>
 Content-Type: multipart/form-data
 ```
+**表单字段：** `file`
+
+**响应：**
+```json
+{
+  "code": 200,
+  "data": {
+    "url": "/uploads/videos/xxx.mp4"
+  }
+}
+```
+**说明：**
+- 视频文件大小不能超过5MB
+- 支持自动去重（基于文件哈希）
+- 如果FFmpeg可用，会自动压缩视频
 
 ---
 

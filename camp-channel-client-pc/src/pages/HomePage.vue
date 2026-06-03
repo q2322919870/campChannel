@@ -64,7 +64,12 @@
         <h3 class="post-title">{{ post.title }}</h3>
         <p class="post-content">{{ post.content }}</p>
         <div v-if="post.images && post.images.length" class="post-images">
-          <img v-for="(img, i) in post.images.slice(0, 3)" :key="i" :src="img" @click.stop />
+          <template v-for="(img, i) in post.images.slice(0, 3)" :key="'img-' + i">
+            <img :src="img" @click.stop />
+          </template>
+        </div>
+        <div v-if="post.videoUrls && post.videoUrls.length" class="post-videos">
+          <video v-for="(vid, i) in post.videoUrls.slice(0, 1)" :key="'vid-' + i" :src="vid" class="post-video" controls @click.stop />
         </div>
         <div class="post-actions">
           <button class="action-btn" :class="{ liked: post.isLiked }" @click.stop="toggleLike(post, $event)">
@@ -247,6 +252,9 @@ async function fetchPosts(channelId?: number) {
         commentCount: p.commentCount || 0,
         images: p.images ? (typeof p.images === 'string' ? JSON.parse(p.images) : p.images).map((url: string) => 
           url.startsWith('http') || url.startsWith('/') ? url : '/uploads/images/' + url
+        ) : [],
+        videoUrls: p.videoUrls ? (typeof p.videoUrls === 'string' ? JSON.parse(p.videoUrls) : p.videoUrls).map((url: string) => 
+          url.startsWith('http') || url.startsWith('/') ? url : '/uploads/videos/' + url
         ) : [],
       }))
       console.log('[HomePage] 帖子数据已更新:', posts.value.length)
@@ -484,6 +492,8 @@ onUnmounted(() => {
 .post-content { font-size: 14px; color: var(--on-surface-variant); line-height: 1.6; margin-bottom: 12px; }
 .post-images { display: flex; gap: 8px; margin-bottom: 12px; }
 .post-images img { width: 120px; height: 80px; border-radius: 8px; object-fit: cover; }
+.post-videos { display: flex; gap: 8px; margin-bottom: 12px; }
+.post-video { width: 100%; max-width: 400px; height: 225px; border-radius: 8px; object-fit: cover; background: #000; }
 .post-actions { display: flex; gap: 16px; }
 .action-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--on-surface-variant); font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: all 0.2s; }
 .action-btn:hover { background: var(--surface); color: var(--on-surface); }

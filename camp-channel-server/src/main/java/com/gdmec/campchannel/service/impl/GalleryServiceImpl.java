@@ -43,10 +43,12 @@ public class GalleryServiceImpl extends ServiceImpl<GalleryMapper, Gallery> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Gallery addGallery(Long userId, String imageUrl, String title, String description, Long channelId) {
+    public Gallery addGallery(Long userId, String imageUrl, String videoUrl, Integer mediaType, String title, String description, Long channelId) {
         Gallery gallery = new Gallery();
         gallery.setUserId(userId);
         gallery.setImageUrl(imageUrl);
+        gallery.setVideoUrl(videoUrl);
+        gallery.setMediaType(mediaType != null ? mediaType : 1);
         gallery.setTitle(title);
         gallery.setDescription(description);
         gallery.setChannelId(channelId);

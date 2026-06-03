@@ -191,7 +191,7 @@ public class PostController {
                 currentUser.getId(),
                 request.getContent(),
                 request.getImages(),
-                request.getVideoUrl(),
+                request.getVideoUrls(),
                 request.getIsAnonymous() != null ? request.getIsAnonymous() : false
         );
         return Result.success("发布成功", post);
@@ -258,7 +258,7 @@ public class PostController {
             @AuthenticationPrincipal SecurityUser currentUser) {
 
         postService.updatePost(postId, currentUser.getId(), request.getContent(),
-                request.getImages(), request.getVideoUrl());
+                request.getImages(), request.getVideoUrls());
         return Result.success("帖子已更新", null);
     }
     
@@ -405,7 +405,7 @@ public class PostController {
         private Long channelId;
         private String content;
         private List<String> images;
-        private String videoUrl;
+        private List<String> videoUrls;
         private Boolean isAnonymous;
     }
 }
