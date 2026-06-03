@@ -161,48 +161,53 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public List<Post> getChannelPosts(Long channelId, int page, int size, Long currentUserId) {
-        QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("channel_id", channelId)
-                .eq("status", 1)
-                .orderByDesc("is_pinned")  // Pinned posts first
-                .orderByDesc("create_time");
-        
-        int offset = (page - 1) * size;
-        queryWrapper.last("LIMIT " + offset + ", " + size);
-        
-        List<Post> posts = list(queryWrapper);
+        try {
+            QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("channel_id", channelId)
+                    .eq("status", 1)
+                    .orderByDesc("is_pinned")  // Pinned posts first
+                    .orderByDesc("create_time");
+            
+            int offset = (page - 1) * size;
+            queryWrapper.last("LIMIT " + offset + ", " + size);
+            
+            List<Post> posts = list(queryWrapper);
 
-        // 附加用户在频道中的角色信息
-        List<ChannelMember> members = channelMemberMapper.selectList(
-                new QueryWrapper<ChannelMember>()
-                        .eq("channel_id", channelId)
-                        .eq("status", 1));
-        Map<Long, String> userRoleMap = members.stream()
-                .collect(Collectors.toMap(ChannelMember::getUserId, ChannelMember::getRole, (a, b) -> a));
+            // 附加用户在频道中的角色信息
+            List<ChannelMember> members = channelMemberMapper.selectList(
+                    new QueryWrapper<ChannelMember>()
+                            .eq("channel_id", channelId)
+                            .eq("status", 1));
+            Map<Long, String> userRoleMap = members.stream()
+                    .collect(Collectors.toMap(ChannelMember::getUserId, ChannelMember::getRole, (a, b) -> a));
 
-        for (Post post : posts) {
-            String role = userRoleMap.get(post.getUserId());
-            if (role == null) role = "member";
-            post.setUserChannelRole(role);
-        }
-        batchPopulateUserInfo(posts);
+            for (Post post : posts) {
+                String role = userRoleMap.get(post.getUserId());
+                if (role == null) role = "member";
+                post.setUserChannelRole(role);
+            }
+            batchPopulateUserInfo(posts);
 
-        // 填充当前用户点赞状态
-        if (currentUserId != null) {
-            List<Long> postIds = posts.stream().map(Post::getId).toList();
-            if (!postIds.isEmpty()) {
-                List<PostLike> likes = postLikeMapper.selectList(
-                        new QueryWrapper<PostLike>()
-                                .in("post_id", postIds)
-                                .eq("user_id", currentUserId));
-                Set<Long> likedPostIds = likes.stream().map(PostLike::getPostId).collect(Collectors.toSet());
-                for (Post post : posts) {
-                    post.setIsLiked(likedPostIds.contains(post.getId()));
+            // 填充当前用户点赞状态
+            if (currentUserId != null && !posts.isEmpty()) {
+                List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+                if (!postIds.isEmpty()) {
+                    List<PostLike> likes = postLikeMapper.selectList(
+                            new QueryWrapper<PostLike>()
+                                    .in("post_id", postIds)
+                                    .eq("user_id", currentUserId));
+                    Set<Long> likedPostIds = likes.stream().map(PostLike::getPostId).collect(Collectors.toSet());
+                    for (Post post : posts) {
+                        post.setIsLiked(likedPostIds.contains(post.getId()));
+                    }
                 }
             }
-        }
 
-        return posts;
+            return posts;
+        } catch (Exception e) {
+            log.error("获取频道帖子失败: channelId={}, error={}", channelId, e.getMessage(), e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取频道帖子失败");
+        }
     }
 
     @Override
