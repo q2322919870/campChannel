@@ -28,9 +28,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { api } from '../api/client'
 
-interface Notif { id: number; type: string; title: string; content: string; time: string; isRead: boolean }
+const router = useRouter()
+
+interface Notif { id: number; type: string; title: string; content: string; time: string; isRead: boolean; relatedId?: string }
 const notifications = ref<Notif[]>([])
 const hasUnread = computed(() => notifications.value.some(n => !n.isRead))
 
@@ -45,6 +48,7 @@ async function fetchNotifications() {
         content: n.content || '',
         time: n.createTime || '',
         isRead: n.isRead === 1,
+        relatedId: n.relatedId || undefined,
       }))
     }
   } catch (e) {}
@@ -58,11 +62,16 @@ async function markAllRead() {
 }
 
 async function markRead(notif: Notif) {
-  if (notif.isRead) return
-  try {
-    await api.post(`/notifications/${notif.id}/read`)
-    notif.isRead = true
-  } catch (e) {}
+  if (!notif.isRead) {
+    try {
+      await api.post(`/notifications/${notif.id}/read`)
+      notif.isRead = true
+    } catch (e) {}
+  }
+  // Navigate to related post for mention/comment/like
+  if (notif.relatedId && ['mention', 'comment', 'like'].includes(notif.type)) {
+    router.push({ name: 'PostDetail', params: { id: notif.relatedId } })
+  }
 }
 
 function getIconBg(type: string) {
@@ -70,10 +79,24 @@ function getIconBg(type: string) {
     friend_request: 'linear-gradient(135deg, #4A9BD9, #F5C6D0)',
     like: 'linear-gradient(135deg, #FF7F7F, #F2B5D4)',
     comment: 'linear-gradient(135deg, #6BCB9E, #F4A460)',
+    mention: 'linear-gradient(135deg, #7C3AED, #A78BFA)',
     system: 'linear-gradient(135deg, #7C9FCB, #CBA6F7)',
     friend_approved: 'linear-gradient(135deg, #4ADE80, #6BCB9E)',
+    channel: 'linear-gradient(135deg, #0D9488, #5EEAD4)',
   }
   return colors[type] || colors.system
+}
+
+function getIconSvg(type: string): string {
+  const icons: Record<string, string> = {
+    like: '<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>',
+    comment: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    mention: '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>',
+    friend_request: '<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>',
+    friend_approved: '<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>',
+    channel: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  }
+  return icons[type] || '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'
 }
 
 onMounted(() => { fetchNotifications() })

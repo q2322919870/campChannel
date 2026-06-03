@@ -1,4 +1,4 @@
-﻿<template>
+﻿﻿﻿﻿<template>
   <div v-if="visible" class="preview-overlay" @click.self="$emit('close')">
     <div class="preview-card">
       <button class="close-btn" @click="$emit('close')">

@@ -4,20 +4,20 @@
       <h2>{{ channelName }}</h2>
       <div class="header-actions">
         <span class="member-count">{{ memberCount }} 位成员</span>
-        <button v-if="isAdmin" class="action-btn secondary" @click="showMembers = !showMembers">
-          {{ showMembers ? '关闭' : '成员管理' }}
+        <button class="action-btn secondary" @click="showMembers = !showMembers">
+          {{ showMembers ? '关闭' : '成员列表' }}
         </button>
       </div>
     </div>
 
-    <div v-if="showMembers && isAdmin" class="members-panel">
+    <div v-if="showMembers" class="members-panel">
       <div v-for="m in members" :key="m.userId" class="member-item">
         <span class="member-avatar">{{ (m.username || '?').charAt(0) }}</span>
         <span class="member-name">{{ m.username || '用户' }}</span>
         <span class="member-role" :data-role="m.role">{{ m.role === 'owner' ? '频道主' : m.role === 'admin' ? '管理员' : '成员' }}</span>
         <span v-if="m.isMuted" class="member-muted">已禁言</span>
         <button
-          v-if="m.userId !== authStore.user?.id && m.role !== 'owner'"
+          v-if="isAdmin && m.userId !== authStore.user?.id && m.role !== 'owner'"
           class="mute-btn"
           :class="{ muted: m.isMuted }"
           @click="toggleMute(m)"
@@ -37,6 +37,12 @@
           <div class="message-author" v-if="!msg.isSelf">{{ msg.username }}</div>
           <div v-if="msg.status === 2" class="message-recalled">
             {{ msg.isSelf ? '你撤回了一条消息' : `${msg.username} 撤回了一条消息` }}
+          </div>
+          <div v-else-if="msg.msgType === 2 && msg.mediaUrl" class="message-media">
+            <img :src="resolveUrl(msg.mediaUrl)" class="msg-image" @click="previewImage(resolveUrl(msg.mediaUrl))" />
+          </div>
+          <div v-else-if="msg.msgType === 3 && msg.mediaUrl" class="message-media">
+            <video :src="resolveUrl(msg.mediaUrl)" class="msg-video" controls preload="metadata"></video>
           </div>
           <div v-else>
             <div class="message-bubble">{{ msg.content }}</div>
@@ -65,7 +71,30 @@
       </div>
     </div>
 
+    <!-- Image Preview Overlay -->
+    <teleport to="body">
+      <div v-if="showPreview" class="image-preview-overlay" @click.self="showPreview = false">
+        <img :src="imagePreviewUrl" class="preview-image" />
+      </div>
+    </teleport>
+
     <div class="chat-input-bar">
+      <label class="attach-btn" title="发送图片">
+        <input type="file" accept="image/*" @change="handleImageUpload" hidden />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+      </label>
+      <label class="attach-btn" title="发送视频">
+        <input type="file" accept="video/*" @change="handleVideoUpload" hidden />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="23 7 16 12 23 17 23 7"></polygon>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+      </label>
+      <span v-if="isUploading" class="uploading-indicator">上传中...</span>
       <input v-model="chatInput" placeholder="输入消息..." @keyup.enter="sendMessage" />
       <button @click="sendMessage">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -96,6 +125,9 @@ const messagesRef = ref<HTMLElement>()
 const members = ref<any[]>([])
 const isAdmin = ref(false)
 const showMembers = ref(false)
+const isUploading = ref(false)
+const showPreview = ref(false)
+const imagePreviewUrl = ref('')
 
 let stompClient: Client | null = null
 let contextMenuTarget: any = null
@@ -235,6 +267,54 @@ function scrollToBottom() {
   if (messagesRef.value) {
     messagesRef.value.scrollTop = messagesRef.value.scrollHeight
   }
+}
+
+function resolveUrl(url: string): string {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  return `/api${url.startsWith('/') ? '' : '/'}${url}`
+}
+
+function previewImage(url: string) {
+  imagePreviewUrl.value = url
+  showPreview.value = true
+}
+
+async function uploadAndSendMedia(file: File, endpoint: string, msgType: number) {
+  isUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await api.post(endpoint, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    if (res.data.code === 200 && res.data.data?.url) {
+      const channelId = route.params.id
+      await api.post('/group-messages', {
+        channelId: Number(channelId),
+        content: msgType === 2 ? '[图片]' : '[视频]',
+        mediaUrl: res.data.data.url,
+        msgType: msgType,
+      })
+    }
+  } catch (e: any) {
+    alert(e.response?.data?.message || '发送失败')
+  }
+  isUploading.value = false
+}
+
+function handleImageUpload(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (!input.files?.length) return
+  uploadAndSendMedia(input.files[0], '/upload/image', 2)
+  input.value = ''
+}
+
+function handleVideoUpload(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (!input.files?.length) return
+  uploadAndSendMedia(input.files[0], '/upload/video', 3)
+  input.value = ''
 }
 
 async function sendMessage() {
@@ -381,6 +461,44 @@ onUnmounted(() => {
   font-size: 13px;
   color: var(--on-surface-variant);
   font-style: italic;
+}
+
+.message-media {
+  max-width: 240px;
+}
+
+.msg-image {
+  max-width: 100%;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.msg-image:hover {
+  transform: scale(1.02);
+}
+
+.msg-video {
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.image-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  cursor: pointer;
+}
+
+.preview-image {
+  max-width: 90%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .message-meta {
@@ -532,5 +650,35 @@ onUnmounted(() => {
 
 .action-btn.secondary:hover {
   border-color: var(--primary);
+}
+
+.attach-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--outline-variant);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.attach-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.uploading-indicator {
+  font-size: 12px;
+  color: var(--primary);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 </style>

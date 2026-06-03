@@ -420,6 +420,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   const BadgeShowcase(),
                   const SizedBox(height: 12),
                   _buildMenuItem(context, Icons.bookmark_outline, '我的收藏', () => Navigator.pushNamed(context, '/favourites')),
+                  _buildMenuItem(context, Icons.drafts_outlined, '我的草稿', () => Navigator.pushNamed(context, '/drafts')),
                   _buildMenuItem(context, Icons.person_outline, '好友列表', () => Navigator.pushNamed(context, '/friend_list')),
                   _buildMenuItem(context, Icons.devices, '设备管理', () => Navigator.pushNamed(context, '/device_management')),
                   const Divider(height: 1),

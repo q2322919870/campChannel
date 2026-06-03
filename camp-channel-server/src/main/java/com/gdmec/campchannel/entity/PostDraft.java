@@ -1,0 +1,38 @@
+package com.gdmec.campchannel.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
+@TableName("post_draft")
+public class PostDraft {
+
+    @TableId(type = IdType.AUTO)
+    private Long id;
+
+    private Long userId;
+
+    private Long channelId;
+
+    private String content;
+
+    private String images;
+
+    private String videoUrl;
+
+    private String topic;
+
+    private Boolean isAnonymous;
+
+    private LocalDateTime createTime;
+
+    private LocalDateTime updateTime;
+
+    @TableField(exist = false)
+    private String channelName;
+}

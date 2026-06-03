@@ -66,11 +66,50 @@ public class PostController {
 
         List<Post> posts = postService.list(queryWrapper);
 
+        // Batch populate user info and channel names (fix N+1)
+        // Collect non-anonymous user IDs
+        java.util.Set<Long> userIds = new java.util.HashSet<>();
+        java.util.Set<Long> channelIds2 = new java.util.HashSet<>();
         for (Post post : posts) {
-            maskAnonymousPost(post);
-            Channel channel = channelMapper.selectById(post.getChannelId());
-            if (channel != null) {
-                post.setChannelName(channel.getName());
+            if (!Boolean.TRUE.equals(post.getIsAnonymous())) {
+                userIds.add(post.getUserId());
+            }
+            if (post.getChannelId() != null) {
+                channelIds2.add(post.getChannelId());
+            }
+        }
+
+        // Batch fetch users
+        Map<Long, User> userMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<User> users = userMapper.selectBatchIds(new ArrayList<>(userIds));
+            userMap = users.stream().collect(Collectors.toMap(User::getId, u -> u, (a, b) -> a));
+        }
+
+        // Batch fetch channels
+        Map<Long, Channel> channelMap = new HashMap<>();
+        if (!channelIds2.isEmpty()) {
+            List<Channel> channels = channelMapper.selectBatchIds(new ArrayList<>(channelIds2));
+            channelMap = channels.stream().collect(Collectors.toMap(Channel::getId, c -> c, (a, b) -> a));
+        }
+
+        // Apply to posts
+        for (Post post : posts) {
+            if (Boolean.TRUE.equals(post.getIsAnonymous())) {
+                post.setUsername("匿名");
+                post.setAvatar(null);
+            } else {
+                User user = userMap.get(post.getUserId());
+                if (user != null) {
+                    post.setUsername(user.getUsername());
+                    post.setAvatar(user.getAvatar());
+                }
+            }
+            if (post.getChannelId() != null) {
+                Channel channel = channelMap.get(post.getChannelId());
+                if (channel != null) {
+                    post.setChannelName(channel.getName());
+                }
             }
         }
 

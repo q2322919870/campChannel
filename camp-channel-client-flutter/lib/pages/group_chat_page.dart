@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../core/network/api_client.dart';
 import '../core/services/storage_service.dart';
 import '../core/services/websocket_service.dart';
@@ -22,6 +25,8 @@ class _GroupChatPageState extends State<GroupChatPage> {
   List<Map<String, dynamic>> _members = [];
   bool _isAdmin = false;
   bool _showMembers = false;
+  final _picker = ImagePicker();
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -215,10 +220,9 @@ class _GroupChatPageState extends State<GroupChatPage> {
       appBar: AppBar(
         title: Text(_channelName),
         actions: [
-          if (_isAdmin)
-            IconButton(
+          IconButton(
               icon: Icon(_showMembers ? Icons.people : Icons.people_outline),
-              tooltip: '成员管理',
+              tooltip: '成员列表',
               onPressed: () => setState(() => _showMembers = !_showMembers),
             ),
         ],
@@ -227,7 +231,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
             ? const Center(child: CircularProgressIndicator())
             : Column(
               children: [
-                if (_showMembers && _isAdmin) _buildMembersPanel(context),
+                if (_showMembers) _buildMembersPanel(context),
                 Expanded(
                   child: ListView.builder(
                     reverse: true,
@@ -259,6 +263,8 @@ class _GroupChatPageState extends State<GroupChatPage> {
     final content = msg['content']?.toString() ?? '';
     final username = msg['username']?.toString() ?? '未知用户';
     final status = msg['status'] ?? 1;
+    final msgType = msg['msgType'] ?? 1;
+    final mediaUrl = msg['mediaUrl']?.toString() ?? '';
     final timeStr = msg['createTime']?.toString() ?? '';
 
     if (status == 2) {
@@ -272,6 +278,54 @@ class _GroupChatPageState extends State<GroupChatPage> {
               fontStyle: FontStyle.italic,
             ),
           ),
+        ),
+      );
+    }
+
+    Widget messageContent;
+    if (msgType == 2 && mediaUrl.isNotEmpty) {
+      // Image message
+      final fullUrl = ApiClient.processImageUrl(mediaUrl);
+      messageContent = GestureDetector(
+        onTap: () => _showImagePreview(context, fullUrl),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: CachedNetworkImage(
+            imageUrl: fullUrl,
+            width: 200,
+            height: 200,
+            fit: BoxFit.cover,
+            placeholder: (_, __) => Container(
+              width: 200, height: 200,
+              color: colorScheme.onSurface.withOpacity(0.1),
+              child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            errorWidget: (_, __, ___) => Container(
+              width: 200, height: 200,
+              color: colorScheme.onSurface.withOpacity(0.1),
+              child: const Icon(Icons.broken_image, size: 48),
+            ),
+          ),
+        ),
+      );
+    } else if (msgType == 3 && mediaUrl.isNotEmpty) {
+      // Video message
+      messageContent = Container(
+        width: 200, height: 150,
+        decoration: BoxDecoration(
+          color: colorScheme.onSurface.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Icon(Icons.play_circle_fill, size: 48, color: colorScheme.primary.withOpacity(0.8)),
+        ),
+      );
+    } else {
+      // Text message
+      messageContent = Text(
+        content,
+        style: TextStyle(
+          color: isMe ? Colors.white : colorScheme.onSurface,
         ),
       );
     }
@@ -302,7 +356,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                   ),
                 ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: msgType == 1 ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12) : const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: isMe ? colorScheme.primary : theme.cardColor,
                   borderRadius: BorderRadius.only(
@@ -312,12 +366,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                     bottomRight: Radius.circular(isMe ? 4 : 18),
                   ),
                 ),
-                child: Text(
-                  content,
-                  style: TextStyle(
-                    color: isMe ? Colors.white : colorScheme.onSurface,
-                  ),
-                ),
+                child: messageContent,
               ),
               if (timeStr.isNotEmpty)
                 Padding(
@@ -365,6 +414,25 @@ class _GroupChatPageState extends State<GroupChatPage> {
       ),
       child: Row(
         children: [
+          // Media attach button
+          InkWell(
+            onTap: _isUploading ? null : () => _showMediaPicker(context),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: colorScheme.primary.withOpacity(0.5)),
+              ),
+              child: _isUploading
+                  ? Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary),
+                    )
+                  : Icon(Icons.add, color: colorScheme.primary, size: 22),
+            ),
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: _messageController,
@@ -383,6 +451,98 @@ class _GroupChatPageState extends State<GroupChatPage> {
             onPressed: _sendMessage,
           ),
         ],
+      ),
+    );
+  }
+
+  void _showMediaPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.image),
+              title: const Text('发送图片'),
+              onTap: () { Navigator.pop(ctx); _pickAndSendImage(); },
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: const Text('发送视频'),
+              onTap: () { Navigator.pop(ctx); _pickAndSendVideo(); },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('拍照'),
+              onTap: () { Navigator.pop(ctx); _captureAndSendImage(); },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndSendImage() async {
+    try {
+      final xFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (xFile != null) await _uploadAndSendMedia(File(xFile.path), 2);
+    } catch (_) {}
+  }
+
+  Future<void> _captureAndSendImage() async {
+    try {
+      final xFile = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+      if (xFile != null) await _uploadAndSendMedia(File(xFile.path), 2);
+    } catch (_) {}
+  }
+
+  Future<void> _pickAndSendVideo() async {
+    try {
+      final xFile = await _picker.pickVideo(source: ImageSource.gallery);
+      if (xFile != null) await _uploadAndSendMedia(File(xFile.path), 3);
+    } catch (_) {}
+  }
+
+  Future<void> _uploadAndSendMedia(File file, int msgType) async {
+    if (!mounted) return;
+    setState(() => _isUploading = true);
+    try {
+      final endpoint = msgType == 2 ? '/upload/image' : '/upload/video';
+      final res = await _apiClient.uploadFile(endpoint, file);
+      final url = res.data['data']?['url']?.toString();
+      if (url != null && mounted) {
+        await _apiClient.post('/group-messages', data: {
+          'channelId': _channelId,
+          'content': msgType == 2 ? '[图片]' : '[视频]',
+          'mediaUrl': url,
+          'msgType': msgType,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('发送失败: $e'), backgroundColor: Theme.of(context).colorScheme.error),
+        );
+      }
+    }
+    if (mounted) setState(() => _isUploading = false);
+  }
+
+  void _showImagePreview(BuildContext context, String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(backgroundColor: Colors.black, iconTheme: const IconThemeData(color: Colors.white)),
+          body: Center(
+            child: InteractiveViewer(
+              minScale: 0.5, maxScale: 4.0,
+              child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.contain),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -475,7 +635,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                           : colorScheme.onSurface.withOpacity(0.5),
                     ),
                   ),
-                  trailing: userId == myUserId || isOwner
+                  trailing: !_isAdmin || userId == myUserId || isOwner
                       ? null
                       : IconButton(
                           icon: Icon(

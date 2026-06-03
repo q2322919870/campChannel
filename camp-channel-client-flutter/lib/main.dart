@@ -23,6 +23,7 @@ import 'pages/favourite_page.dart';
 import 'pages/group_chat_page.dart';
 import 'pages/search_page.dart';
 import 'pages/hot_posts_page.dart';
+import 'pages/draft_list_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -124,6 +125,7 @@ class _CampChannelAppState extends State<CampChannelApp> {
               '/group_chat': (context) => const GroupChatPage(),
               '/search': (context) => const SearchPage(),
               '/hot_posts': (context) => const HotPostsPage(),
+              '/drafts': (context) => const DraftListPage(),
             },
           );
         },

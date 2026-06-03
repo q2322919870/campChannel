@@ -112,12 +112,44 @@ class _NotificationPageState extends State<NotificationPage> {
                             icon = Icons.person_add;
                             iconColor = Colors.green;
                             break;
+                          case 'mention':
+                            icon = Icons.alternate_email;
+                            iconColor = Colors.deepPurple;
+                            break;
+                          case 'friend_request':
+                            icon = Icons.person_add_alt;
+                            iconColor = Colors.blue;
+                            break;
+                          case 'channel':
+                            icon = Icons.group;
+                            iconColor = Colors.teal;
+                            break;
+                          case 'system':
+                            icon = Icons.info_outline;
+                            iconColor = Colors.grey;
+                            break;
                           default:
                             icon = Icons.notifications;
                             iconColor = Colors.orange;
                         }
 
-                        return Container(
+                        final relatedId = notif['relatedId']?.toString();
+
+                        return GestureDetector(
+                          onTap: () async {
+                            // Mark as read on tap
+                            final notifId = notif['id'];
+                            if (notifId != null && isUnread) {
+                              try {
+                                await _apiClient.post('/notifications/$notifId/read');
+                              } catch (_) {}
+                            }
+                            // Navigate to related post if applicable
+                            if (relatedId != null && (type == 'mention' || type == 'comment' || type == 'like')) {
+                              Navigator.pushNamed(context, '/post_detail', arguments: {'id': int.tryParse(relatedId)});
+                            }
+                          },
+                          child: Container(
                           margin: const EdgeInsets.only(bottom: 10),
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
@@ -184,6 +216,7 @@ class _NotificationPageState extends State<NotificationPage> {
                               ),
                             ],
                           ),
+                        ),
                         );
                       },
                     ),

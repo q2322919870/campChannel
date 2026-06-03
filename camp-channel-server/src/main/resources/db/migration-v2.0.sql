@@ -51,3 +51,45 @@ ADD FULLTEXT INDEX `ft_post_search` (`content`, `topic`) WITH PARSER ngram;
 -- 检查索引是否创建成功
 -- SHOW INDEX FROM `post_favourite`;
 -- SHOW INDEX FROM `post`;
+
+-- ============================================
+-- 7. 创建帖子草稿表 (post_draft)
+-- ============================================
+CREATE TABLE IF NOT EXISTS `post_draft` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `channel_id` BIGINT COMMENT '频道ID（选填）',
+    `content` TEXT COMMENT '草稿内容',
+    `images` VARCHAR(2000) COMMENT '图片URL列表，逗号分隔',
+    `video_url` VARCHAR(500) COMMENT '视频URL',
+    `topic` VARCHAR(100) COMMENT '话题',
+    `is_anonymous` TINYINT DEFAULT 0 COMMENT '是否匿名: 0-否, 1-是',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_draft_user_id` (`user_id`),
+    INDEX `idx_draft_update_time` (`update_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='帖子草稿表';
+
+-- ============================================
+-- 8. 性能优化索引 (V2.0)
+-- ============================================
+
+-- 通知表: 用户未读通知复合索引
+ALTER TABLE `notification`
+ADD INDEX `idx_user_unread` (`user_id`, `is_read`, `create_time`);
+
+-- 消息表: 未读消息索引
+ALTER TABLE `message`
+ADD INDEX `idx_unread_msg` (`receiver_id`, `is_read`);
+
+-- 评论表: 帖子评论列表复合索引
+ALTER TABLE `comment`
+ADD INDEX `idx_post_comments` (`post_id`, `status`, `create_time`);
+
+-- 帖子表: 用户发帖查询索引
+ALTER TABLE `post`
+ADD INDEX `idx_user_posts` (`user_id`, `status`, `create_time`);
+
+-- 帖子表: 树洞匿名帖查询索引
+ALTER TABLE `post`
+ADD INDEX `idx_anonymous_posts` (`is_anonymous`, `status`, `create_time`);

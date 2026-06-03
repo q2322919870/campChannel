@@ -26,6 +26,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/channel/:id/group-chat', name: 'GroupChat', component: () => import('../pages/GroupChatPage.vue'), meta: { requiresAuth: true } },
   { path: '/search', name: 'Search', component: () => import('../pages/SearchPage.vue'), meta: { requiresAuth: true } },
   { path: '/hot-posts', name: 'HotPosts', component: () => import('../pages/HotPostsPage.vue'), meta: { requiresAuth: true } },
+  { path: '/drafts', name: 'Drafts', component: () => import('../pages/DraftsPage.vue'), meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

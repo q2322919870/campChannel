@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../core/network/api_client.dart';
 import '../core/services/storage_service.dart';
 import '../core/services/websocket_service.dart';
@@ -24,6 +27,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   StreamSubscription<Map<String, dynamic>>? _readSub;
   StreamSubscription<Map<String, dynamic>>? _onlineSub;
   bool _isFriendOnline = false;
+  final _picker = ImagePicker();
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -206,6 +211,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       final response = await _apiClient.post('/chat/messages/send', data: {
         'receiverId': _friendId,
         'content': content,
+        'type': 1,
       });
       final result = response.data;
       if (result != null && result['code'] == 200 && result['data'] != null) {
@@ -226,6 +232,135 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           });
         });
       }
+    }
+  }
+
+  void _showMediaPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildMediaOption(Icons.image, '图片', () {
+                Navigator.pop(ctx);
+                _pickAndSendImage();
+              }),
+              _buildMediaOption(Icons.videocam, '视频', () {
+                Navigator.pop(ctx);
+                _pickAndSendVideo();
+              }),
+              _buildMediaOption(Icons.camera_alt, '拍摄', () {
+                Navigator.pop(ctx);
+                _captureAndSendImage();
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaOption(IconData icon, String label, VoidCallback onTap) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: colorScheme.primary, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: TextStyle(fontSize: 12, color: colorScheme.onSurface)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickAndSendImage() async {
+    try {
+      final XFile? file = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (file == null || _friendId == null) return;
+      await _uploadAndSendMedia(File(file.path), 2);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('选择图片失败: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _captureAndSendImage() async {
+    try {
+      final XFile? file = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+      if (file == null || _friendId == null) return;
+      await _uploadAndSendMedia(File(file.path), 2);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('拍摄失败: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickAndSendVideo() async {
+    try {
+      final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);
+      if (file == null || _friendId == null) return;
+      await _uploadAndSendMedia(File(file.path), 3);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('选择视频失败: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadAndSendMedia(File file, int msgType) async {
+    if (mounted) setState(() => _isUploading = true);
+    try {
+      final endpoint = msgType == 2 ? '/upload/image' : '/upload/video';
+      final uploadRes = await _apiClient.uploadFile(endpoint, file);
+      final uploadData = uploadRes.data;
+      if (uploadData != null && uploadData['code'] == 200 && uploadData['data'] != null) {
+        final url = uploadData['data']['url'] as String;
+        final sendRes = await _apiClient.post('/chat/messages/send', data: {
+          'receiverId': _friendId,
+          'content': url,
+          'type': msgType,
+        });
+        final sendData = sendRes.data;
+        if (sendData != null && sendData['code'] == 200 && sendData['data'] != null) {
+          if (mounted) {
+            setState(() {
+              _messages.add(sendData['data'] as Map<String, dynamic>);
+            });
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('发送失败: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
@@ -348,6 +483,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final content = msg['content']?.toString() ?? '';
+    final int msgType = msg['type'] is int ? msg['type'] as int : 1;
     // Determine read status: support both new integer status and old string status
     // New: 0=sending, 1=sent, 2=delivered, 3=read, 5=recalled
     // Old: isRead (0/1) + status string (SENDING/SENT/DELIVERED/READ)
@@ -372,6 +508,108 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     
     final timeStr = msg['createTime']?.toString() ?? msg['createdAt']?.toString() ?? '';
 
+    // Build bubble content based on message type
+    Widget bubbleContent;
+    if (statusInt == 5 || statusText == 'RECALLED') {
+      // Recalled message
+      bubbleContent = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Text(
+          isMe ? '你撤回了一条消息' : '对方撤回了一条消息',
+          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.5), fontStyle: FontStyle.italic, fontSize: 13),
+        ),
+      );
+    } else if (msgType == 2) {
+      // Image message
+      bubbleContent = GestureDetector(
+        onTap: () => _showImagePreview(context, content),
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isMe ? 18 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 18),
+          ),
+          child: CachedNetworkImage(
+            imageUrl: ApiClient.processImageUrl(content),
+            width: 200,
+            height: 200,
+            fit: BoxFit.cover,
+            placeholder: (_, __) => Container(
+              width: 200,
+              height: 200,
+              color: colorScheme.surfaceVariant,
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            errorWidget: (_, __, ___) => Container(
+              width: 200,
+              height: 100,
+              color: colorScheme.surfaceVariant,
+              child: Icon(Icons.broken_image, color: colorScheme.onSurface.withOpacity(0.3)),
+            ),
+          ),
+        ),
+      );
+    } else if (msgType == 3) {
+      // Video message
+      bubbleContent = Container(
+        constraints: const BoxConstraints(maxWidth: 200, maxHeight: 200),
+        decoration: BoxDecoration(
+          color: isMe ? colorScheme.primary : theme.cardColor,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isMe ? 18 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 18),
+          ),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 200,
+              height: 150,
+              color: Colors.black26,
+              child: Icon(Icons.videocam, color: Colors.white70, size: 40),
+            ),
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circular,
+              ),
+              child: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Text message
+      bubbleContent = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isMe ? colorScheme.primary : theme.cardColor,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isMe ? 18 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 18),
+          ),
+        ),
+        child: Text(
+          content,
+          style: TextStyle(
+            color: isMe ? Colors.white : colorScheme.onSurface,
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onLongPress: () {
         if (isMe && _canRecall(msg)) {
@@ -388,24 +626,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           child: Column(
             crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isMe ? colorScheme.primary : theme.cardColor,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(18),
-                    topRight: const Radius.circular(18),
-                    bottomLeft: Radius.circular(isMe ? 18 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 18),
-                  ),
-                ),
-                child: Text(
-                  content,
-                  style: TextStyle(
-                    color: isMe ? Colors.white : colorScheme.onSurface,
-                  ),
-                ),
-              ),
+              bubbleContent,
               const SizedBox(height: 4),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -422,6 +643,33 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showImagePreview(BuildContext context, String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: CachedNetworkImage(
+                imageUrl: ApiClient.processImageUrl(imageUrl),
+                fit: BoxFit.contain,
+                placeholder: (_, __) => const Center(child: CircularProgressIndicator(color: Colors.white)),
+                errorWidget: (_, __, ___) => const Icon(Icons.broken_image, color: Colors.white54, size: 64),
+              ),
+            ),
           ),
         ),
       ),
@@ -512,6 +760,18 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       child: SafeArea(
         child: Row(
           children: [
+            // Media attachment button
+            Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceVariant,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(Icons.add, color: colorScheme.onSurface, size: 22),
+                onPressed: _isUploading ? null : _showMediaPicker,
+              ),
+            ),
+            const SizedBox(width: 8),
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -522,24 +782,38 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 child: TextField(
                   controller: _messageController,
                   decoration: InputDecoration(
-                    hintText: '输入消息...',
+                    hintText: _isUploading ? '上传中...' : '输入消息...',
                     hintStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.3)),
                     border: InputBorder.none,
                   ),
+                  enabled: !_isUploading,
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: colorScheme.primary,
-                shape: BoxShape.circle,
+            if (_isUploading)
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary),
+                  ),
+                ),
+              )
+            else
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.send, color: Colors.white, size: 20),
+                  onPressed: _sendMessage,
+                ),
               ),
-              child: IconButton(
-                icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                onPressed: _sendMessage,
-              ),
-            ),
           ],
         ),
       ),

@@ -54,6 +54,9 @@
 
         <div class="form-actions">
           <button type="button" class="btn cancel" @click="$router.back()">取消</button>
+          <button type="button" class="btn draft" @click="saveDraft" :disabled="savingDraft || !content.trim()">
+            {{ savingDraft ? '保存中...' : '存草稿' }}
+          </button>
           <button type="submit" class="btn submit" :disabled="loading || !channelId || !content.trim()">
             {{ loading ? '发布中...' : '发布' }}
           </button>
@@ -79,6 +82,7 @@ const images = ref<string[]>([])
 const topic = ref('')
 const mentionInput = ref('')
 const loading = ref(false)
+const savingDraft = ref(false)
 const error = ref('')
 
 async function fetchChannels() {
@@ -140,6 +144,30 @@ async function handleSubmit() {
 }
 
 onMounted(() => { fetchChannels() })
+
+async function saveDraft() {
+  if (!content.value.trim()) return
+  savingDraft.value = true
+  error.value = ''
+  try {
+    const res = await api.post('/drafts', {
+      channelId: channelId.value ? Number(channelId.value) : null,
+      content: content.value.trim(),
+      images: images.value.length > 0 ? images.value.join(',') : null,
+      topic: topic.value.trim() || null,
+    })
+    if (res.data.code === 200) {
+      alert('草稿已保存')
+      router.push('/drafts')
+    } else {
+      error.value = res.data.message || '保存失败'
+    }
+  } catch (e: any) {
+    error.value = e.response?.data?.message || '保存失败'
+  } finally {
+    savingDraft.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -171,6 +199,8 @@ onMounted(() => { fetchChannels() })
 .form-actions { display: flex; gap: 12px; justify-content: flex-end; }
 .btn { padding: 12px 28px; border-radius: 12px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .btn.cancel { background: var(--surface); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); }
+.btn.draft { background: var(--surface); border: 1px solid var(--primary); color: var(--primary); }
+.btn.draft:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn.submit { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
 .btn.submit:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

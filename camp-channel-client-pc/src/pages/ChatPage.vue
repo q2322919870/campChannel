@@ -33,7 +33,20 @@
         <div class="chat-header">{{ selectedConv.name }}</div>
         <div class="chat-messages" ref="messagesRef">
           <div v-for="msg in messages" :key="msg.id" class="message-item" :class="{ self: msg.isSelf }">
-            <div class="message-bubble">{{ msg.content }}</div>
+            <!-- Recalled message -->
+            <div v-if="msg.status === 5" class="message-recalled">
+              {{ msg.isSelf ? '你撤回了一条消息' : '对方撤回了一条消息' }}
+            </div>
+            <!-- Image message -->
+            <div v-else-if="msg.type === 2" class="message-media" @click="previewImage(msg.content)">
+              <img :src="resolveUrl(msg.content)" class="msg-image" loading="lazy" />
+            </div>
+            <!-- Video message -->
+            <div v-else-if="msg.type === 3" class="message-media video-msg">
+              <video :src="resolveUrl(msg.content)" class="msg-video" controls preload="metadata" />
+            </div>
+            <!-- Text message -->
+            <div v-else class="message-bubble">{{ msg.content }}</div>
             <div class="message-meta">
               <span v-if="msg.isSelf" class="message-status">
                 <span v-if="msg.status === 5 || msg.status === 2" class="status-recalled">已撤回</span>
@@ -49,8 +62,24 @@
           </div>
         </div>
         <div class="chat-input-bar">
-          <input v-model="chatInput" placeholder="输入消息..." @keyup.enter="sendMessage" />
-          <button @click="sendMessage">
+          <label class="attach-btn" title="发送图片">
+            <input type="file" accept="image/*" @change="handleImageUpload" hidden />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </label>
+          <label class="attach-btn" title="发送视频">
+            <input type="file" accept="video/*" @change="handleVideoUpload" hidden />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+          </label>
+          <input v-model="chatInput" placeholder="输入消息..." @keyup.enter="sendMessage" :disabled="isUploading" />
+          <span v-if="isUploading" class="uploading-indicator">⬆️</span>
+          <button @click="sendMessage" :disabled="isUploading">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
@@ -59,6 +88,11 @@
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         <p>选择一个会话开始聊天</p>
       </div>
+    </div>
+    <!-- Image Preview Overlay -->
+    <div v-if="showPreview" class="image-preview-overlay" @click="showPreview = false">
+      <button class="preview-close" @click="showPreview = false">&times;</button>
+      <img :src="imagePreviewUrl" class="preview-image" @click.stop />
     </div>
   </div>
 </template>
@@ -76,6 +110,7 @@ const myId = computed(() => authStore.user?.id || 0)
 const searchQuery = ref('')
 const activeChat = ref<number | null>(null)
 const chatInput = ref('')
+const isUploading = ref(false)
 const selectedConv = ref<any>(null)
 const conversations = ref<any[]>([])
 const messages = ref<any[]>([])
@@ -136,14 +171,27 @@ async function connectWebSocket() {
   }
 }
 
+function resolveUrl(url: string): string {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  return '/api' + url
+}
+
+function getMsgPreview(data: any): string {
+  if (data.type === 2) return '[图片]'
+  if (data.type === 3) return '[视频]'
+  return data.content || ''
+}
+
 function handleIncomingMessage(data: any) {
   const isFromOther = data.senderId !== myId.value
   const convId = isFromOther ? data.senderId : data.receiverId
+  const preview = getMsgPreview(data)
 
   // Update or add conversation
   let conv = conversations.value.find(c => c.id === convId)
   if (conv) {
-    conv.lastMsg = data.content
+    conv.lastMsg = preview
     conv.time = formatTime(data.createTime)
     if (isFromOther && activeChat.value !== convId) {
       conv.unread = (conv.unread || 0) + 1
@@ -158,7 +206,7 @@ function handleIncomingMessage(data: any) {
       id: convId,
       name: data.username || '用户' + convId,
       avatar: data.avatar || '',
-      lastMsg: data.content,
+      lastMsg: preview,
       time: formatTime(data.createTime),
       unread: isFromOther && activeChat.value !== convId ? 1 : 0,
       online: false,
@@ -172,6 +220,7 @@ function handleIncomingMessage(data: any) {
     messages.value.push({
       id: data.id,
       content: data.content,
+      type: data.type || 1,
       createTime: formatTime(data.createTime),
       isSelf: !isFromOther,
       isRead: data.isRead || false,
@@ -251,6 +300,7 @@ async function selectConversation(conv: any) {
       messages.value = res.data.data.map((m: any) => ({
         id: m.id,
         content: m.content || '',
+        type: m.type || 1,
         createTime: formatTime(m.createTime) || '',
         isSelf: m.senderId === myId.value,
         isRead: m.isRead === 1,
@@ -284,24 +334,90 @@ async function sendMessage() {
       messages.value.push({
         id: msg.id || Date.now(),
         content: msg.content || content,
+        type: 1,
         createTime: formatTime(msg.createTime) || '刚刚',
         isSelf: true,
         isRead: false,
         status: msg.status || 1,
       })
       scrollToBottom()
-      // Update conversation preview
-      const conv = conversations.value.find(c => c.id === selectedConv.value.id)
-      if (conv) {
-        conv.lastMsg = content
-        conv.time = '刚刚'
-        // Move to top
-        const idx = conversations.value.indexOf(conv)
-        conversations.value.splice(idx, 1)
-        conversations.value.unshift(conv)
-      }
+      updateConvPreview(content)
     }
   } catch (e) {}
+}
+
+function updateConvPreview(content: string, type: number = 1) {
+  if (!selectedConv.value) return
+  const preview = type === 2 ? '[图片]' : type === 3 ? '[视频]' : content
+  const conv = conversations.value.find(c => c.id === selectedConv.value.id)
+  if (conv) {
+    conv.lastMsg = preview
+    conv.time = '刚刚'
+    const idx = conversations.value.indexOf(conv)
+    conversations.value.splice(idx, 1)
+    conversations.value.unshift(conv)
+  }
+}
+
+async function handleImageUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !selectedConv.value) return
+  input.value = '' // reset for re-upload
+  await uploadAndSendMedia(file, '/upload/image', 2)
+}
+
+async function handleVideoUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file || !selectedConv.value) return
+  input.value = ''
+  await uploadAndSendMedia(file, '/upload/video', 3)
+}
+
+async function uploadAndSendMedia(file: File, endpoint: string, type: number) {
+  isUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const uploadRes = await api.post(endpoint, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    if (uploadRes.data.code === 200 && uploadRes.data.data?.url) {
+      const url = uploadRes.data.data.url
+      const sendRes = await api.post('/chat/messages/send', {
+        receiverId: selectedConv.value.id,
+        content: url,
+        type,
+      })
+      if (sendRes.data.code === 200 && sendRes.data.data) {
+        const msg = sendRes.data.data
+        messages.value.push({
+          id: msg.id || Date.now(),
+          content: msg.content || url,
+          type,
+          createTime: formatTime(msg.createTime) || '刚刚',
+          isSelf: true,
+          isRead: false,
+          status: msg.status || 1,
+        })
+        scrollToBottom()
+        updateConvPreview(url, type)
+      }
+    }
+  } catch (e: any) {
+    window.alert(e.response?.data?.message || '上传失败')
+  } finally {
+    isUploading.value = false
+  }
+}
+
+let imagePreviewUrl = ref('')
+let showPreview = ref(false)
+
+function previewImage(url: string) {
+  imagePreviewUrl.value = resolveUrl(url)
+  showPreview.value = true
 }
 
 async function recallMessage(messageId: number) {
@@ -402,6 +518,18 @@ onUnmounted(() => {
 .status-recalled { color: #ff6b6b; font-size: 10px; }
 .message-time { font-size: 10px; color: var(--on-surface-variant); }
 .recall-btn { background: none; border: none; color: #ff6b6b; font-size: 10px; cursor: pointer; margin-top: 2px; padding: 0; align-self: flex-end; }
+.message-media { max-width: 220px; cursor: pointer; border-radius: 14px; overflow: hidden; }
+.msg-image { width: 100%; max-height: 200px; object-fit: cover; border-radius: 14px; display: block; transition: transform 0.2s; }
+.msg-image:hover { transform: scale(1.02); }
+.msg-video { width: 100%; max-height: 200px; border-radius: 14px; display: block; }
+.message-recalled { padding: 8px 16px; font-size: 13px; color: var(--on-surface-variant); font-style: italic; background: var(--surface); border-radius: 14px; border: 1px solid var(--outline-variant); }
+.attach-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--outline-variant); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--on-surface-variant); transition: all 0.2s; flex-shrink: 0; }
+.attach-btn:hover { border-color: var(--primary); color: var(--primary); }
+.uploading-indicator { font-size: 16px; animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.image-preview-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+.preview-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: white; font-size: 36px; cursor: pointer; z-index: 10000; line-height: 1; }
+.preview-image { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; cursor: default; }
 .chat-input-bar { display: flex; gap: 8px; padding: 16px; border-top: 1px solid var(--outline-variant); }
 .chat-input-bar input { flex: 1; padding: 12px 16px; border: 1px solid var(--outline-variant); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 14px; outline: none; }
 .chat-input-bar input:focus { border-color: var(--primary); }

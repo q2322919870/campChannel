@@ -16,6 +16,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
   String? _selectedChannelId;
   final List<String> _imageUrls = [];
   bool _isLoading = false;
+  bool _isSavingDraft = false;
   List<Map<String, dynamic>> _channels = [];
 
   @override
@@ -65,12 +66,43 @@ class _CreatePostPageState extends State<CreatePostPage> {
     if (mounted) setState(() => _isLoading = false);
   }
 
+  Future<void> _saveDraft() async {
+    if (_contentController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('内容不能为空')));
+      return;
+    }
+    setState(() => _isSavingDraft = true);
+    try {
+      final apiClient = ApiClient();
+      final res = await apiClient.post('/drafts', data: {
+        'channelId': _selectedChannelId != null ? int.parse(_selectedChannelId!) : null,
+        'content': _contentController.text.trim(),
+        'images': _imageUrls.isEmpty ? null : _imageUrls.join(','),
+        'topic': _topicController.text.trim().isNotEmpty ? _topicController.text.trim() : null,
+      });
+      if (res.data['code'] == 200 && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('草稿已保存')));
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('保存失败: $e')));
+      }
+    }
+    if (mounted) setState(() => _isSavingDraft = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('发布帖子'), actions: [
+        TextButton.icon(
+          onPressed: _isSavingDraft ? null : _saveDraft,
+          icon: const Icon(Icons.drafts_outlined, size: 18),
+          label: Text(_isSavingDraft ? '保存中...' : '存草稿', style: TextStyle(color: colorScheme.secondary)),
+        ),
         TextButton(
           onPressed: _isLoading ? null : _submit,
           child: Text(_isLoading ? '发布中...' : '发布', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600)),
