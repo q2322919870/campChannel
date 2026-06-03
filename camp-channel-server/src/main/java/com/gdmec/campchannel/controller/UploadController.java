@@ -49,6 +49,38 @@ public class UploadController {
         return uploadFile(file, "avatars", false);
     }
 
+    @GetMapping("/video/check")
+    @Operation(summary = "视频秒传校验：根据文件Hash检查是否已存在")
+    public Result<Map<String, Object>> checkVideoExists(@RequestParam("hash") String hash) {
+        try {
+            Path baseDir = Paths.get(uploadPath).toAbsolutePath().normalize();
+            Path videoDir = baseDir.resolve("videos");
+            
+            // 检查常见视频格式是否存在
+            String[] extensions = {".mp4", ".webm", ".mov", ".avi", ".mkv"};
+            for (String ext : extensions) {
+                Path filePath = videoDir.resolve(hash + ext);
+                if (filePath.toFile().exists()) {
+                    String fileUrl = "/uploads/videos/" + hash + ext;
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("exists", true);
+                    result.put("url", fileUrl);
+                    log.info("视频秒传命中: {}", hash);
+                    return Result.success("文件已存在", result);
+                }
+            }
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("exists", false);
+            return Result.success("文件不存在", result);
+        } catch (Exception e) {
+            log.error("秒传校验失败", e);
+            Map<String, Object> result = new HashMap<>();
+            result.put("exists", false);
+            return Result.success("校验失败", result);
+        }
+    }
+
     /**
      * 计算文件内容的MD5哈希值，用于去重
      */
@@ -174,8 +206,19 @@ public class UploadController {
 
             if (isVideo) {
                 // 视频上传：去重 + 压缩
-                // 1. 计算文件哈希用于去重
-                String fileHash = calculateFileHash(file.getInputStream());
+                // 1. 先保存临时文件
+                String tempFilename = UUID.randomUUID().toString().replace("-", "") + extension;
+                Path tempPath = uploadDir.resolve(tempFilename);
+                file.transferTo(tempPath.toFile());
+
+                File tempFile = tempPath.toFile();
+                long fileSize = tempFile.length();
+
+                // 2. 计算文件哈希用于去重
+                String fileHash = null;
+                try (java.io.FileInputStream fis = new java.io.FileInputStream(tempFile)) {
+                    fileHash = calculateFileHash(fis);
+                }
                 
                 if (fileHash != null) {
                     // 检查是否已存在相同文件
@@ -183,6 +226,8 @@ public class UploadController {
                     Path existingFile = uploadDir.resolve(hashFilename);
                     
                     if (existingFile.toFile().exists()) {
+                        // 删除刚上传的临时文件
+                        tempFile.delete();
                         log.info("视频已存在，跳过上传: {}", hashFilename);
                         String fileUrl = "/uploads/" + subDir + "/" + hashFilename;
                         Map<String, String> result = new HashMap<>();
@@ -193,43 +238,42 @@ public class UploadController {
                     }
                 }
 
-                // 2. 保存临时文件
-                String tempFilename = UUID.randomUUID().toString().replace("-", "") + extension;
-                Path tempPath = uploadDir.resolve(tempFilename);
-                file.transferTo(tempPath.toFile());
-
-                File tempFile = tempPath.toFile();
-                long fileSize = tempFile.length();
-
-                // 3. 如果文件超过5MB，进行压缩
-                if (fileSize > MAX_VIDEO_SIZE) {
-                    log.info("视频大小 {}KB 超过限制 {}KB，开始压缩", fileSize/1024, MAX_VIDEO_SIZE/1024);
-                    
-                    String compressedFilename = fileHash != null ? fileHash + extension : tempFilename;
-                    Path compressedPath = uploadDir.resolve(compressedFilename);
-                    File compressedFile = compressedPath.toFile();
-                    
-                    boolean compressed = compressVideo(tempFile, compressedFile, MAX_VIDEO_SIZE);
-                    
-                    if (compressed && compressedFile.exists()) {
-                        // 删除临时文件
-                        tempFile.delete();
-                        filePath = compressedPath;
-                        newFilename = compressedFilename;
-                        log.info("视频压缩成功: {}KB -> {}KB", 
-                            fileSize/1024, compressedFile.length()/1024);
+                // 3. 始终尝试压缩视频到5MB以内
+                log.info("视频原始大小 {}KB，开始压缩到 {}KB 以内", fileSize/1024, MAX_VIDEO_SIZE/1024);
+                
+                String compressedFilename = fileHash != null ? fileHash + extension : tempFilename;
+                Path compressedPath = uploadDir.resolve(compressedFilename);
+                File compressedFile = compressedPath.toFile();
+                
+                boolean compressed = compressVideo(tempFile, compressedFile, MAX_VIDEO_SIZE);
+                
+                if (compressed && compressedFile.exists() && compressedFile.length() <= MAX_VIDEO_SIZE) {
+                    // 压缩成功且文件大小符合要求，删除临时文件
+                    tempFile.delete();
+                    filePath = compressedPath;
+                    newFilename = compressedFilename;
+                    log.info("视频压缩成功: {}KB -> {}KB", 
+                        fileSize/1024, compressedFile.length()/1024);
+                } else if (compressed && compressedFile.exists()) {
+                    // 压缩完成但仍然超过5MB，保留压缩后的文件
+                    tempFile.delete();
+                    filePath = compressedPath;
+                    newFilename = compressedFilename;
+                    log.warn("视频压缩后仍为 {}KB，超过 {}KB 限制", 
+                        compressedFile.length()/1024, MAX_VIDEO_SIZE/1024);
+                } else {
+                    // 压缩失败，使用原始文件（重命名为哈希值）
+                    if (fileHash != null) {
+                        String hashFilename = fileHash + extension;
+                        Path hashPath = uploadDir.resolve(hashFilename);
+                        Files.move(tempPath, hashPath, StandardCopyOption.REPLACE_EXISTING);
+                        filePath = hashPath;
+                        newFilename = hashFilename;
                     } else {
-                        // 压缩失败，使用原始文件
                         filePath = tempPath;
                         newFilename = tempFilename;
-                        log.warn("视频压缩失败，使用原始文件");
                     }
-                } else {
-                    // 文件未超过限制，使用哈希值重命名
-                    newFilename = fileHash != null ? fileHash + extension : tempFilename;
-                    Path newPath = uploadDir.resolve(newFilename);
-                    Files.move(tempPath, newPath, StandardCopyOption.REPLACE_EXISTING);
-                    filePath = newPath;
+                    log.warn("视频压缩失败，使用原始文件");
                 }
             } else {
                 // 图片/头像：使用UUID命名

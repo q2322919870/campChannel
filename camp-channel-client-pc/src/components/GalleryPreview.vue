@@ -1,11 +1,12 @@
-﻿﻿﻿﻿﻿﻿<template>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<template>
   <div v-if="visible" class="preview-overlay" @click.self="$emit('close')">
     <div class="preview-card">
       <button class="close-btn" @click="$emit('close')">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
 
-      <img :src="item.imageUrl" class="preview-img" />
+      <img v-if="!isVideo" :src="item.imageUrl" class="preview-img" />
+      <video v-else :src="item.videoUrl || item.imageUrl" class="preview-video" controls autoplay />
 
       <div class="preview-info">
         <div class="preview-author">
@@ -62,6 +63,7 @@ const props = defineProps<{ visible: boolean; item: any }>()
 const emit = defineEmits<{ close: []; deleted: [] }>()
 const authStore = useAuthStore()
 const isOwner = computed(() => props.item?.userId === authStore.user?.id)
+const isVideo = computed(() => props.item?.mediaType === 2 || (props.item?.videoUrl && !props.item?.imageUrl))
 
 const isLiked = ref(false)
 const likeCount = ref(props.item?.likeCount || 0)
@@ -153,7 +155,7 @@ async function handleReport() {
 .preview-card { position: relative; max-width: 520px; width: 90%; max-height: 90vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--card-radius); padding: 24px; animation: scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1); }
 @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .close-btn { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.4); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; z-index: 1; }
-.preview-img { width: 100%; max-height: 50vh; object-fit: contain; border-radius: var(--card-radius); margin-bottom: 16px; }
+.preview-img, .preview-video { width: 100%; max-height: 50vh; object-fit: contain; border-radius: var(--card-radius); margin-bottom: 16px; }
 .preview-info { margin-bottom: 12px; }
 .preview-author { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
 .author-avatar { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }

@@ -3,6 +3,8 @@ import * as THREE from 'three'
 export interface Gallery3DItem {
   id: number
   imageUrl: string
+  videoUrl?: string
+  mediaType?: number // 1-图片, 2-视频
   title?: string
   username?: string
   userId?: number
@@ -19,6 +21,8 @@ export class Post3DGallery {
   private items: Gallery3DItem[] = []
   private meshes: THREE.Mesh[] = []
   private textures: Map<number, THREE.Texture> = new Map()
+  private videoElements: Map<number, HTMLVideoElement> = new Map()
+  private videoTextures: Map<number, THREE.VideoTexture> = new Map()
   private selectedId: number | null = null
   private paused = false
   private onClickBound: ((e: MouseEvent) => void) | null = null
@@ -55,9 +59,43 @@ export class Post3DGallery {
       const x = Math.sin(angle) * radius
       const z = Math.cos(angle) * radius
 
-      const texture = new THREE.TextureLoader().load(item.imageUrl)
-      this.textures.set(item.id, texture)
+      let texture: THREE.Texture
+
+      // 检查是否为视频
+      const isVideo = item.mediaType === 2 || (item.videoUrl && !item.imageUrl)
+      if (isVideo && item.videoUrl) {
+        // 创建视频元素
+        const video = document.createElement('video')
+        video.src = item.videoUrl
+        video.crossOrigin = 'anonymous'
+        video.loop = true
+        video.muted = true
+        video.playsInline = true
+        video.autoplay = true
+        video.style.display = 'none'
+        document.body.appendChild(video)
+
+        this.videoElements.set(item.id, video)
+
+        // 创建视频纹理
+        const videoTexture = new THREE.VideoTexture(video)
+        videoTexture.minFilter = THREE.LinearFilter
+        videoTexture.magFilter = THREE.LinearFilter
+        videoTexture.format = THREE.RGBAFormat
+        this.videoTextures.set(item.id, videoTexture)
+
+        texture = videoTexture
+      } else {
+        // 图片纹理
+        texture = new THREE.TextureLoader().load(item.imageUrl)
+        this.textures.set(item.id, texture)
+      }
       const geo = new THREE.PlaneGeometry(2.4, 2.4 * 0.75)
+      // 翻转 UV 坐标，让图片正面朝向观察者（3D 画廊中图片朝内，需要翻转 UV）
+      const uvAttr = geo.attributes.uv
+      for (let i = 0; i < uvAttr.count; i++) {
+        uvAttr.setXY(i, 1 - uvAttr.getX(i), uvAttr.getY(i))
+      }
       const mat = new THREE.ShaderMaterial({
         uniforms: {
           uTexture: { value: texture },
@@ -276,7 +314,15 @@ export class Post3DGallery {
         container.removeChild(this.renderer.domElement)
       }
     }
+    // 清理纹理
     this.textures.forEach(t => t.dispose())
+    // 清理视频纹理和元素
+    this.videoTextures.forEach(t => t.dispose())
+    this.videoElements.forEach(video => {
+      video.pause()
+      video.src = ''
+      video.remove()
+    })
     this.renderer.dispose()
     this.group.clear()
     this.scene.clear()

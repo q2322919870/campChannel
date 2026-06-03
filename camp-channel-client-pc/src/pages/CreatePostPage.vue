@@ -36,11 +36,22 @@
               <button type="button" class="remove-media" @click="mediaItems.splice(i, 1)">×</button>
             </div>
             <label v-if="mediaItems.length < 9" class="upload-btn">
-              <input type="file" accept="image/*,video/*" multiple @change="handleMediaUpload" hidden />
+              <input type="file" accept="image/*" multiple @change="handleImageUpload" hidden />
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </label>
+            <SmartVideoUploader
+              v-if="mediaItems.length < 9"
+              :disabled="isUploadingVideo"
+              @uploaded="onVideoUploaded"
+            />
           </div>
           <span class="media-count">{{ mediaItems.length }}/9</span>
+          <div v-if="isUploadingVideo" class="upload-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: videoUploadProgress + '%' }"></div>
+            </div>
+            <span class="progress-text">{{ videoUploadStatusText }}</span>
+          </div>
         </div>
 
         <div class="form-group">
@@ -74,6 +85,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from '../api/client'
 import { useAuthStore } from '../stores/auth'
+import SmartVideoUploader from '../components/SmartVideoUploader.vue'
+import { useVideoUploader } from '../composables/useVideoUploader'
 
 interface MediaItem {
   type: 'image' | 'video'
@@ -96,6 +109,32 @@ const loading = ref(false)
 const savingDraft = ref(false)
 const error = ref('')
 
+// 视频上传状态
+const {
+  status: videoUploadStatus,
+  progress: videoUploadProgress,
+  errorMsg: videoUploadError,
+  isUploading: isUploadingVideo,
+} = useVideoUploader()
+
+const videoUploadStatusText = computed(() => {
+  const map: Record<string, string> = {
+    idle: '',
+    hashing: '正在计算文件指纹...',
+    checking: '正在检查秒传...',
+    uploading: '正在上传...',
+    success: '上传成功',
+    error: '上传失败',
+  }
+  return map[videoUploadStatus.value] || ''
+})
+
+function onVideoUploaded(url: string) {
+  if (mediaItems.value.length < 9) {
+    mediaItems.value.push({ type: 'video', url })
+  }
+}
+
 async function fetchChannels() {
   try {
     const res = await api.get('/channels/my')
@@ -105,35 +144,26 @@ async function fetchChannels() {
   } catch (e) {}
 }
 
-async function handleMediaUpload(e: Event) {
+async function handleImageUpload(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files?.length) return
   for (const file of Array.from(input.files)) {
     if (mediaItems.value.length >= 9) break
 
-    const isVideo = file.type.startsWith('video/')
-    if (isVideo && file.size > 5 * 1024 * 1024) {
-      error.value = `视频 ${file.name} 超过5MB限制`
-      continue
-    }
-
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const endpoint = isVideo ? '/upload/video' : '/upload/image'
-      const res = await api.post(endpoint, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      const res = await api.post('/upload/image', formData)
       if (res.data.code === 200 && res.data.data?.url) {
         if (mediaItems.value.length < 9) {
           mediaItems.value.push({
-            type: isVideo ? 'video' : 'image',
+            type: 'image',
             url: res.data.data.url
           })
         }
       }
     } catch (e: any) {
-      error.value = e.response?.data?.message || `${isVideo ? '视频' : '图片'}上传失败`
+      error.value = e.response?.data?.message || '图片上传失败'
     }
   }
   input.value = ''
@@ -275,6 +305,10 @@ async function saveDraft() {
 .remove-media { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .upload-btn { width: 80px; height: 80px; border: 2px dashed var(--outline-variant); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--on-surface-variant); transition: all 0.2s; }
 .upload-btn:hover { border-color: var(--primary); color: var(--primary); }
+.upload-progress { width: 100%; margin-top: 8px; }
+.upload-progress .progress-bar { height: 6px; background: var(--outline-variant); border-radius: 3px; overflow: hidden; }
+.upload-progress .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width 0.3s ease; }
+.upload-progress .progress-text { font-size: 12px; color: var(--on-surface-variant); margin-top: 4px; display: block; }
 .error-msg { color: #ff6b6b; font-size: 13px; }
 .form-actions { display: flex; gap: 12px; justify-content: flex-end; }
 .btn { padding: 12px 28px; border-radius: 12px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }

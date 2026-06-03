@@ -2,14 +2,21 @@
   <div v-if="visible" class="dialog-overlay" @click.self="$emit('close')">
     <div class="dialog-card">
       <h3>添加画作到画廊</h3>
-      <div class="upload-area" @click="triggerUpload">
+      <div class="upload-area" @click="triggerImageUpload">
         <img v-if="mediaType === 'image' && previewUrl" :src="previewUrl" class="preview-img" />
         <video v-else-if="mediaType === 'video' && previewUrl" :src="previewUrl" class="preview-video" controls />
         <div v-else class="upload-placeholder">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          <span>点击上传图片或视频</span>
+          <span>点击上传图片</span>
         </div>
-        <input ref="fileInput" type="file" accept="image/*,video/*" hidden @change="onFileSelected" />
+        <input ref="fileInput" type="file" accept="image/*" hidden @change="onImageSelected" />
+      </div>
+      <div class="video-upload-section">
+        <SmartVideoUploader
+          :disabled="!!previewUrl"
+          @uploaded="onVideoUploaded"
+        />
+        <span class="video-hint">或上传视频（自动压缩至5MB）</span>
       </div>
       <input v-model="title" placeholder="画作标题（选填）" class="gallery-input" />
       <textarea v-model="description" placeholder="画作描述（选填）" rows="3" class="gallery-textarea"></textarea>
@@ -25,6 +32,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { api } from '../api/client'
+import SmartVideoUploader from './SmartVideoUploader.vue'
 
 defineProps<{ visible: boolean }>()
 const emit = defineEmits<{ close: []; added: [] }>()
@@ -38,19 +46,21 @@ const description = ref('')
 const submitting = ref(false)
 const error = ref('')
 
-function triggerUpload() { fileInput.value?.click() }
+function triggerImageUpload() { fileInput.value?.click() }
 
-async function onFileSelected(e: Event) {
+function onVideoUploaded(url: string) {
+  previewUrl.value = url
+  mediaUrl.value = url
+  mediaType.value = 'video'
+  error.value = ''
+}
+
+async function onImageSelected(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files?.length) return
   const file = input.files[0]
-  const isVideo = file.type.startsWith('video/')
   
-  if (isVideo && file.size > 5 * 1024 * 1024) { 
-    error.value = '视频不能超过5MB'
-    return 
-  }
-  if (!isVideo && file.size > 10 * 1024 * 1024) { 
+  if (file.size > 10 * 1024 * 1024) { 
     error.value = '图片不能超过10MB'
     return 
   }
@@ -58,12 +68,11 @@ async function onFileSelected(e: Event) {
   const formData = new FormData()
   formData.append('file', file)
   try {
-    const endpoint = isVideo ? '/upload/video' : '/upload/image'
-    const res = await api.post(endpoint, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    const res = await api.post('/upload/image', formData)
     if (res.data.code === 200 && res.data.data?.url) {
       previewUrl.value = res.data.data.url
       mediaUrl.value = res.data.data.url
-      mediaType.value = isVideo ? 'video' : 'image'
+      mediaType.value = 'image'
       error.value = ''
     } else {
       error.value = res.data.message || '上传失败'
@@ -108,6 +117,8 @@ async function submit() {
 .upload-area:hover { border-color: var(--primary); }
 .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--on-surface-variant); font-size: 14px; }
 .preview-img, .preview-video { width: 100%; height: 100%; object-fit: cover; }
+.video-upload-section { margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.video-hint { font-size: 12px; color: var(--on-surface-variant); }
 .gallery-input, .gallery-textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--outline-variant); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--on-surface); font-size: 14px; outline: none; margin-bottom: 12px; box-sizing: border-box; }
 .gallery-input:focus, .gallery-textarea:focus { border-color: var(--primary); }
 .gallery-textarea { resize: vertical; font-family: inherit; }

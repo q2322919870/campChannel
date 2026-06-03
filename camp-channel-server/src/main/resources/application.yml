@@ -43,8 +43,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 25MB
+      max-file-size: 100MB
+      max-request-size: 100MB
 
   mail:
     host: smtp.exmail.qq.com

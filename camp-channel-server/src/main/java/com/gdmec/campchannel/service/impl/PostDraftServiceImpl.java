@@ -127,6 +127,15 @@ public class PostDraftServiceImpl extends ServiceImpl<PostDraftMapper, PostDraft
                     .collect(Collectors.toList());
         }
 
+        // 将 videoUrl 字符串转为 List
+        List<String> videoUrlList = null;
+        if (draft.getVideoUrl() != null && !draft.getVideoUrl().isEmpty()) {
+            videoUrlList = Arrays.stream(draft.getVideoUrl().split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+        }
+
         // 构建完整内容（含话题和@）
         String finalContent = draft.getContent().trim();
         if (draft.getTopic() != null && !draft.getTopic().isEmpty()) {
@@ -142,7 +151,7 @@ public class PostDraftServiceImpl extends ServiceImpl<PostDraftMapper, PostDraft
                 userId,
                 finalContent,
                 imageList,
-                draft.getVideoUrl(),
+                videoUrlList,
                 draft.getIsAnonymous() != null ? draft.getIsAnonymous() : false
         );
 

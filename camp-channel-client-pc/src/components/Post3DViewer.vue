@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div ref="containerRef" class="post-3d-gallery" @wheel.prevent>
     <div v-if="loading" class="gallery-loading">加载3D画廊...</div>
     <div v-else-if="!items.length" class="gallery-empty">
@@ -31,7 +31,9 @@ async function loadItems() {
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       items.value = res.data.data.map((g: any) => ({
         id: g.id,
-        imageUrl: g.imageUrl,
+        imageUrl: g.imageUrl || '',
+        videoUrl: g.videoUrl || '',
+        mediaType: g.mediaType || 1,
         title: g.title || '',
         username: g.username || '',
         userId: g.userId,

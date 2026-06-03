@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api/client'
 import { useAuthStore } from '../stores/auth'
@@ -127,6 +127,20 @@ async function fetchProfile() {
     }
   } catch {}
 }
+
+// 监听 userId 变化，重新获取用户信息
+watch(() => props.userId, () => {
+  if (props.visible && props.userId > 0) {
+    fetchProfile()
+  }
+})
+
+// 监听 visible 变化，打开时获取用户信息
+watch(() => props.visible, (newVal) => {
+  if (newVal && props.userId > 0) {
+    fetchProfile()
+  }
+})
 
 async function toggleFollow() {
   try {
