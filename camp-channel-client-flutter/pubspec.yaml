@@ -31,6 +31,15 @@ dependencies:
   # Permission handler for runtime permissions
   permission_handler: ^11.3.0
 
+  # Crypto for file hash calculation
+  crypto: ^3.0.3
+
+  # Video player
+  video_player: ^2.8.1
+
+  # Path provider
+  path: ^1.8.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

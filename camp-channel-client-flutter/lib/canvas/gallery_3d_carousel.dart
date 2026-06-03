@@ -4,20 +4,24 @@ import 'package:flutter/material.dart';
 import '../core/network/api_client.dart';
 
 /// Ported from PC client's Post3DGallery.ts (Three.js).
-/// A 3D rotating carousel of image cards with perspective projection.
+/// A 3D rotating carousel of image/video cards with perspective projection.
 /// Supports drag to rotate, tap to select.
 class Gallery3DItem {
   final int id;
   final String imageUrl;
+  final String? videoUrl; // If present, this is a video item
   final String? title;
   final String? username;
 
   const Gallery3DItem({
     required this.id,
     required this.imageUrl,
+    this.videoUrl,
     this.title,
     this.username,
   });
+
+  bool get isVideo => videoUrl != null && videoUrl!.isNotEmpty;
 }
 
 class Gallery3DCarousel extends StatefulWidget {
@@ -212,34 +216,61 @@ class _Gallery3DCarouselState extends State<Gallery3DCarousel>
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.network(
-                            widget.items[i].imageUrl,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                color: Colors.black26,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
-                                    strokeWidth: 2,
-                                    color: widget.glowColor,
-                                  ),
+                          widget.items[i].isVideo
+                              ? Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.network(
+                                      widget.items[i].imageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                                    ),
+                                    const Center(
+                                      child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 40),
+                                    ),
+                                  ],
+                                )
+                              : Image.network(
+                                  widget.items[i].imageUrl,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.black26,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value: loadingProgress.expectedTotalBytes != null
+                                              ? loadingProgress.cumulativeBytesLoaded /
+                                                  loadingProgress.expectedTotalBytes!
+                                              : null,
+                                          strokeWidth: 2,
+                                          color: widget.glowColor,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    debugPrint('Gallery image load error: $error');
+                                    debugPrint('Image URL: ${widget.items[i].imageUrl}');
+                                    return Container(
+                                      color: Colors.black26,
+                                      child: const Icon(Icons.image, color: Colors.white38, size: 32),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              debugPrint('Gallery image load error: $error');
-                              debugPrint('Image URL: ${widget.items[i].imageUrl}');
-                              return Container(
-                                color: Colors.black26,
-                                child: const Icon(Icons.image, color: Colors.white38, size: 32),
-                              );
-                            },
-                          ),
+                          if (widget.items[i].isVideo)
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text('视频', style: TextStyle(color: Colors.white, fontSize: 9)),
+                              ),
+                            ),
                           if (widget.items[i].title != null)
                             Positioned(
                               bottom: 0,

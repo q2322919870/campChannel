@@ -8,6 +8,7 @@ class PostCard extends StatelessWidget {
   final String title;
   final String content;
   final List<String>? images;
+  final List<String>? videoUrls;
   final int likeCount;
   final int commentCount;
   final bool isLiked;
@@ -27,6 +28,7 @@ class PostCard extends StatelessWidget {
     required this.title,
     required this.content,
     this.images,
+    this.videoUrls,
     this.likeCount = 0,
     this.commentCount = 0,
     this.isLiked = false,
@@ -101,6 +103,10 @@ class PostCard extends StatelessWidget {
                 if (images != null && images!.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   _buildImageGrid(context),
+                ],
+                if (videoUrls != null && videoUrls!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildVideoGrid(context),
                 ],
                 const SizedBox(height: 12),
                 _buildActions(context),
@@ -241,6 +247,38 @@ class PostCard extends StatelessWidget {
       child: Icon(
         Icons.image_outlined,
         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+      ),
+    );
+  }
+
+  Widget _buildVideoGrid(BuildContext context) {
+    if (videoUrls == null || videoUrls!.isEmpty) return const SizedBox.shrink();
+    final count = videoUrls!.length;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: count == 1 ? 1 : 2,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+        childAspectRatio: 16 / 9,
+      ),
+      itemCount: count > 4 ? 4 : count,
+      itemBuilder: (_, i) => ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              ApiClient.processImageUrl(videoUrls![i]),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _placeholderImage(context),
+            ),
+            const Center(
+              child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 40),
+            ),
+          ],
+        ),
       ),
     );
   }

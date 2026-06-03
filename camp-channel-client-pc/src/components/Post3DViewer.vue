@@ -53,7 +53,7 @@ function initGallery(data: Gallery3DItem[]) {
     gallery?.destroy()
     gallery = new Post3DGallery(containerRef.value, data, {
       primary: themeStore.currentTheme.primary,
-      accent: themeStore.currentTheme.accent,
+      secondary: themeStore.currentTheme.secondary,
     })
     gallery.onSelect((item) => {
       emit('item-click', item)
@@ -65,7 +65,7 @@ function initGallery(data: Gallery3DItem[]) {
 }
 
 watch(() => themeStore.themeIndex, () => {
-  if (gallery && items.value.length > 0) gallery.updateColors(themeStore.currentTheme.primary, themeStore.currentTheme.accent)
+  if (gallery && items.value.length > 0) gallery.updateColors(themeStore.currentTheme.primary, themeStore.currentTheme.secondary)
 })
 
 watch(() => props.channelId, () => {

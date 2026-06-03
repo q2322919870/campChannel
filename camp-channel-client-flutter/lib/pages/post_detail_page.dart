@@ -239,6 +239,19 @@ class _PostDetailPageState extends State<PostDetailPage> {
         imageList = parsed;
       } catch (_) {}
     }
+    // Parse videoUrls
+    List<String> videoList = [];
+    final rawVideos = _post!['videoUrls'];
+    if (rawVideos is List) {
+      videoList = rawVideos.map((e) => e.toString()).toList();
+    } else if (rawVideos is String && rawVideos.isNotEmpty) {
+      try {
+        final parsed = (rawVideos.startsWith('['))
+            ? (json.decode(rawVideos) as List).map((e) => e.toString()).toList()
+            : rawVideos.split(',');
+        videoList = parsed;
+      } catch (_) {}
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -248,6 +261,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
           'topic': _post!['topic'] ?? '',
           'channelId': _post!['channelId'],
           'images': imageList,
+          'videoUrls': videoList,
         }),
       ),
     ).then((result) {
@@ -578,6 +592,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     content,
                     style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
                   ),
+                  // Display images
+                  if (_post?['images'] != null && (_post!['images'] is List || (_post!['images'] is String && _post!['images'].isNotEmpty)))
+                    _buildMediaGrid(_parseMediaList(_post!['images'], isVideo: false)),
+                  // Display videos
+                  if (_post?['videoUrls'] != null && (_post!['videoUrls'] is List || (_post!['videoUrls'] is String && _post!['videoUrls'].isNotEmpty)))
+                    _buildMediaGrid(_parseMediaList(_post!['videoUrls'], isVideo: true)),
                   if ((_post?['editCount'] ?? 0) > 0)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
@@ -774,5 +794,92 @@ class _PostDetailPageState extends State<PostDetailPage> {
   bool get _canPinPost {
     final role = _post?['userChannelRole']?.toString() ?? '';
     return role == 'owner' || role == 'admin';
+  }
+
+  List<String> _parseMediaList(dynamic raw, {required bool isVideo}) {
+    List<String> list = [];
+    if (raw is List) {
+      list = raw.map((e) => e.toString()).toList();
+    } else if (raw is String && raw.isNotEmpty) {
+      try {
+        final parsed = (raw.startsWith('['))
+            ? (json.decode(raw) as List).map((e) => e.toString()).toList()
+            : raw.split(',');
+        list = parsed;
+      } catch (_) {}
+    }
+    return list;
+  }
+
+  Widget _buildMediaGrid(List<String> urls) {
+    if (urls.isEmpty) return const SizedBox.shrink();
+    final isVideo = urls.any((u) => u.endsWith('.mp4') || u.endsWith('.webm') || u.endsWith('.mov'));
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: urls.length == 1 ? 1 : 2,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 16 / 9,
+        ),
+        itemCount: urls.length,
+        itemBuilder: (context, index) {
+          final url = urls[index];
+          return GestureDetector(
+            onTap: () => _showMediaPreview(url, isVideo: isVideo),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    ApiClient.processImageUrl(url),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.grey[800],
+                      child: const Icon(Icons.image, color: Colors.white38),
+                    ),
+                  ),
+                  if (isVideo)
+                    const Center(
+                      child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 48),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showMediaPreview(String url, {required bool isVideo}) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.black,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Image.network(
+              ApiClient.processImageUrl(url),
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Icon(Icons.image, color: Colors.white38, size: 64),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

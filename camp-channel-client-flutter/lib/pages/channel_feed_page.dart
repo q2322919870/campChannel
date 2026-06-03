@@ -358,6 +358,18 @@ class _ChannelFeedPageState extends State<ChannelFeedPage> {
                                       : rawContent);
                               // Wrap with ShaderCard effect (alternating glass/glitch like PC)
                               final useGlitch = postIndex % 3 == 0 && _channels.isNotEmpty;
+                              // Parse videoUrls
+                              List<String>? videoList;
+                              final rawVideos = post['videoUrls'];
+                              if (rawVideos is List) {
+                                videoList = rawVideos.map((e) => e.toString()).toList();
+                              } else if (rawVideos is String && rawVideos.isNotEmpty) {
+                                try {
+                                  videoList = rawVideos.startsWith('[')
+                                      ? (rawVideos as dynamic).map((e) => e.toString()).toList()
+                                      : rawVideos.split(',');
+                                } catch (_) {}
+                              }
                               return ShaderCard(
                                 mood: useGlitch ? MoodMode.glitch : MoodMode.glass,
                                 intensity: 0.15,
@@ -374,6 +386,8 @@ class _ChannelFeedPageState extends State<ChannelFeedPage> {
                                   timestamp: post['createTime'] != null
                                       ? DateTime.tryParse(post['createTime'].toString())
                                       : null,
+                                  images: post['images'] is List ? (post['images'] as List).map((e) => e.toString()).toList() : null,
+                                  videoUrls: videoList,
                                   onLike: () => _toggleLike(postIndex),
                                   onComment: () => Navigator.pushNamed(context, '/post_detail', arguments: post),
                                   onTap: () => Navigator.pushNamed(context, '/post_detail', arguments: post),

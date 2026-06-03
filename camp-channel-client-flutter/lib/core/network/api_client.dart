@@ -109,4 +109,16 @@ class ApiClient {
     });
     return await _dio.post<T>(path, data: formData);
   }
+
+  /// Check if video already exists on server (deduplication)
+  Future<Map<String, dynamic>?> checkVideoExists(String hash) async {
+    try {
+      final response = await get('/upload/video/check', queryParameters: {'hash': hash});
+      final result = response.data;
+      if (result != null && result['code'] == 200) {
+        return result['data'] as Map<String, dynamic>;
+      }
+    } catch (_) {}
+    return null;
+  }
 }
