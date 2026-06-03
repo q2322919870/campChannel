@@ -1,7 +1,7 @@
 // 广东机电校园频道 UniApp 网络请求封装
 // Try storage first, fallback to default
 const storedUrl = uni.getStorageSync('api_base_url')
-export const BASE_URL = storedUrl || 'http://localhost:8080/api'
+export const BASE_URL = storedUrl || 'http://10.50.30.104:8080/api'
 
 interface RequestOptions {
   url: string;
