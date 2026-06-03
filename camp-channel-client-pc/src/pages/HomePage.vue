@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="home-page">
     <div class="home-header">
       <div class="header-row">
@@ -226,8 +226,11 @@ async function fetchPosts(channelId?: number) {
   loading.value = true
   try {
     const url = channelId ? `/posts/channel/${channelId}` : '/posts/channel/1'
+    console.log('[HomePage] 请求帖子列表:', url)
     const res = await api.get(url, { params: { page: 1, size: 20 } })
+    console.log('[HomePage] API响应:', res.data)
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
+      console.log('[HomePage] 获取到帖子数量:', res.data.data.length)
       posts.value = res.data.data.map((p: any) => ({
         ...p,
         id: p.id,
@@ -246,8 +249,13 @@ async function fetchPosts(channelId?: number) {
           url.startsWith('http') || url.startsWith('/') ? url : '/uploads/images/' + url
         ) : [],
       }))
+      console.log('[HomePage] 帖子数据已更新:', posts.value.length)
+    } else {
+      console.warn('[HomePage] API响应异常:', res.data)
+      posts.value = []
     }
-  } catch (e) {
+  } catch (e: any) {
+    console.error('[HomePage] 获取帖子失败:', e)
     posts.value = []
   } finally {
     loading.value = false
