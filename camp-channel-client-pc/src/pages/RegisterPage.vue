@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿<template>
+﻿﻿﻿﻿﻿﻿<template>
   <div class="register-page">
     <div class="register-bg"></div>
     <div class="register-container">
@@ -15,8 +15,16 @@
       <div class="register-form-wrapper">
         <form @submit.prevent="handleRegister" class="register-form">
           <div class="form-grid">
-            <div class="form-field">
-              <label class="field-label">学号</label>
+              <div class="form-field">
+              <div class="label-row">
+                <label class="field-label">学号</label>
+                <a
+                  class="m3-link"
+                  href="https://wxzx.gdmec.edu.cn/xsfw/xyyxsysm.htm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >没有学校邮箱？</a>
+              </div>
               <div class="email-input-group">
                 <input v-model="studentId" type="text" class="field-input" placeholder="输入学号" required />
                 <span class="email-suffix">@stu.gdmec.edu.cn</span>
@@ -81,7 +89,13 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 const studentId = ref('')
-const email = computed(() => studentId.value ? `${studentId.value}@stu.gdmec.edu.cn` : '')
+const email = computed(() => {
+  const id = studentId.value.trim()
+  if (!id) return ''
+  // Strip suffix if user typed full email to prevent double suffix
+  if (id.endsWith('@stu.gdmec.edu.cn')) return id
+  return `${id}@stu.gdmec.edu.cn`
+})
 const username = ref('')
 const password = ref('')
 const code = ref('')
@@ -430,6 +444,50 @@ async function handleRegister() {
 .login-link a:hover {
   color: var(--secondary);
   text-decoration: underline;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.m3-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+  padding: 0 2px;
+  border-radius: 4px;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  position: relative;
+  letter-spacing: 0.1px;
+}
+
+.m3-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.m3-link:hover {
+  color: var(--secondary);
+}
+
+.m3-link:hover::after {
+  transform: scaleX(1);
+}
+
+.m3-link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 @media (max-width: 768px) {

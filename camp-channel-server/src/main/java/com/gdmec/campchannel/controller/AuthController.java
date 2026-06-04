@@ -64,28 +64,34 @@ public class AuthController {
         if (!StringUtils.hasText(request.getEmail())) {
             return Result.failed(ErrorCode.BAD_REQUEST, "邮箱不能为空");
         }
-        if (!request.getEmail().endsWith("@stu.gdmec.edu.cn")) {
+        // 自动修正双重后缀：如果邮箱以 @stu.gdmec.edu.cn@stu.gdmec.edu.cn 结尾，去掉重复部分
+        String email = request.getEmail().trim();
+        String suffix = "@stu.gdmec.edu.cn";
+        if (email.endsWith(suffix + suffix)) {
+            email = email.substring(0, email.length() - suffix.length());
+        }
+        if (!email.endsWith(suffix)) {
             return Result.failed(ErrorCode.INVALID_EMAIL_SUFFIX);
         }
 
-        if (userService.getUserByEmail(request.getEmail()) != null) {
+        if (userService.getUserByEmail(email) != null) {
             return Result.failed(ErrorCode.BAD_REQUEST, "该邮箱已被注册");
         }
 
-        String rateLimitKey = "verify_code_rate:" + request.getEmail();
+        String rateLimitKey = "verify_code_rate:" + email;
         if (redisUtils.hasKey(rateLimitKey)) {
             return Result.failed(ErrorCode.TOO_MANY_REQUESTS, "验证码已发送，请60秒后再试");
         }
 
         String code = String.format("%06d", new Random().nextInt(1000000));
 
-        String codeKey = "verify_code:" + request.getEmail();
+        String codeKey = "verify_code:" + email;
         redisUtils.set(codeKey, code, 300);
 
         redisUtils.set(rateLimitKey, "1", 60);
 
-        emailService.sendVerificationCode(request.getEmail(), code);
-        log.info("验证码已发送至: {}, code: {}", request.getEmail(), code);
+        emailService.sendVerificationCode(email, code);
+        log.info("验证码已发送至: {}, code: {}", email, code);
 
         return Result.success("验证码已发送至您的邮箱", null);
     }
@@ -99,8 +105,17 @@ public class AuthController {
             return Result.failed(ErrorCode.BAD_REQUEST, "邮箱、用户名、密码和验证码不能为空");
         }
 
-        String codeKey = "verify_code:" + registerRequest.getEmail();
-        String savedCode = (String) redisUtils.get(codeKey);
+        // 自动修正双重后缀
+        String email = registerRequest.getEmail().trim();
+        String suffix = "@stu.gdmec.edu.cn";
+        if (email.endsWith(suffix + suffix)) {
+            email = email.substring(0, email.length() - suffix.length());
+        }
+
+        String codeKey = "verify_code:" + email;
+        Object codeObj = redisUtils.get(codeKey);
+        String savedCode = codeObj != null ? codeObj.toString() : null;
+        log.info("验证码校验: email={}, codeKey={}, savedCode={}, inputCode={}", email, codeKey, savedCode, registerRequest.getCode());
         if (savedCode == null) {
             return Result.failed(ErrorCode.BAD_REQUEST, "验证码已过期，请重新发送");
         }
@@ -111,7 +126,7 @@ public class AuthController {
         redisUtils.del(codeKey);
 
         User user = userService.register(
-                registerRequest.getEmail(),
+                email,
                 registerRequest.getUsername(),
                 registerRequest.getPassword(),
                 registerRequest.getRealName(),

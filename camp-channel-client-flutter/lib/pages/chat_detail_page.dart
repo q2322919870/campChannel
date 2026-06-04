@@ -581,7 +581,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               height: 50,
               decoration: BoxDecoration(
                 color: Colors.black54,
-                shape: BoxShape.circular,
+                shape: BoxShape.circle,
               ),
               child: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
             ),
