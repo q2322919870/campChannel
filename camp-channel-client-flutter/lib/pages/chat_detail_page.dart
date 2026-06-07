@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../core/network/api_client.dart';
 import '../core/services/storage_service.dart';
 import '../core/services/websocket_service.dart';
+import '../widgets/video_player_widget.dart';
 
 class ChatDetailPage extends StatefulWidget {
   const ChatDetailPage({super.key});
@@ -289,15 +292,57 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  Future<void> _pickAndSendImage() async {
+  /// Request photo/video permissions for Android 13+ and fallback
+  Future<bool> _requestMediaPermission() async {
     try {
-      final XFile? file = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
-      if (file == null || _friendId == null) return;
-      await _uploadAndSendMedia(File(file.path), 2);
-    } catch (e) {
+      var status = await Permission.photos.status;
+      if (!status.isGranted) {
+        status = await Permission.photos.request();
+      }
+      if (status.isGranted) return true;
+      // Fallback to storage permission for older Android
+      var storageStatus = await Permission.storage.status;
+      if (!storageStatus.isGranted) {
+        storageStatus = await Permission.storage.request();
+      }
+      return storageStatus.isGranted;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _pickAndSendImage() async {
+    if (!await _requestMediaPermission()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('选择图片失败: $e')),
+          const SnackBar(content: Text('需要相册权限才能选择图片')),
+        );
+      }
+      return;
+    }
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty || _friendId == null) return;
+      final path = result.files.single.path;
+      if (path == null) return;
+      final file = File(path);
+      if (!await file.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('选择的图片文件不存在')),
+          );
+        }
+        return;
+      }
+      await _uploadAndSendMedia(file, 2);
+    } catch (e) {
+      debugPrint('pickImage error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('选择图片失败，请检查相册权限后重试')),
         );
       }
     }
@@ -318,14 +363,37 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   Future<void> _pickAndSendVideo() async {
-    try {
-      final XFile? file = await _picker.pickVideo(source: ImageSource.gallery);
-      if (file == null || _friendId == null) return;
-      await _uploadAndSendMedia(File(file.path), 3);
-    } catch (e) {
+    if (!await _requestMediaPermission()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('选择视频失败: $e')),
+          const SnackBar(content: Text('需要相册权限才能选择视频')),
+        );
+      }
+      return;
+    }
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.video,
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty || _friendId == null) return;
+      final path = result.files.single.path;
+      if (path == null) return;
+      final file = File(path);
+      if (!await file.exists()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('选择的视频文件不存在')),
+          );
+        }
+        return;
+      }
+      await _uploadAndSendMedia(file, 3);
+    } catch (e) {
+      debugPrint('pickVideo error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('选择视频失败，请检查相册权限后重试')),
         );
       }
     }
@@ -555,37 +623,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         ),
       );
     } else if (msgType == 3) {
-      // Video message
-      bubbleContent = Container(
-        constraints: const BoxConstraints(maxWidth: 200, maxHeight: 200),
-        decoration: BoxDecoration(
-          color: isMe ? colorScheme.primary : theme.cardColor,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(18),
-            topRight: const Radius.circular(18),
-            bottomLeft: Radius.circular(isMe ? 18 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 18),
-          ),
+      // Video message - inline player
+      bubbleContent = ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(18),
+          topRight: const Radius.circular(18),
+          bottomLeft: Radius.circular(isMe ? 18 : 4),
+          bottomRight: Radius.circular(isMe ? 4 : 18),
         ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 200,
-              height: 150,
-              color: Colors.black26,
-              child: Icon(Icons.videocam, color: Colors.white70, size: 40),
+        child: GestureDetector(
+          onDoubleTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FullScreenVideoPlayer(videoUrl: content),
             ),
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
-            ),
-          ],
+          ),
+          child: InlineVideoPlayer(
+            videoUrl: content,
+            width: 200,
+            height: 150,
+            borderRadius: 0,
+          ),
         ),
       );
     } else {

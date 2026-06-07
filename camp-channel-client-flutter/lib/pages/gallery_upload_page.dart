@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:crypto/crypto.dart';
 import '../core/network/api_client.dart';
 import '../core/services/storage_service.dart';
 
@@ -15,7 +17,12 @@ class _GalleryUploadPageState extends State<GalleryUploadPage> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   XFile? _imageFile;
+  XFile? _videoFile;
+  bool _isVideoMode = false; // false = image, true = video
   bool _isUploading = false;
+  String _uploadStatus = '';
+
+  static const int maxVideoSizeBytes = 100 * 1024 * 1024; // 100MB
 
   @override
   void dispose() {
@@ -27,65 +34,91 @@ class _GalleryUploadPageState extends State<GalleryUploadPage> {
   Future<void> _pickImage() async {
     try {
       final picker = ImagePicker();
-      // 使用 pickMedia 而不是 pickImage，兼容性更好
       final XFile? image = await picker.pickMedia(
         maxWidth: 1920,
         imageQuality: 85,
       );
-      debugPrint('Image picker result: ${image?.path}');
-      debugPrint('Image picker result is null: ${image == null}');
       if (image != null) {
-        debugPrint('Before setState, _imageFile: ${_imageFile?.path}');
         setState(() {
           _imageFile = image;
+          _videoFile = null;
         });
-        debugPrint('After setState, _imageFile: ${_imageFile?.path}');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('已选择图片: ${image.name}')),
           );
         }
-      } else {
-        debugPrint('Image picker returned null (user cancelled)');
       }
     } catch (e) {
-      debugPrint('Image picker error: $e');
-      // 如果 pickMedia 失败，尝试 pickImage
+      debugPrint('pickMedia error: $e');
+      // Fallback
       try {
         final picker = ImagePicker();
-        final image = await picker.pickImage(
-          source: ImageSource.gallery,
-          maxWidth: 1920,
-          imageQuality: 85,
-        );
-        debugPrint('Fallback pickImage result: ${image?.path}');
+        final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1920, imageQuality: 85);
         if (image != null) {
-          setState(() => _imageFile = image);
+          setState(() { _imageFile = image; _videoFile = null; });
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('已选择图片: ${image.name}')),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选择图片: ${image.name}')));
           }
         }
       } catch (e2) {
-        debugPrint('Image picker fallback error: $e2');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('选择图片失败: $e2')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('选择图片失败，请检查相册权限')));
         }
       }
     }
   }
 
+  Future<void> _pickVideo() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? video = await picker.pickVideo(source: ImageSource.gallery, maxDuration: const Duration(minutes: 10));
+      if (video == null) return;
+
+      final file = File(video.path);
+      final fileSize = await file.length();
+      if (fileSize > maxVideoSizeBytes) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('视频文件过大（${(fileSize / 1024 / 1024).toStringAsFixed(1)}MB），请选择100MB以内的视频')),
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        _videoFile = video;
+        _imageFile = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选择视频: ${video.name}')));
+      }
+    } catch (e) {
+      debugPrint('pickVideo error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('选择视频失败，请检查相册权限')));
+      }
+    }
+  }
+
+  Future<String> _calculateFileHash(File file) async {
+    final hash = await compute(_hashFile, file.path);
+    return hash;
+  }
+
+  static String _hashFile(String path) {
+    final file = File(path);
+    final bytes = file.readAsBytesSync();
+    final digest = md5.convert(bytes);
+    return digest.toString();
+  }
+
   Future<String?> _uploadImage(File file) async {
     final apiClient = ApiClient();
     try {
-      // Upload to server's /upload/image endpoint
       final response = await apiClient.uploadFile<Map<String, dynamic>>('/upload/image', file);
       final result = response.data;
       if (result != null && result['code'] == 200) {
-        // Server returns {"code": 200, "data": {"url": "/uploads/images/..."}}
         final data = result['data'] as Map<String, dynamic>;
         return data['url'] as String?;
       }
@@ -94,63 +127,106 @@ class _GalleryUploadPageState extends State<GalleryUploadPage> {
     }
     return null;
   }
+  
+  Future<String?> _uploadVideo(File file) async {
+    final apiClient = ApiClient();
+    try {
+      // 1. Calculate hash
+      setState(() => _uploadStatus = '正在计算文件指纹...');
+      final fileHash = await _calculateFileHash(file);
+  
+      // 2. Check dedup
+      setState(() => _uploadStatus = '正在检查秒传...');
+      final exists = await apiClient.checkVideoExists(fileHash);
+      if (exists != null && exists['exists'] == true) {
+        return exists['url'] as String?;
+      }
+  
+      // 3. Upload
+      setState(() => _uploadStatus = '正在上传视频...');
+      final response = await apiClient.uploadFile<Map<String, dynamic>>('/upload/video', file);
+      final result = response.data;
+      if (result != null && result['code'] == 200) {
+        final data = result['data'] as Map<String, dynamic>;
+        return data['url'] as String?;
+      }
+    } catch (e) {
+      debugPrint('Video upload failed: $e');
+    }
+    return null;
+  }
 
   Future<void> _submit() async {
-    debugPrint('_submit called, _imageFile: ${_imageFile?.path}');
-    if (_imageFile == null) {
-      debugPrint('No image selected, returning');
+    final hasImage = _imageFile != null;
+    final hasVideo = _videoFile != null;
+    if (!hasImage && !hasVideo) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先选择图片或视频')));
       return;
     }
-    setState(() => _isUploading = true);
+    setState(() { _isUploading = true; _uploadStatus = ''; });
 
     try {
-      // 1. Upload image
-      debugPrint('Uploading image: ${_imageFile!.path}');
-      final imageUrl = await _uploadImage(File(_imageFile!.path));
-      debugPrint('Upload result: $imageUrl');
-      if (imageUrl == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('图片上传失败')),
-          );
-        }
-        return;
-      }
-
-      // 2. Create gallery entry
       final apiClient = ApiClient();
-      final data = {
-        'title': _titleController.text.trim().isEmpty ? '无标题' : _titleController.text.trim(),
-        'description': _descController.text.trim().isEmpty ? null : _descController.text.trim(),
-        'imageUrl': imageUrl,
-      };
-      debugPrint('Creating gallery entry: $data');
-      final response = await apiClient.post('/gallery', data: data);
-      final result = response.data;
-      debugPrint('Gallery create response: $result');
-      if (result != null && result['code'] == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('画作已上传到画廊')),
-          );
-          Navigator.pop(context);
+      final title = _titleController.text.trim().isEmpty ? '无标题' : _titleController.text.trim();
+      final description = _descController.text.trim().isEmpty ? null : _descController.text.trim();
+
+      if (hasVideo) {
+        // Video upload
+        final videoUrl = await _uploadVideo(File(_videoFile!.path));
+        if (videoUrl == null) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('视频上传失败')));
+          return;
+        }
+        final data = {
+          'title': title,
+          'description': description,
+          'videoUrl': videoUrl,
+          'mediaType': 2,
+        };
+        final response = await apiClient.post('/gallery', data: data);
+        final result = response.data;
+        if (result != null && result['code'] == 200) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('视频已上传到画廊')));
+            Navigator.pop(context);
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result?['message'] ?? '上传失败')));
+          }
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result?['message'] ?? '上传失败')),
-          );
+        // Image upload
+        final imageUrl = await _uploadImage(File(_imageFile!.path));
+        if (imageUrl == null) {
+          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('图片上传失败')));
+          return;
+        }
+        final data = {
+          'title': title,
+          'description': description,
+          'imageUrl': imageUrl,
+          'mediaType': 1,
+        };
+        final response = await apiClient.post('/gallery', data: data);
+        final result = response.data;
+        if (result != null && result['code'] == 200) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画作已上传到画廊')));
+            Navigator.pop(context);
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result?['message'] ?? '上传失败')));
+          }
         }
       }
     } catch (e) {
-      debugPrint('Submit error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('上传失败: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('上传失败: $e')));
       }
     }
-    if (mounted) setState(() => _isUploading = false);
+    if (mounted) setState(() { _isUploading = false; _uploadStatus = ''; });
   }
 
   @override
@@ -158,37 +234,82 @@ class _GalleryUploadPageState extends State<GalleryUploadPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     // 标题不是必填的，只需要有图片即可上传
-    final canUpload = _imageFile != null && !_isUploading;
-    
-    debugPrint('Build called, _imageFile: ${_imageFile?.path}, canUpload: $canUpload');
+    final canUpload = (_imageFile != null || _videoFile != null) && !_isUploading;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('上传画作'),
         actions: [
-          Tooltip(
-            message: canUpload
-                ? '上传画作'
-                : (_imageFile == null ? '请先选择图片' : '正在上传中'),
-            child: TextButton(
-              onPressed: canUpload ? () {
-                debugPrint('Upload button tapped, image: ${_imageFile?.path}');
-                _submit();
-              } : null,
-              child: Text(_isUploading ? '上传中...' : '上传',
-                  style: TextStyle(
-                    color: canUpload ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.3),
-                    fontWeight: FontWeight.w600,
-                  )),
-            ),
+          TextButton(
+            onPressed: canUpload ? _submit : null,
+            child: Text(_isUploading ? '上传中...' : '上传',
+                style: TextStyle(
+                  color: canUpload ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.3),
+                  fontWeight: FontWeight.w600,
+                )),
           ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // 状态提示
-          if (_imageFile == null)
+          // Media type toggle
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() { _isVideoMode = false; }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: !_isVideoMode ? colorScheme.primary : colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colorScheme.outlineVariant),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.image, color: !_isVideoMode ? Colors.white : colorScheme.onSurface.withOpacity(0.5)),
+                        const SizedBox(width: 8),
+                        Text('图片', style: TextStyle(
+                          color: !_isVideoMode ? Colors.white : colorScheme.onSurface.withOpacity(0.5),
+                          fontWeight: FontWeight.w600,
+                        )),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() { _isVideoMode = true; }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: _isVideoMode ? colorScheme.primary : colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colorScheme.outlineVariant),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.videocam, color: _isVideoMode ? Colors.white : colorScheme.onSurface.withOpacity(0.5)),
+                        const SizedBox(width: 8),
+                        Text('视频', style: TextStyle(
+                          color: _isVideoMode ? Colors.white : colorScheme.onSurface.withOpacity(0.5),
+                          fontWeight: FontWeight.w600,
+                        )),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Hint
+          if (_imageFile == null && _videoFile == null)
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
@@ -203,16 +324,16 @@ class _GalleryUploadPageState extends State<GalleryUploadPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '请先选择一张图片，然后填写画作标题即可上传',
+                      _isVideoMode ? '请选择一个视频，然后填写标题即可上传' : '请先选择一张图片，然后填写画作标题即可上传',
                       style: TextStyle(color: colorScheme.onPrimaryContainer, fontSize: 13),
                     ),
                   ),
                 ],
               ),
             ),
-          // Image picker area
+          // Media picker area
           GestureDetector(
-            onTap: _pickImage,
+            onTap: _isVideoMode ? _pickVideo : _pickImage,
             child: Container(
               height: 200,
               decoration: BoxDecoration(
@@ -230,48 +351,72 @@ class _GalleryUploadPageState extends State<GalleryUploadPage> {
                             width: double.infinity,
                             height: 200,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              debugPrint('Image.file error: $error');
-                              return Container(
-                                color: Colors.black26,
-                                child: const Center(
-                                  child: Text('图片加载失败', style: TextStyle(color: Colors.white70)),
-                                ),
-                              );
-                            },
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.black26,
+                              child: const Center(child: Text('图片加载失败', style: TextStyle(color: Colors.white70))),
+                            ),
                           ),
                         ),
                         Positioned(
-                          top: 8,
-                          right: 8,
+                          top: 8, right: 8,
                           child: Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
+                            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
                             child: const Icon(Icons.edit, color: Colors.white, size: 18),
                           ),
                         ),
                       ],
                     )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_photo_alternate_outlined,
-                            size: 48, color: colorScheme.primary.withOpacity(0.6)),
-                        const SizedBox(height: 8),
-                        Text('点击选择图片',
-                            style: TextStyle(
-                              color: colorScheme.onSurface.withOpacity(0.5),
-                              fontSize: 14,
-                            )),
-                      ],
-                    ),
+                  : _videoFile != null
+                      ? Stack(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              height: 200,
+                              color: Colors.black,
+                              child: const Center(
+                                child: Icon(Icons.videocam, color: Colors.white54, size: 48),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 8, left: 8, right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                                child: Text(
+                                  _videoFile!.name,
+                                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 8, right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                                child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isVideoMode ? Icons.videocam_outlined : Icons.add_photo_alternate_outlined,
+                              size: 48, color: colorScheme.primary.withOpacity(0.6),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _isVideoMode ? '点击选择视频' : '点击选择图片',
+                              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.5), fontSize: 14),
+                            ),
+                          ],
+                        ),
             ),
           ),
           const SizedBox(height: 20),
-          // Title
           TextField(
             controller: _titleController,
             decoration: const InputDecoration(
@@ -281,7 +426,6 @@ class _GalleryUploadPageState extends State<GalleryUploadPage> {
             ),
           ),
           const SizedBox(height: 12),
-          // Description
           TextField(
             controller: _descController,
             maxLines: 3,
@@ -292,8 +436,18 @@ class _GalleryUploadPageState extends State<GalleryUploadPage> {
               border: OutlineInputBorder(),
             ),
           ),
+          if (_isUploading && _uploadStatus.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                children: [
+                  const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                  const SizedBox(width: 8),
+                  Text(_uploadStatus, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
           const SizedBox(height: 20),
-          // User info
           Row(
             children: [
               CircleAvatar(

@@ -5,6 +5,7 @@ import '../core/network/api_client.dart';
 import '../core/services/storage_service.dart';
 import '../widgets/comment_widget.dart';
 import '../widgets/user_card.dart';
+import '../widgets/video_player_widget.dart';
 import 'create_post_page.dart';
 
 class PostDetailPage extends StatefulWidget {
@@ -832,23 +833,46 @@ class _PostDetailPageState extends State<PostDetailPage> {
             onTap: () => _showMediaPreview(url, isVideo: isVideo),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    ApiClient.processImageUrl(url),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: Colors.grey[800],
-                      child: const Icon(Icons.image, color: Colors.white38),
+              child: isVideo
+                  ? Container(
+                      color: Colors.black87,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          const Center(
+                            child: Icon(Icons.videocam, color: Colors.white38, size: 36),
+                          ),
+                          const Center(
+                            child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 48),
+                          ),
+                          Positioned(
+                            bottom: 4,
+                            right: 4,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text('视频', style: TextStyle(color: Colors.white, fontSize: 10)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          ApiClient.processImageUrl(url),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.grey[800],
+                            child: const Icon(Icons.image, color: Colors.white38),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  if (isVideo)
-                    const Center(
-                      child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 48),
-                    ),
-                ],
-              ),
             ),
           );
         },
@@ -857,6 +881,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   void _showMediaPreview(String url, {required bool isVideo}) {
+    if (isVideo) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FullScreenVideoPlayer(videoUrl: url),
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (ctx) => Dialog(

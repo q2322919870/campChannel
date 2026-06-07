@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿<template>
+﻿<template>
   <div class="login-page">
     <div class="login-container">
       <div class="brand-section">
@@ -8,7 +8,7 @@
               <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
             </svg>
           </div>
-          <h1 class="brand-title">Camp Channel</h1>
+          <h1 class="brand-title font-display">Camp Channel</h1>
           <p class="brand-desc">广东机电职业技术学院 · 校园频道</p>
           <div class="brand-features">
             <div class="feature-item">
@@ -117,28 +117,29 @@ async function handleLogin() {
   max-width: 960px;
   width: 100%;
   min-height: 560px;
-  background: var(--surface);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--card-radius);
+  background: var(--card-bg, var(--surface));
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--border-color, var(--outline-variant));
+  border-radius: 24px;
   overflow: hidden;
   box-shadow: var(--card-shadow);
 }
 .brand-section {
   flex: 1;
-  background: linear-gradient(135deg, rgba(124,159,203,0.1), rgba(242,181,212,0.05));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand, #35bfab) 12%, transparent), color-mix(in srgb, var(--brand-secondary, #1fc9e7) 8%, transparent));
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 48px;
 }
 .brand-content { max-width: 320px; }
-.brand-icon { color: var(--primary); margin-bottom: 24px; }
-.brand-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+.brand-icon { color: var(--brand, var(--primary)); margin-bottom: 24px; }
+.brand-title { font-size: 36px; font-weight: 400; margin-bottom: 8px; }
 .brand-desc { color: var(--on-surface-variant); font-size: 14px; margin-bottom: 32px; }
 .brand-features { display: flex; flex-direction: column; gap: 16px; }
 .feature-item { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--on-surface-variant); }
-.feature-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.feature-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand, var(--primary)); }
 .form-section {
   flex: 1;
   display: flex;
@@ -207,13 +208,14 @@ async function handleLogin() {
   padding: 14px;
   border: none;
   border-radius: var(--button-radius);
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, var(--brand, var(--primary)), var(--brand-secondary, var(--secondary)));
   color: #fff;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
 }
+.login-btn:hover:not(:disabled) { transform: translateY(-1px); }
 .login-btn:hover { opacity: 0.9; }
 .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .error-msg { color: #ff6b6b; font-size: 13px; }

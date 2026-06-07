@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../core/network/api_client.dart';
 
 /// Ported from PC client's Post3DGallery.ts (Three.js).
 /// A 3D rotating carousel of image/video cards with perspective projection.
@@ -12,6 +11,10 @@ class Gallery3DItem {
   final String? videoUrl; // If present, this is a video item
   final String? title;
   final String? username;
+  final int? userId;
+  final String? avatar;
+  final String? description;
+  final int mediaType; // 1=image, 2=video
 
   const Gallery3DItem({
     required this.id,
@@ -19,9 +22,13 @@ class Gallery3DItem {
     this.videoUrl,
     this.title,
     this.username,
+    this.userId,
+    this.avatar,
+    this.description,
+    this.mediaType = 1,
   });
 
-  bool get isVideo => videoUrl != null && videoUrl!.isNotEmpty;
+  bool get isVideo => mediaType == 2 || (videoUrl != null && videoUrl!.isNotEmpty);
 }
 
 class Gallery3DCarousel extends StatefulWidget {
@@ -220,11 +227,14 @@ class _Gallery3DCarouselState extends State<Gallery3DCarousel>
                               ? Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    Image.network(
-                                      widget.items[i].imageUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(color: Colors.black),
-                                    ),
+                                    if (widget.items[i].imageUrl.isNotEmpty)
+                                      Image.network(
+                                        widget.items[i].imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                                      )
+                                    else
+                                      Container(color: Colors.black),
                                     const Center(
                                       child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 40),
                                     ),

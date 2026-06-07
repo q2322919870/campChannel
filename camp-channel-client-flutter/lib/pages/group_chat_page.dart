@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../core/network/api_client.dart';
 import '../core/services/storage_service.dart';
 import '../core/services/websocket_service.dart';
+import '../widgets/video_player_widget.dart';
 
 class GroupChatPage extends StatefulWidget {
   const GroupChatPage({super.key});
@@ -309,15 +312,22 @@ class _GroupChatPageState extends State<GroupChatPage> {
         ),
       );
     } else if (msgType == 3 && mediaUrl.isNotEmpty) {
-      // Video message
-      messageContent = Container(
-        width: 200, height: 150,
-        decoration: BoxDecoration(
-          color: colorScheme.onSurface.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Icon(Icons.play_circle_fill, size: 48, color: colorScheme.primary.withOpacity(0.8)),
+      // Video message - inline player
+      messageContent = ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: GestureDetector(
+          onDoubleTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FullScreenVideoPlayer(videoUrl: mediaUrl),
+            ),
+          ),
+          child: InlineVideoPlayer(
+            videoUrl: mediaUrl,
+            width: 200,
+            height: 150,
+            borderRadius: 12,
+          ),
         ),
       );
     } else {
@@ -483,11 +493,52 @@ class _GroupChatPageState extends State<GroupChatPage> {
     );
   }
 
-  Future<void> _pickAndSendImage() async {
+  /// Request photo/video permissions for Android 13+ and fallback
+  Future<bool> _requestMediaPermission() async {
     try {
-      final xFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
-      if (xFile != null) await _uploadAndSendMedia(File(xFile.path), 2);
-    } catch (_) {}
+      var status = await Permission.photos.status;
+      if (!status.isGranted) {
+        status = await Permission.photos.request();
+      }
+      if (status.isGranted) return true;
+      var storageStatus = await Permission.storage.status;
+      if (!storageStatus.isGranted) {
+        storageStatus = await Permission.storage.request();
+      }
+      return storageStatus.isGranted;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _pickAndSendImage() async {
+    if (!await _requestMediaPermission()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('需要相册权限才能选择图片')),
+        );
+      }
+      return;
+    }
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final path = result.files.single.path;
+      if (path == null) return;
+      final file = File(path);
+      if (!await file.exists()) return;
+      await _uploadAndSendMedia(file, 2);
+    } catch (e) {
+      debugPrint('pickImage error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('选择图片失败')),
+        );
+      }
+    }
   }
 
   Future<void> _captureAndSendImage() async {
@@ -498,10 +549,33 @@ class _GroupChatPageState extends State<GroupChatPage> {
   }
 
   Future<void> _pickAndSendVideo() async {
+    if (!await _requestMediaPermission()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('需要相册权限才能选择视频')),
+        );
+      }
+      return;
+    }
     try {
-      final xFile = await _picker.pickVideo(source: ImageSource.gallery);
-      if (xFile != null) await _uploadAndSendMedia(File(xFile.path), 3);
-    } catch (_) {}
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.video,
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final path = result.files.single.path;
+      if (path == null) return;
+      final file = File(path);
+      if (!await file.exists()) return;
+      await _uploadAndSendMedia(file, 3);
+    } catch (e) {
+      debugPrint('pickVideo error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('选择视频失败')),
+        );
+      }
+    }
   }
 
   Future<void> _uploadAndSendMedia(File file, int msgType) async {

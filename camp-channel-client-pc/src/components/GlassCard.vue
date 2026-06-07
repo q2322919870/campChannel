@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿<template>
+﻿<template>
   <div class="glass-card" :style="cardStyle">
     <slot></slot>
   </div>
@@ -18,12 +18,15 @@ const props = withDefaults(defineProps<{
 
 const themeStore = useThemeStore()
 
-const cardStyle = computed(() => ({
-  padding: props.padding,
-  background: themeStore.currentTheme.card,
-  border: `1px solid ${themeStore.currentTheme.border}`,
-  color: themeStore.currentTheme.text,
-}))
+const cardStyle = computed(() => {
+  const t = themeStore.currentTheme
+  return {
+    padding: props.padding,
+    background: t.card,
+    border: `1px solid ${t.border}`,
+    color: t.text,
+  }
+})
 </script>
 
 <style scoped>

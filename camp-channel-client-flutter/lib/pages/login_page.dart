@@ -12,14 +12,23 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'admin@stu.gdmec.edu.cn');
-  final _passwordController = TextEditingController(text: 'admin123');
+  final _emailController = TextEditingController(text: '');
+  final _passwordController = TextEditingController(text: '');
   bool _isLoading = false;
   String? _errorMessage;
   bool _obscurePassword = true;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
+
+  static const _emailSuffix = '@stu.gdmec.edu.cn';
+
+  /// Build full email from user input (auto-append suffix if missing)
+  String get _fullEmail {
+    final input = _emailController.text.trim();
+    if (input.endsWith(_emailSuffix) || input.contains('@')) return input;
+    return '$input$_emailSuffix';
+  }
 
   final ApiClient _apiClient = ApiClient();
 
@@ -55,7 +64,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
     try {
       final response = await _apiClient.post('/auth/login', data: {
-        'email': _emailController.text.trim(),
+        'email': _fullEmail,
         'password': _passwordController.text,
       });
 
@@ -201,15 +210,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               children: [
                 TextFormField(
                   controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(
                     labelText: '学校认证邮箱',
-                    hintText: 'user@stu.gdmec.edu.cn',
-                    prefixIcon: Icon(Icons.email_outlined),
+                    hintText: '请输入学号或用户名',
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    suffixText: _emailSuffix,
                   ),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) return '请输入邮箱';
-                    if (!value.trim().endsWith('@stu.gdmec.edu.cn')) return '邮箱必须以 @stu.gdmec.edu.cn 结尾';
+                    if (value == null || value.trim().isEmpty) return '请输入邮箱前缀';
                     return null;
                   },
                 ),

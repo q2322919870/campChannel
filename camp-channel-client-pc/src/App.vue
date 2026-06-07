@@ -61,16 +61,18 @@ const showLayout = computed(() => {
 
 .main-content {
   flex: 1;
-  margin-left: 72px;
+  margin-left: 140px;
   overflow-y: auto;
-  padding: 32px;
+  padding: 36px 40px 36px 48px;
+  max-width: calc(100vw - 140px);
 }
 
 .main-content.mobile {
   margin-left: 0;
-  margin-bottom: 68px;
+  max-width: 100vw;
+  margin-bottom: 0;
   padding: 16px 12px;
-  padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 
 .auth-wrapper {

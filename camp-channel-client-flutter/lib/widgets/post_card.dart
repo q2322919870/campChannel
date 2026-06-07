@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import '../core/network/api_client.dart';
+import 'video_player_widget.dart';
 
 class PostCard extends StatelessWidget {
   final String username;
@@ -266,18 +267,46 @@ class PostCard extends StatelessWidget {
       itemCount: count > 4 ? 4 : count,
       itemBuilder: (_, i) => ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.network(
-              ApiClient.processImageUrl(videoUrls![i]),
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _placeholderImage(context),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FullScreenVideoPlayer(videoUrl: videoUrls![i]),
+              ),
+            );
+          },
+          child: Container(
+            color: Colors.black87,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const Center(
+                  child: Icon(Icons.videocam, color: Colors.white38, size: 36),
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black26,
+                  ),
+                ),
+                const Center(
+                  child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 40),
+                ),
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text('视频', style: TextStyle(color: Colors.white, fontSize: 10)),
+                  ),
+                ),
+              ],
             ),
-            const Center(
-              child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 40),
-            ),
-          ],
+          ),
         ),
       ),
     );

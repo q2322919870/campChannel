@@ -4,6 +4,8 @@ import { setCursorTheme } from '../utils/cursorRenderer'
 
 export interface Theme {
   name: string
+  brand: string
+  brandSecondary: string
   primary: string
   primaryContainer: string
   onPrimaryContainer: string
@@ -25,6 +27,11 @@ export interface Theme {
   inverseSurface: string
   inverseOnSurface: string
   inversePrimary: string
+  card: string
+  article: string
+  border: string
+  text: string
+  isDark: boolean
   style: 'md3' | 'glass'
   borderRadius: string
   cardRadius: string
@@ -33,7 +40,98 @@ export interface Theme {
   cardShadow: string
 }
 
-const themes: Theme[] = [
+type ThemeInput = Omit<Theme, 'brand' | 'brandSecondary' | 'card' | 'article' | 'border' | 'text' | 'isDark'> &
+  Partial<Pick<Theme, 'brand' | 'brandSecondary' | 'card' | 'article' | 'border' | 'text' | 'isDark'>>
+
+function enrichTheme(t: ThemeInput): Theme {
+  const isDark = t.isDark ?? true
+  return {
+    ...t,
+    brand: t.brand ?? t.primary,
+    brandSecondary: t.brandSecondary ?? t.secondary,
+    card: t.card ?? (t.style === 'glass' ? (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.4)') : t.surface),
+    article: t.article ?? (isDark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.8)'),
+    border: t.border ?? (isDark ? 'rgba(255,255,255,0.2)' : '#ffffff'),
+    text: t.text ?? t.onSurface,
+    isDark,
+  }
+}
+
+const rawThemes: ThemeInput[] = [
+  {
+    name: 'lvy-neko 暗色',
+    brand: '#35bfab',
+    brandSecondary: '#1fc9e7',
+    primary: '#35bfab',
+    primaryContainer: '#2a9d8f',
+    onPrimaryContainer: '#c8f5ee',
+    secondary: '#1fc9e7',
+    secondaryContainer: '#17a8c2',
+    tertiary: '#7b888e',
+    tertiaryContainer: '#5a666b',
+    surface: 'rgba(255,255,255,0.06)',
+    surfaceVariant: 'rgba(255,255,255,0.1)',
+    surfaceTint: 'rgba(53, 191, 171, 0.08)',
+    background: '#1a2224',
+    onSurface: '#e8eeef',
+    onSurfaceVariant: '#7b888e',
+    outline: 'rgba(255,255,255,0.2)',
+    outlineVariant: 'rgba(255,255,255,0.12)',
+    error: '#ff8a80',
+    errorContainer: '#8c1d18',
+    scrim: 'rgba(0, 0, 0, 0.55)',
+    inverseSurface: '#e8eeef',
+    inverseOnSurface: '#334f52',
+    inversePrimary: '#2a9d8f',
+    card: 'rgba(255,255,255,0.1)',
+    article: 'rgba(255,255,255,0.14)',
+    border: 'rgba(255,255,255,0.22)',
+    text: '#e8eeef',
+    isDark: true,
+    style: 'glass',
+    borderRadius: '12px',
+    cardRadius: '20px',
+    buttonRadius: '999px',
+    shadow: '0 4px 24px rgba(0,0,0,0.25)',
+    cardShadow: '0 8px 32px rgba(0,0,0,0.2)',
+  },
+  {
+    name: 'lvy-neko 浅色',
+    brand: '#35bfab',
+    brandSecondary: '#1fc9e7',
+    primary: '#35bfab',
+    primaryContainer: '#2a9d8f',
+    onPrimaryContainer: '#334f52',
+    secondary: '#1fc9e7',
+    secondaryContainer: '#17a8c2',
+    tertiary: '#7b888e',
+    tertiaryContainer: '#9aa5ab',
+    surface: 'rgba(255,255,255,0.5)',
+    surfaceVariant: 'rgba(255,255,255,0.35)',
+    surfaceTint: 'rgba(53, 191, 171, 0.06)',
+    background: '#eeeeee',
+    onSurface: '#334f52',
+    onSurfaceVariant: '#7b888e',
+    outline: 'rgba(51, 79, 82, 0.15)',
+    outlineVariant: 'rgba(255,255,255,0.8)',
+    error: '#e40014',
+    errorContainer: '#ffcaca',
+    scrim: 'rgba(0, 0, 0, 0.35)',
+    inverseSurface: '#334f52',
+    inverseOnSurface: '#eeeeee',
+    inversePrimary: '#2a9d8f',
+    card: 'rgba(255,255,255,0.4)',
+    article: 'rgba(255,255,255,0.8)',
+    border: '#ffffff',
+    text: '#334f52',
+    isDark: false,
+    style: 'glass',
+    borderRadius: '12px',
+    cardRadius: '20px',
+    buttonRadius: '999px',
+    shadow: '0 4px 24px rgba(51,79,82,0.08)',
+    cardShadow: '0 8px 32px rgba(51,79,82,0.1)',
+  },
   {
     name: 'Material You',
     primary: '#4FC3F7',
@@ -576,6 +674,8 @@ const themes: Theme[] = [
   },
 ]
 
+const themes: Theme[] = rawThemes.map(enrichTheme)
+
 export const useThemeStore = defineStore('theme', () => {
   const savedIndex = parseInt(localStorage.getItem('themeIndex') || '0')
   const themeIndex = ref(savedIndex >= 0 && savedIndex < themes.length ? savedIndex : 0)
@@ -623,6 +723,14 @@ export const useThemeStore = defineStore('theme', () => {
     root.style.setProperty('--shadow', t.shadow)
     root.style.setProperty('--card-shadow', t.cardShadow)
     root.style.setProperty('--theme-style', t.style)
+    root.style.setProperty('--brand', t.brand)
+    root.style.setProperty('--brand-secondary', t.brandSecondary)
+    root.style.setProperty('--card-bg', t.card)
+    root.style.setProperty('--article-bg', t.article)
+    root.style.setProperty('--border-color', t.border)
+    root.style.setProperty('--text', t.text)
+    root.classList.toggle('theme-dark', t.isDark)
+    root.classList.toggle('theme-light', !t.isDark)
     setCursorTheme(themeIndex.value)
   }
 

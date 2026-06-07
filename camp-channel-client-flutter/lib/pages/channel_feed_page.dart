@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../core/network/api_client.dart';
 import '../core/services/burst_service.dart';
 import '../canvas/canvas_effects.dart';
 import '../widgets/post_card.dart';
 import '../widgets/stack_expand_fab.dart';
+import '../widgets/gallery_preview_dialog.dart';
 
 class ChannelFeedPage extends StatefulWidget {
   const ChannelFeedPage({super.key});
@@ -38,13 +40,24 @@ class _ChannelFeedPageState extends State<ChannelFeedPage> {
           setState(() {
             _galleryItems = list.map((e) {
               final g = Map<String, dynamic>.from(e as Map);
+              final mediaType = g['mediaType'];
+              final isVideoItem = mediaType == 2 || (mediaType is String && mediaType == '2');
+              final videoUrl = g['videoUrl']?.toString();
+              final imageUrl = g['imageUrl']?.toString() ?? '';
               return Gallery3DItem(
                 id: g['id'] ?? 0,
-                imageUrl: ApiClient.processImageUrl(g['imageUrl']?.toString() ?? ''),
+                imageUrl: ApiClient.processImageUrl(isVideoItem ? (imageUrl.isNotEmpty ? imageUrl : null) : imageUrl),
+                videoUrl: isVideoItem && videoUrl != null && videoUrl.isNotEmpty
+                    ? ApiClient.processImageUrl(videoUrl)
+                    : null,
                 title: g['title']?.toString() ?? '',
                 username: g['username']?.toString() ?? '匿名',
+                userId: g['userId'] is int ? g['userId'] as int : int.tryParse(g['userId']?.toString() ?? ''),
+                avatar: ApiClient.processImageUrl(g['avatar']?.toString()),
+                description: g['description']?.toString(),
+                mediaType: isVideoItem ? 2 : 1,
               );
-            }).where((item) => item.imageUrl.isNotEmpty).toList();
+            }).where((item) => item.imageUrl.isNotEmpty || item.isVideo).toList();
           });
         }
       }
@@ -325,22 +338,10 @@ class _ChannelFeedPageState extends State<ChannelFeedPage> {
                                     glowColor: colorScheme.secondary,
                                     height: 200,
                                     onItemTap: (item) {
-                                      // Show gallery image preview dialog
-                                      showDialog(
-                                        context: context,
-                                        builder: (ctx) => Dialog(
-                                          backgroundColor: Colors.transparent,
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(16),
-                                            child: Image.network(
-                                              item.imageUrl,
-                                              fit: BoxFit.contain,
-                                              errorBuilder: (_, __, ___) => const SizedBox(
-                                                height: 200, child: Center(child: Text('图片加载失败')),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
+                                      GalleryPreviewDialog.show(
+                                        context,
+                                        item,
+                                        onDeleted: () => _fetchGalleryItems(),
                                       );
                                     },
                                   ),
@@ -358,16 +359,25 @@ class _ChannelFeedPageState extends State<ChannelFeedPage> {
                                       : rawContent);
                               // Wrap with ShaderCard effect (alternating glass/glitch like PC)
                               final useGlitch = postIndex % 3 == 0 && _channels.isNotEmpty;
-                              // Parse videoUrls
+                              // Parse videoUrls (API returns JSON string like '["url1","url2"]')
                               List<String>? videoList;
                               final rawVideos = post['videoUrls'];
                               if (rawVideos is List) {
                                 videoList = rawVideos.map((e) => e.toString()).toList();
                               } else if (rawVideos is String && rawVideos.isNotEmpty) {
                                 try {
-                                  videoList = rawVideos.startsWith('[')
-                                      ? (rawVideos as dynamic).map((e) => e.toString()).toList()
-                                      : rawVideos.split(',');
+                                  if (rawVideos.startsWith('[')) {
+                                    final decoded = jsonDecode(rawVideos);
+                                    if (decoded is List) {
+                                      videoList = decoded.map((e) {
+                                        final url = e.toString();
+                                        if (url.startsWith('http') || url.startsWith('/')) return url;
+                                        return '/uploads/videos/$url';
+                                      }).toList();
+                                    }
+                                  } else {
+                                    videoList = rawVideos.split(',');
+                                  }
                                 } catch (_) {}
                               }
                               return ShaderCard(

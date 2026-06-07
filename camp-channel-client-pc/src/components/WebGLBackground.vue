@@ -1,5 +1,7 @@
 <template>
-  <div ref="containerRef" class="fluid-bg-container"></div>
+  <div class="fluid-bg-blur">
+    <div ref="containerRef" class="fluid-bg-container"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -13,7 +15,11 @@ const themeStore = useThemeStore()
 let canvasEl: HTMLCanvasElement | null = null
 
 function themeToColors(theme: any): FluidColors {
-  return { primary: theme.primary || '#D0BCFF', secondary: theme.secondary || '#CCC2DC', glowColor: theme.primary || '#D0BCFF' }
+  return {
+    primary: theme.brand || theme.primary || '#35bfab',
+    secondary: theme.brandSecondary || theme.secondary || '#1fc9e7',
+    glowColor: theme.brand || theme.primary || '#35bfab',
+  }
 }
 
 onMounted(() => {
@@ -21,7 +27,7 @@ onMounted(() => {
   try {
     const e = new FluidBackground(themeToColors(themeStore.currentTheme))
     canvasEl = e.getCanvas()
-    canvasEl.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;'
+    canvasEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:block;'
     containerRef.value.appendChild(canvasEl)
     e.start()
     engine.value = e
@@ -43,13 +49,19 @@ watch(() => themeStore.themeIndex, () => {
 </script>
 
 <style scoped>
-.fluid-bg-container {
+.fluid-bg-blur {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   z-index: 0;
+  overflow: hidden;
+  filter: blur(50px);
+  opacity: 0.88;
+  pointer-events: none;
+}
+
+.fluid-bg-container {
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 </style>

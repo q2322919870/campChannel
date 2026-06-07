@@ -2,7 +2,7 @@
   <div class="home-page">
     <div class="home-header">
       <div class="header-row">
-        <h1 class="page-title">首页</h1>
+        <h1 class="page-title font-display">首页</h1>
         <div class="header-actions">
           <button class="hot-btn" @click="router.push('/hot-posts')" title="热门帖子">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -39,7 +39,7 @@
     </div>
 
     <div class="gallery-section" v-if="showGallery">
-      <Post3DViewer @item-click="onGalleryItemClick" :channelId="currentChannelId" />
+      <PhotoCardStack @item-click="onGalleryItemClick" :channelId="currentChannelId" />
     </div>
 
     <div class="posts-grid">
@@ -133,7 +133,7 @@ import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api/client'
 import UserCard from '../components/UserCard.vue'
-import Post3DViewer from '../components/Post3DViewer.vue'
+import PhotoCardStack from '../components/PhotoCardStack.vue'
 import ShaderPostCard from '../components/ShaderPostCard.vue'
 import AddGalleryDialog from '../components/AddGalleryDialog.vue'
 import GalleryPreview from '../components/GalleryPreview.vue'
@@ -412,43 +412,65 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.home-page { max-width: 800px; margin: 0 auto; }
-.home-header { margin-bottom: 24px; }
+.home-page { max-width: 920px; margin: 0 auto; width: 100%; }
+.home-header { margin-bottom: 28px; }
 .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.page-title { font-size: 28px; font-weight: 700; margin: 0; }
+.page-title { font-size: 32px; font-weight: 400; margin: 0; color: var(--text, var(--on-surface)); }
 .header-actions { display: flex; gap: 8px; }
-.search-btn, .hot-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.search-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(124,159,203,0.1); }
-.hot-btn:hover { border-color: #ff6b35; color: #ff6b35; background: rgba(255,107,53,0.1); }
-.channel-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.search-btn, .hot-btn {
+  width: 42px; height: 42px; border-radius: 14px;
+  background: var(--card-bg, var(--surface));
+  border: 1px solid var(--border-color, var(--outline-variant));
+  color: var(--on-surface-variant); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s; backdrop-filter: blur(12px);
+}
+.search-btn:hover { border-color: var(--brand, var(--primary)); color: var(--brand, var(--primary)); background: var(--card-bg); }
+.hot-btn:hover { border-color: #ff6b35; color: #ff6b35; background: rgba(255,107,53,0.08); }
+.channel-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
 .channel-tab {
   flex-shrink: 0;
-  padding: 8px 16px;
-  border-radius: var(--card-radius);
-  background: var(--surface);
-  border: 1px solid var(--outline-variant);
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--card-bg, var(--surface));
+  border: 1px solid var(--border-color, var(--outline-variant));
   color: var(--on-surface-variant);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s;
   display: flex;
   align-items: center;
   gap: 6px;
+  backdrop-filter: blur(12px);
 }
-.channel-tab:hover { border-color: var(--primary); color: var(--on-surface); }
-.channel-tab.active { background: rgba(124,159,203,0.15); border-color: var(--primary); color: var(--primary); font-weight: 600; }
-.tab-badge { background: var(--primary); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+.channel-tab:hover { border-color: var(--brand, var(--primary)); color: var(--on-surface); }
+.channel-tab.active {
+  background: color-mix(in srgb, var(--brand, var(--primary)) 18%, transparent);
+  border-color: var(--brand, var(--primary));
+  color: var(--brand, var(--primary));
+  font-weight: 600;
+}
+.tab-badge { background: var(--brand, var(--primary)); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; }
 
-.gallery-section { margin-bottom: 24px; }
-.posts-grid { display: flex; flex-direction: column; gap: 12px; }
+.gallery-section {
+  margin-bottom: 32px;
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: var(--card-bg, var(--surface));
+  border: 1px solid var(--border-color, var(--outline-variant));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.posts-grid { display: flex; flex-direction: column; gap: 14px; }
 .post-card {
-  padding: 20px;
-  background: var(--surface);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--outline-variant);
-  border-radius: 16px;
+  padding: 22px;
+  background: var(--card-bg, var(--surface));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color, var(--outline-variant));
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 .post-card.pinned {
@@ -470,7 +492,7 @@ onUnmounted(() => {
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(240, 173, 78, 0.4);
 }
-.post-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+.post-card:hover { transform: translateY(-3px); border-color: var(--brand, var(--primary)); box-shadow: var(--card-shadow); }
 .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .post-avatar {
   width: 36px; height: 36px; border-radius: 10px;
@@ -508,13 +530,19 @@ onUnmounted(() => {
 .fab-item span { font-weight: 500; }
 .fab-item.refresh.spinning svg { animation: spin 0.6s ease-in-out; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.fab-main { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: all 0.3s; }
+.fab-main { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--brand, var(--primary)), var(--brand-secondary, var(--secondary))); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: all 0.3s; }
 .fab-main:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(0,0,0,0.4); }
 .floating-page-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; animation: fadeIn 0.2s; }
 .floating-page-card { background: rgba(15,18,25,0.8); backdrop-filter: blur(20px); border: 1px solid var(--outline-variant); border-radius: var(--card-radius); box-shadow: var(--card-shadow); padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; animation: scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1); }
 
+@media (min-width: 1200px) {
+.home-page { max-width: 1040px; }
+.gallery-section { padding: 32px 36px; }
+}
+
 @media (max-width: 768px) {
 .home-page { max-width: 100%; }
+.gallery-section { padding: 16px 12px; border-radius: 18px; }
 .page-title { font-size: 22px; margin-bottom: 16px; }
 .channel-tabs { gap: 6px; }
 .channel-tab { padding: 6px 12px; font-size: 12px; }
