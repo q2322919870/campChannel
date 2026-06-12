@@ -200,7 +200,8 @@ const emailNotify = computed(() => authStore.user?.emailNotify !== 0)
 async function toggleEmailNotify(e: Event) {
   const checked = (e.target as HTMLInputElement).checked
   try {
-    await api.put('/users/me', { emailNotify: checked ? 1 : 0 })
+    // VP0-005: PUT /users/me → PUT /api/users/profile (per BP0-001 fix)
+    await api.put('/api/users/profile', { emailNotify: checked ? 1 : 0 })
     if (authStore.user) authStore.user.emailNotify = checked ? 1 : 0
   } catch {
     alert('设置失败')
@@ -215,7 +216,8 @@ async function updateUsername() {
   if (!newUsername.value.trim()) { usernameError.value = '用户名不能为空'; return }
   if (newUsername.value.trim().length < 2) { usernameError.value = '用户名至少2个字符'; return }
   try {
-    const res = await api.put('/users/me', { username: newUsername.value.trim() })
+    // VP0-005: PUT /users/me → PUT /api/users/profile (per BP0-001 fix)
+    const res = await api.put('/api/users/profile', { username: newUsername.value.trim() })
     if (res.data.code === 200 && authStore.user) {
       authStore.user.username = newUsername.value.trim()
       showUsernameInput.value = false
@@ -248,7 +250,7 @@ async function changePassword() {
     return
   }
   try {
-    const res = await api.post('/users/change-password', { oldPassword: oldPassword.value, newPassword: newPassword.value })
+    const res = await api.put('/users/password', { oldPassword: oldPassword.value, newPassword: newPassword.value })
     if (res.data.code === 200) {
       oldPassword.value = ''
       newPassword.value = ''
