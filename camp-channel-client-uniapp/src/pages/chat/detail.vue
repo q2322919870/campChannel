@@ -17,24 +17,44 @@
             </view>
           </view>
           <view class="msg-body">
-            <view class="msg-bubble" @longpress="canRecall(msg) && recallMessage(msg)">
-              <text class="msg-text">{{ msg.content }}</text>
+            <view class="msg-bubble" :class="{ 'msg-bubble-media': msg.type === 2 || msg.type === 3 }" @longpress="canRecall(msg) && recallMessage(msg)">
+              <template v-if="msg.status === 'RECALLED'">
+                <text class="msg-text msg-recalled">已撤回一条消息</text>
+              </template>
+              <template v-else-if="msg.type === 2">
+                <image :src="msg.content" mode="widthFix" class="msg-image" @tap="previewImage(msg.content)" />
+              </template>
+              <template v-else-if="msg.type === 3">
+                <video :src="msg.content" class="msg-video" controls :show-center-play-btn="true" :show-play-btn="true" :enable-progress-gesture="false" object-fit="cover" poster="" />
+              </template>
+              <template v-else>
+                <text class="msg-text">{{ msg.content }}</text>
+              </template>
             </view>
             <view class="msg-meta">
               <text class="msg-time">{{ msg.createdAt }}</text>
-              <text v-if="msg.status === 'RECALLED'" class="msg-recalled">已撤回</text>
             </view>
           </view>
         </template>
         <!-- Self message: body left, avatar right -->
         <template v-else>
           <view class="msg-body">
-            <view class="msg-bubble bubble-self" @longpress="canRecall(msg) && recallMessage(msg)">
-              <text class="msg-text">{{ msg.content }}</text>
+            <view class="msg-bubble bubble-self" :class="{ 'msg-bubble-media': msg.type === 2 || msg.type === 3 }" @longpress="canRecall(msg) && recallMessage(msg)">
+              <template v-if="msg.status === 'RECALLED'">
+                <text class="msg-text msg-recalled">已撤回一条消息</text>
+              </template>
+              <template v-else-if="msg.type === 2">
+                <image :src="msg.content" mode="widthFix" class="msg-image" @tap="previewImage(msg.content)" />
+              </template>
+              <template v-else-if="msg.type === 3">
+                <video :src="msg.content" class="msg-video" controls :show-center-play-btn="true" :show-play-btn="true" :enable-progress-gesture="false" object-fit="cover" poster="" />
+              </template>
+              <template v-else>
+                <text class="msg-text">{{ msg.content }}</text>
+              </template>
             </view>
             <view class="msg-meta">
               <text class="msg-time">{{ msg.createdAt }}</text>
-              <text v-if="msg.status === 'RECALLED'" class="msg-recalled">已撤回</text>
               <text v-if="msg.status === 'SENDING'" class="msg-sending">发送中...</text>
               <text v-if="msg.status === 'FAILED'" class="msg-failed">发送失败</text>
               <text v-if="msg.status === 'SENT'" class="msg-read">✓</text>
@@ -60,6 +80,9 @@
         placeholder-class="ph"
         @confirm="sendMessage"
       />
+      <view class="btn-media" @tap="showMediaMenu">
+        <text>➕</text>
+      </view>
       <button class="btn-send" @tap="sendMessage">发送</button>
     </view>
   </view>
@@ -68,7 +91,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useAuthStore } from '../../stores/auth'
-import request, { processImageUrl } from '../../utils/request'
+import request, { processImageUrl, BASE_URL } from '../../utils/request'
 import wsManager from '../../utils/websocket'
 
 const authStore = useAuthStore()
@@ -86,6 +109,7 @@ const scrollIntoView = ref('')
 interface Message {
   id: number
   content: string
+  type: number
   createdAt: string
   isSelf: boolean
   status: string
@@ -147,17 +171,23 @@ async function loadHistory() {
     const res = await request<any>(`/chat/history/${friendId.value}?page=1&size=50`)
     if (res?.code === 200) {
       const list = res.data || []
-      messages.value = list.map((m: any) => ({
-        id: m.id,
-        content: m.content || '',
-        createdAt: formatTime(m.createTime || m.createdAt),
-        isSelf: m.senderId === authStore.userInfo?.userId,
-        // Always start with 'SENT' for self messages from history.
-        // Only WebSocket 'message_read' event changes status to 'READ'.
-        // Backend auto-marks messages as read on every history load,
-        // so we cannot rely on backend's isRead for self messages.
-        status: m.status === 2 ? 'RECALLED' : 'SENT',
-      }))
+      messages.value = list.map((m: any) => {
+        // type: 1=text, 2=image, 3=video
+        const msgType = m.type || 1
+        let content = m.content || ''
+        // For image/video messages, content holds the URL
+        if ((msgType === 2 || msgType === 3) && content) {
+          content = processImageUrl(content)
+        }
+        return {
+          id: m.id,
+          content,
+          type: msgType,
+          createdAt: formatTime(m.createTime || m.createdAt),
+          isSelf: m.senderId === authStore.userInfo?.userId,
+          status: m.status === 2 || m.status === 5 ? 'RECALLED' : 'SENT',
+        }
+      })
     }
   } catch (_) {
     uni.showToast({ title: '加载聊天记录失败', icon: 'none' })
@@ -186,6 +216,7 @@ async function sendMessage() {
   messages.value.push({
     id: tempId,
     content: text,
+    type: 1,
     createdAt: '发送中...',
     isSelf: true,
     status: 'SENDING',
@@ -208,6 +239,7 @@ async function sendMessage() {
         messages.value[idx].id = res.data?.id || tempId
         messages.value[idx].createdAt = formatTime(new Date().toISOString())
         messages.value[idx].status = 'SENT'
+        messages.value[idx].type = 1
       }
     }
   } catch (_) {
@@ -256,6 +288,120 @@ function canRecall(msg: Message): boolean {
   return (now - msgTime) < 120000 // 2 minutes
 }
 
+function showMediaMenu() {
+  uni.showActionSheet({
+    itemList: ['图片', '拍摄', '视频'],
+    success: (res) => {
+      if (res.tapIndex === 0) chooseImage()
+      else if (res.tapIndex === 1) chooseCamera()
+      else if (res.tapIndex === 2) chooseVideo()
+    },
+  })
+}
+
+async function chooseImage() {
+  try {
+    const res = await uni.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album'],
+    })
+    if (res.tempFilePaths?.length) {
+      await uploadAndSendMedia(res.tempFilePaths[0], '/upload/image', 2)
+    }
+  } catch (_) {}
+}
+
+async function chooseCamera() {
+  try {
+    const res = await uni.chooseImage({
+      count: 1,
+      sourceType: ['camera'],
+    })
+    if (res.tempFilePaths?.length) {
+      await uploadAndSendMedia(res.tempFilePaths[0], '/upload/image', 2)
+    }
+  } catch (_) {}
+}
+
+async function chooseVideo() {
+  try {
+    const res = await uni.chooseVideo({
+      sourceType: ['album', 'camera'],
+      maxDuration: 60,
+      compressed: true,
+    })
+    if (res.tempFilePath) {
+      await uploadAndSendMedia(res.tempFilePath, '/upload/video', 3)
+    }
+  } catch (_) {}
+}
+
+async function uploadAndSendMedia(filePath: string, endpoint: string, type: number) {
+  const tempId = Date.now()
+  const placeholder = type === 2 ? '[图片]' : '[视频]'
+  messages.value.push({
+    id: tempId,
+    content: placeholder,
+    type,
+    createdAt: '发送中...',
+    isSelf: true,
+    status: 'SENDING',
+  })
+  scrollToBottom()
+
+  try {
+    uni.showLoading({ title: '上传中...' })
+    const uploadRes = await new Promise<any>((resolve, reject) => {
+      uni.uploadFile({
+        url: `${BASE_URL}${endpoint}`,
+        filePath,
+        name: 'file',
+        header: { Authorization: `Bearer ${authStore.token}` },
+        success: (r) => resolve(JSON.parse(r.data)),
+        fail: reject,
+      })
+    })
+    uni.hideLoading()
+
+    if (uploadRes.code === 200 && uploadRes.data?.url) {
+      const url = processImageUrl(uploadRes.data.url)
+      const sendRes = await request<any>({
+        url: '/chat/messages/send',
+        method: 'POST',
+        data: {
+          receiverId: friendId.value,
+          content: uploadRes.data.url,
+          type,
+        },
+      })
+      if (sendRes?.code === 200) {
+        const idx = messages.value.findIndex((m) => m.id === tempId)
+        if (idx !== -1) {
+          messages.value[idx].id = sendRes.data?.id || tempId
+          messages.value[idx].content = url
+          messages.value[idx].createdAt = formatTime(new Date().toISOString())
+          messages.value[idx].status = 'SENT'
+        }
+      }
+    } else {
+      throw new Error('upload failed')
+    }
+  } catch (_) {
+    uni.hideLoading()
+    const idx = messages.value.findIndex((m) => m.id === tempId)
+    if (idx !== -1) {
+      messages.value[idx].status = 'FAILED'
+    }
+    uni.showToast({ title: type === 2 ? '发送图片失败' : '发送视频失败', icon: 'none' })
+  }
+  scrollToBottom()
+}
+
+function previewImage(url: string) {
+  if (url) uni.previewImage({ urls: [url] })
+}
+
 function connectWebSocket() {
   wsManager.connect().then(() => {
     console.log('[ChatDetail] WebSocket connected')
@@ -264,11 +410,16 @@ function connectWebSocket() {
     unsubscribeMessage = wsManager.on('new_message', (data) => {
       if (data.senderId === friendId.value || data.senderId === authStore.userInfo?.userId) {
         console.log('[ChatDetail] New message in this conversation')
-        // Add new message to list
         if (data.senderId !== authStore.userInfo?.userId) {
+          const msgType = data.type || 1
+          let content = data.content || ''
+          if ((msgType === 2 || msgType === 3) && content) {
+            content = processImageUrl(content)
+          }
           messages.value.push({
             id: data.messageId || Date.now(),
-            content: data.content || '',
+            content,
+            type: msgType,
             createdAt: formatTime(new Date().toISOString()),
             isSelf: false,
             status: 'SENT',
@@ -396,6 +547,24 @@ function scrollToBottom() {
   line-height: 1.5;
 }
 
+.msg-bubble-media {
+  padding: 8rpx !important;
+  overflow: hidden;
+}
+
+.msg-image {
+  max-width: 400rpx;
+  border-radius: 12rpx;
+  display: block;
+}
+
+.msg-video {
+  width: 400rpx;
+  height: 280rpx;
+  border-radius: 12rpx;
+  display: block;
+}
+
 .msg-meta {
   display: flex;
   align-items: center;
@@ -463,6 +632,16 @@ function scrollToBottom() {
 
 .ph {
   color: var(--text-muted);
+}
+
+.btn-media {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  flex-shrink: 0;
 }
 
 .btn-send {

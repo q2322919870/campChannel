@@ -82,6 +82,24 @@
       }
     },
     {
+      "path": "pages/post/hot-posts",
+      "style": {
+        "navigationBarTitleText": "热门帖子",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/post/drafts",
+      "style": {
+        "navigationBarTitleText": "我的草稿",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
       "path": "pages/chat/list",
       "style": {
         "navigationBarTitleText": "消息",
@@ -154,9 +172,72 @@
       }
     },
     {
+      "path": "pages/settings/change-password",
+      "style": {
+        "navigationBarTitleText": "修改密码",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/settings/devices",
+      "style": {
+        "navigationBarTitleText": "设备管理",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/settings/edit-profile",
+      "style": {
+        "navigationBarTitleText": "编辑资料",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
       "path": "pages/admin/admin",
       "style": {
         "navigationBarTitleText": "管理后台",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/user/profile",
+      "style": {
+        "navigationBarTitleText": "用户主页",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/follow/following-feed",
+      "style": {
+        "navigationBarTitleText": "关注动态",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/follow/follow-list",
+      "style": {
+        "navigationBarTitleText": "关注列表",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/tree-hole/tree-hole",
+      "style": {
+        "navigationBarTitleText": "树洞",
         "navigationBarBackgroundColor": "#FFFFFF",
         "navigationBarTextStyle": "black",
         "backgroundColor": "#F3F4F8"

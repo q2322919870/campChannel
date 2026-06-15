@@ -3,6 +3,10 @@
     <view class="home-header">
       <view class="header-top">
         <text class="page-title">首页</text>
+        <view class="hot-entry" @tap="goHotPosts">
+          <text class="hot-icon">🔥</text>
+          <text class="hot-text">热门</text>
+        </view>
         <view class="search-bar" @tap="focusSearch">
           <input
             v-model="searchKeyword"
@@ -110,6 +114,7 @@ interface Post {
   likeCount: number
   commentCount: number
   isLiked: boolean
+  isPinned?: boolean
 }
 
 const channelTabs = ref<Channel[]>([])
@@ -184,6 +189,7 @@ async function loadPosts() {
         likeCount: p.likeCount || 0,
         commentCount: p.commentCount || 0,
         isLiked: p.isLiked || false,
+        isPinned: p.isPinned || false,
       }))
     }
   } catch (_) {
@@ -245,7 +251,11 @@ function viewPost(postId: number) {
 }
 
 function showUserCard(userId: number) {
-  uni.navigateTo({ url: `/pages/friend/search?userId=${userId}` })
+  uni.navigateTo({ url: `/pages/user/profile?userId=${userId}` })
+}
+
+function goHotPosts() {
+  uni.navigateTo({ url: '/pages/post/hot-posts' })
 }
 
 function sharePost(post: Post) {
@@ -382,6 +392,26 @@ function connectWebSocket() {
   font-size: 26rpx;
   color: var(--text);
   height: 48rpx;
+}
+
+.hot-entry {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 20rpx;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 100rpx;
+  flex-shrink: 0;
+}
+
+.hot-icon {
+  font-size: 28rpx;
+}
+
+.hot-text {
+  font-size: 24rpx;
+  color: #F59E0B;
+  font-weight: 600;
 }
 
 .search-icon {

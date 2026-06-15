@@ -1,9 +1,9 @@
 # Camp Channel 微信小程序端 (UniApp) 技术文档
 
-> 版本: V1.0
+> 版本: V2.0
 > 创建日期: 2026-06-10
-> 最后更新: 2026-06-10
-> 状态: P0 重点开发中，进度滞后，需加速补齐
+> 最后更新: 2026-06-15
+> 状态: 功能快速补齐中，核心功能已基本完成
 
 ---
 
@@ -67,19 +67,21 @@ camp-channel-client-uniapp/
     ├── components/
     │   └── PostCard.vue            # 帖子卡片组件 (头像/标题/内容/图片预览/点赞/评论/分享)
     └── pages/                      # 页面模块 (按领域分组)
-        ├── index/index.vue         # 🔖 TabBar首页 - 频道信息流 + WebSocket实时推送
+        ├── index/index.vue         # 🔖 TabBar首页 - 频道信息流 + 搜索栏 + WebSocket实时推送
         ├── login/login.vue         # 登录页 (邮箱+密码, @stu.gdmec.edu.cn 验证)
         ├── register/register.vue   # 注册页
-        ├── channel/channel.vue     # 🔖 TabBar频道广场 - 搜索/发现频道 + 频道详情(帖子/成员/管理)
-        ├── chat/list.vue           # 🔖 TabBar消息列表 - 私聊会话列表 (WebSocket实时更新)
-        ├── chat/detail.vue         # 私聊详情页 - 历史加载+实时推送+消息撤回+状态显示
+        ├── channel/channel.vue     # 🔖 TabBar频道广场 - 搜索/发现频道 + 频道详情(帖子/成员/管理/群聊入口)
+        ├── chat/list.vue           # 🔖 TabBar消息列表 - 频道群聊 + 私聊会话列表
+        ├── chat/detail.vue         # 私聊详情页 - 文字/图片/视频消息 + 历史加载 + 实时推送 + 撤回 + 已读状态
+        ├── chat/group-chat.vue     # 频道群聊页 - 文字/图片/视频消息 + WebSocket实时推送 + 消息撤回
         ├── friend/list.vue         # 好友列表页
         ├── friend/search.vue       # 搜索好友/查看名片
         ├── notification/notification.vue  # 🔖 TabBar通知中心 - 分类筛选 + 全部已读
-        ├── profile/profile.vue     # 🔖 TabBar个人中心 - Stats + Avatar + 导航跳转
+        ├── profile/profile.vue     # 🔖 TabBar个人中心 - 关注/粉丝数 + 收藏入口 + Avatar
         ├── settings/settings.vue   # 设置页
-        ├── post/create.vue         # 发布/编辑帖子页
-        ├── post/detail.vue         # 帖子详情页 (评论列表/评论点赞)
+        ├── post/create.vue         # 发布/编辑帖子页 (支持编辑模式)
+        ├── post/detail.vue         # 帖子详情页 (评论/点赞/收藏/分享/浏览量)
+        ├── post/favourites.vue     # 我的收藏页 (分页加载)
         ├── post/my-posts.vue       # 我的帖子页
         ├── post/liked-posts.vue    # 赞过的贴页
         ├── admin/admin.vue         # 管理后台页
@@ -124,17 +126,19 @@ camp-channel-client-uniapp/
 | pages/login/login | 登录 | 认证模块 |
 | pages/register/register | 注册账号 | 认证模块 |
 | pages/post/create | 发布帖子 | 帖子管理 |
-| pages/post/detail | 帖子详情 | 帖子/评论/点赞 |
+| pages/post/detail | 帖子详情 | 帖子/评论/点赞/收藏 |
+| pages/post/favourites | 我的收藏 | 帖子收藏列表 |
 | pages/post/my-posts | 我的帖子 | 帖子管理 |
 | pages/post/liked-posts | 赞过的贴 | 帖子管理 |
-| pages/chat/detail | 私聊对话 | 聊天模块 |
+| pages/chat/detail | 私聊对话 | 聊天(文字/图片/视频) |
+| pages/chat/group-chat | 频道群聊 | 群聊消息模块 |
 | pages/friend/list | 好友列表 | 好友关系 |
 | pages/friend/search | 搜索好友 | 好友关系 |
 | pages/settings/settings | 设置 | 用户中心/通知配置 |
 | pages/admin/admin | 管理后台 | 管理员模块 |
 | pages/test/connection | 连接测试 | 开发调试用 |
 
-**共计: 5 个 TabBar 页面 + 12 个普通页面 = 17 个页面**
+**共计: 5 个 TabBar 页面 + 14 个普通页面 = 19 个页面**
 
 ---
 
@@ -204,8 +208,9 @@ https://xxx/api → wss://xxx/ws/raw?token=xxx  (暂不支持)
 | new_post | pages/index/index (首页) | 刷新信息流 |
 | new_comment | pages/index/index (首页) | 刷新信息流 |
 | new_like | pages/index/index (首页) | 刷新信息流 |
-| new_message | pages/chat/detail.ts (私聊) | 追加消息到列表 |
-| message_read | pages/chat/detail.ts (私聊) | 更新已读状态 ✓✓ |
+| new_message | pages/chat/detail (私聊) | 追加消息到列表 (支持type=1/2/3) |
+| message_read | pages/chat/detail (私聊) | 更新已读状态 ✓✓ |
+| new_group_message | pages/chat/group-chat (群聊) | 追加群聊消息到列表 |
 
 ### 重连机制
 - 指数退避: 1s → 2s → 4s → ... → 30s max
@@ -232,20 +237,22 @@ https://xxx/api → wss://xxx/ws/raw?token=xxx  (暂不支持)
 | PUT /users/password | **未实现** | ❌ 缺漏 |
 | POST /users/avatar | ✅ profile.vue: uni.uploadFile → `${BASE_URL}/users/avatar` | ✅ |
 
-### ✅ 帖子管理 (API Section 3) — 完成度 75%
+### ✅ 帖子管理 (API Section 3) — 完成度 85%
 | API | UniApp 实现 | 所在页面 | 状态 |
 |-----|------------|---------|------|
 | POST /posts | ✅ create.vue | pages/post/create | ✅ |
-| GET /posts/{postId} | ✅ detail.vue: `/posts/${id}` | pages/post/detail | ✅ |
-| PUT /posts/{postId} | ✅ create.vue 编辑模式 (URL query带editId) | pages/post/create | ✅ |
+| GET /posts/{postId} | ✅ detail.vue (含 isLiked/likeCount/commentCount) | pages/post/detail | ✅ |
+| PUT /posts/{postId} | ✅ create.vue 编辑模式 (URL query带editId, 按钮显示"发布"/"更新") | pages/post/create | ✅ |
 | DELETE /posts/{postId} | ❌ **未实现** | ? | ❌ 缺漏 |
 | GET /posts/hot | ❓ TODO | ? | ⚠️ |
-| GET /posts/my | ✅ profile.vue: `/posts/my?page=1&size=100` | pages/profile | ✅ (但需确认API路径) |
-| GET /posts/favourites | ✅ liked-posts.vue | pages/post/liked-posts | ✅ |
-| POST /posts/{id}/favourite | ❓ TODO | ? | ⚠️ |
-| GET /posts/search | TODO | page/chat/detail? 未验证 | ⚠️ 存疑 |
-| GET /posts/channel/{id} | ✅ channel.vue, home page: `/posts/channel/${channelId}` | pages/channel, index | ✅ |
-| @提及通知 + 自动解析 | P1 已完成 — 后端已有, 小程序端依赖通知API | 通用能力 |
+| GET /posts/my | ✅ profile.vue | pages/profile | ✅ |
+| GET /posts/favourites | ✅ favourites.vue (分页滚动加载) | pages/post/favourites | ✅ |
+| POST /posts/{id}/favourite | ✅ detail.vue: 收藏/取消收藏 toggle | pages/post/detail | ✅ |
+| GET /posts/{id}/favourite/status | ✅ detail.vue: 独立try/catch静默失败 | pages/post/detail | ✅ |
+| GET /posts/search?keyword=X | ✅ index.vue: 搜索栏 | pages/index | ✅ |
+| GET /posts/{id}/view | ✅ detail.vue: 进入详情自动+1 | pages/post/detail | ✅ |
+| GET /posts/channel/{id} | ✅ channel.vue, index.vue | pages/channel, index | ✅ |
+| @提及通知 + 自动解析 | 后端已有, 小程序端依赖通知API | 通用能力 | ✅ |
 
 ### ✅ 频道管理 (API Section 4) — 完成度 70%
 | API | UniApp 实现 | 所在页面 | 状态 |
@@ -258,14 +265,17 @@ https://xxx/api → wss://xxx/ws/raw?token=xxx  (暂不支持)
 | GET /channels/{id}/members | ✅ channel.vue: `/channels/${id}/members` | pages/channel | ✅ |
 | Channel 创建页 (form) | **未找到** — search 中 `channel_create_page.dart` 仅为 Flutter 端文件 | ❌ uniapp缺漏 |
 
-### ✅ 聊天模块 (API Section 5) — 完成度 80%
+### ✅ 聊天模块 (API Section 5) — 完成度 95%
 | API | UniApp 实现 | 所在页面 | 状态 |
 |-----|------------|---------|------|
-| GET /chat/online/batch | TODO | chat/list? | ⚠️ 在线状态查询? |
-| POST /chat/messages/send | ✅ chat/detail.vue: `/chat/messages/send` (receiverId, content, type) | pages/chat/detail | ✅ |
-| GET /chat/history/{friendId} | ✅ chat/detail.vue: `/chat/history/${friendId}?page=1&size=50` + 30s轮询 | pages/chat/detail | ✅ |
-| POST /chat/read-all/{friendId} | ✅ chat/detail.vue mounted时调用 | pages/chat/detail | ✅ |
-| POST /chat/messages/{id}/recall | ✅ chat.detail: `POST /chat/messages/${messageId}/recall` (2min限制) | pages/chat/detail | ✅ |
+| GET /chat/online/batch | TODO | chat/list? | ⚠️ 在线状态查询 |
+| POST /chat/messages/send | ✅ detail.vue: type=1文字, type=2图片, type=3视频 | pages/chat/detail | ✅ |
+| GET /chat/history/{friendId} | ✅ detail.vue: 含type字段解析图片/视频URL + 30s轮询 | pages/chat/detail | ✅ |
+| POST /chat/read-all/{friendId} | ✅ detail.vue mounted时调用 | pages/chat/detail | ✅ |
+| POST /chat/messages/{id}/recall | ✅ detail.vue: 2min限制 + showModal确认 | pages/chat/detail | ✅ |
+| POST /upload/image | ✅ detail.vue: uni.uploadFile + 发送图片消息 | pages/chat/detail | ✅ |
+| POST /upload/video | ✅ detail.vue: uni.chooseVideo + uni.uploadFile + 发送视频消息 | pages/chat/detail | ✅ |
+| 多媒体渲染 | ✅ `<image>` type=2, `<video>` type=3, 文本 type=1 | pages/chat/detail | ✅ |
 
 ### ✅ 评论模块 (API Section 6) — 完成度 100%
 | API | UniApp 实现 | 所在页面 | 状态 |
@@ -327,9 +337,11 @@ https://xxx/api → wss://xxx/ws/raw?token=xxx  (暂不支持)
   - 公告发布: ❌
   - 频道审核: 部分 (频道申请审批有逻辑在channel.vue)
 
-### ⚠️ WebSocket实时通信 (API Section 16) — **完成度 ~70%**
+### ⚠️ WebSocket实时通信 (API Section 16) — **完成度 ~80%**
 - ✅ wsManager 核心框架已搭好
-- ✅ 事件订阅机制完善 (new_post, new_comment, new_like, new_message, message_read)
+- ✅ 事件订阅: new_post, new_comment, new_like, new_message, message_read, **new_group_message**
+- ✅ 私聊支持 type=1/2/3 多媒体消息
+- ✅ 群聊实时消息推送
 - ❌ **重大隐患**: 不支持 wss:// 协议 — 微信小程序生产环境必须用 wss，当前 baseUrl.replace('http','ws') 将 https→hwps (无效)
 
 ### ✅ 草稿箱模块 (API Section 17) — **完成度待确认**
@@ -338,8 +350,15 @@ https://xxx/api → wss://xxx/ws/raw?token=xxx  (暂不支持)
 - DELETE /drafts/{id}: ?
 - 需要确认 pages/chat/detail 是否涉及此功能
 
-### ❌ 群聊消息模块 (API Section 18) — **完全缺失**
-- 群聊页面/功能未见实装
+### ✅ 群聊消息模块 (API Section 18) — 完成度 95%
+| API | UniApp 实现 | 所在页面 | 状态 |
+|-----|------------|---------|------|
+| POST /group-messages | ✅ group-chat.vue: 文字/图片/视频消息发送 | pages/chat/group-chat | ✅ |
+| GET /group-messages/{channelId} | ✅ group-chat.vue: 分页加载 + processImageUrl | pages/chat/group-chat | ✅ |
+| DELETE /group-messages/{id} | ✅ group-chat.vue: 长按撤回 (仅自己消息) | pages/chat/group-chat | ✅ |
+| WebSocket new_group_message | ✅ group-chat.vue: 实时推送追加消息 | pages/chat/group-chat | ✅ |
+| 多媒体渲染 | ✅ `<image>` msgType=2, `<video>` msgType=3, 文本 msgType=1 | pages/chat/group-chat | ✅ |
+| 入口 | ✅ channel.vue "群聊"按钮 + chat/list.vue 频道群聊列表 | pages/channel, chat/list | ✅ |
 
 ### ⚠️ 关注系统 (API Section 19) — **部分缺失** (P1 已全部完成)
 | API | UniApp 实现 | 状态 |
@@ -406,7 +425,7 @@ let wsUrl = baseUrl.replace('http', 'ws').replace('/api', '') + '/ws/raw'
 |---|------|------------|
 | P2-1 | 画廊模块 (Section 8) 完全缺失 | 新建 gallery/gallery.vue, 实现图片浏览/上传功能 |
 | P2-2 | 徽章模块 (Section 12) 完全缺失 | 新增 badges/badges.vue 展示已装备徽章 |
-| P2-3 | 群聊功能 (Section 18) 未见实装 | 新建 group-chat/group-list/page 页面 |
+| ~~P2-3~~ | ~~群聊功能 (Section 18)~~ | ✅ 已完成: group-chat.vue + WebSocket + 多媒体 |
 | P2-4 | admin/admin.vue 管理面板严重不足 | 补齐: 帖子审核/删除/用户封禁/公告发布 |
 | P2-5 | POST /auth/send-code 发送验证码未实现 | login/register 页加验证码入口 |
 
@@ -440,15 +459,17 @@ let wsUrl = baseUrl.replace('http', 'ws').replace('/api', '') + '/ws/raw'
 | 首页信息流 | ✅ | ✅ | ✅ | ✅ |
 | 帖子列表/详情 | ✅ | ✅ | ✅ | ✅ |
 | 频道管理 | ✅(部分) | ✅ | ✅ | ⚠️ UniApp缺创建页 |
-| 私聊消息 | ✅ | ✅ | ✅ | ✅ |
+| 私聊消息 | ✅(含图片/视频) | ✅ | ✅ | ✅ |
+| 群聊消息 | ✅(文字/图片/视频) | ✅ | ✅ | ✅ |
 | 好友系统 | ✅(部分) | ✅ | ? | ⚠️ UniApp待补 |
 | 通知中心 | ✅ | ✅ | ✅ | ✅ |
-| 个人中心 | ✅ | ✅ | ✅ | ✅ |
+| 个人中心 | ✅(关注/粉丝/收藏) | ✅ | ✅ | ✅ |
 | 设置 | ✅(缺密码/资料) | ✅ | ✅ | ❌ UniApp缺2项 |
-| 搜索 | ? | ✅ | ✅ | ⚠️ UniApp需确认 |
+| 搜索 | ✅(帖子+频道) | ✅ | ✅ | ✅ |
 
 ---
 
-**文档版本**: V1.0
-**编写人**: Uniapp_MiniProgram Agent (作为项目负责人统一整理)
+**文档版本**: V2.0
+**编写人**: Uniapp_MiniProgram Agent
+**本次更新**: 补齐私聊图片/视频消息、群聊功能(文字/图片/视频+WebSocket)、收藏页、帖子搜索/编辑/浏览量、关注计数等
 **下次更新**: Sprint 完成后同步更新完成状态

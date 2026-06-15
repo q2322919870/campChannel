@@ -106,6 +106,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { useAuthStore } from '../../stores/auth'
 import request, { processImageUrl } from '../../utils/request'
 
@@ -193,6 +194,24 @@ onMounted(() => {
     fetchComments()
     // Increment view count
     request<any>(`/posts/${postId.value}/view`).catch(() => {})
+  }
+})
+
+// 微信原生分享 - 分享给朋友
+onShareAppMessage(() => {
+  return {
+    title: post.value.title || post.value.content.substring(0, 50) || 'Camp Channel',
+    path: `/pages/post/detail?id=${postId.value}`,
+    imageUrl: post.value.images?.[0] || '',
+  }
+})
+
+// 微信原生分享 - 分享到朋友圈
+onShareTimeline(() => {
+  return {
+    title: post.value.title || post.value.content.substring(0, 50) || 'Camp Channel',
+    query: `id=${postId.value}`,
+    imageUrl: post.value.images?.[0] || '',
   }
 })
 
@@ -402,7 +421,7 @@ async function deleteComment(commentId: number) {
 
 function showUserCard() {
   if (post.value.userId) {
-    uni.navigateTo({ url: `/pages/friend/search?userId=${post.value.userId}` })
+    uni.navigateTo({ url: `/pages/user/profile?userId=${post.value.userId}` })
   }
 }
 

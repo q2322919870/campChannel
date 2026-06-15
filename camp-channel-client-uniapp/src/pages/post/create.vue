@@ -68,6 +68,9 @@
 
           <view class="form-actions">
             <button class="btn cancel" @tap="goBack">取消</button>
+            <button class="btn draft" @tap="saveDraft" :disabled="savingDraft || !content.trim()">
+              {{ savingDraft ? '保存中...' : '存草稿' }}
+            </button>
             <button 
               class="btn submit" 
               :disabled="loading || !channelId || !content.trim()"
@@ -104,6 +107,8 @@ const topic = ref('')
 const loading = ref(false)
 const error = ref('')
 const editId = ref<number | null>(null)
+const draftId = ref<number | null>(null)
+const savingDraft = ref(false)
 
 onMounted(() => {
   if (!authStore.token) {
@@ -114,9 +119,13 @@ onMounted(() => {
   const pages = getCurrentPages()
   const page = pages[pages.length - 1] as any
   const editParam = page?.options?.editId
+  const draftParam = page?.options?.draftId
   if (editParam) {
     editId.value = parseInt(editParam)
     loadPostForEdit(editId.value)
+  } else if (draftParam) {
+    draftId.value = parseInt(draftParam)
+    loadDraftForEdit(draftId.value)
   }
   fetchChannels()
 })
@@ -162,6 +171,75 @@ async function loadPostForEdit(id: number) {
     }
   } catch (_) {
     uni.showToast({ title: '加载帖子失败', icon: 'none' })
+  }
+}
+
+async function loadDraftForEdit(id: number) {
+  try {
+    const res = await request<any>(`/drafts?page=1&size=50`)
+    if (res?.code === 200) {
+      const list = res.data?.records || res.data || []
+      const draft = list.find((d: any) => d.id === id)
+      if (draft) {
+        content.value = draft.content || ''
+        channelId.value = draft.channelId || null
+        topic.value = draft.topic || ''
+        if (draft.images) {
+          if (Array.isArray(draft.images)) {
+            images.value = draft.images
+          } else if (typeof draft.images === 'string') {
+            try {
+              const parsed = JSON.parse(draft.images)
+              if (Array.isArray(parsed)) images.value = parsed
+            } catch (_) {}
+          }
+        }
+        // Find channel index
+        if (channelId.value) {
+          const idx = channels.value.findIndex((c: Channel) => c.id === channelId.value)
+          if (idx >= 0) channelIndex.value = idx
+        }
+      }
+    }
+  } catch (_) {
+    uni.showToast({ title: '加载草稿失败', icon: 'none' })
+  }
+}
+
+async function saveDraft() {
+  if (!content.value.trim()) {
+    uni.showToast({ title: '内容不能为空', icon: 'none' })
+    return
+  }
+  savingDraft.value = true
+  try {
+    let finalContent = content.value
+    if (topic.value.trim()) {
+      const t = topic.value.trim().startsWith('#') ? topic.value.trim() : '#' + topic.value.trim()
+      finalContent += '\n' + (t.endsWith('#') ? t : t + '#')
+    }
+    const res = await request<any>({
+      url: '/posts/draft',
+      method: 'POST',
+      data: {
+        id: draftId.value || undefined,
+        channelId: channelId.value,
+        content: finalContent,
+        images: images.value.length > 0 ? images.value : null,
+        topic: topic.value || null,
+        isAnonymous: false,
+      },
+    })
+    if (res?.code === 200) {
+      if (res.data?.id) draftId.value = res.data.id
+      uni.showToast({ title: '草稿已保存', icon: 'success' })
+    } else {
+      uni.showToast({ title: res?.message || '保存失败', icon: 'none' })
+    }
+  } catch (_) {
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  } finally {
+    savingDraft.value = false
   }
 }
 
@@ -465,6 +543,11 @@ function goBack() {
   background: var(--bg);
   color: var(--text);
   border: 1rpx solid var(--card-border);
+}
+
+.btn.draft {
+  background: var(--warning);
+  color: #ffffff;
 }
 
 .btn.submit {

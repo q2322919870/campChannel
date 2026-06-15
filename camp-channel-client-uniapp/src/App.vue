@@ -1,21 +1,25 @@
 <script setup lang="ts">
 import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
 import { useAuthStore } from './stores/auth'
+import { useThemeStore } from './stores/theme'
 import request from './utils/request'
 
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 onLaunch(() => {
+  themeStore.init()
+
   if (authStore.token) {
     loadUnreadCount()
   }
-  
+
   // Set custom tab bar style
   uni.setTabBarStyle({
-    backgroundColor: '#FFFFFF',
-    borderStyle: 'white',
-    color: '#9CA3AF',
-    selectedColor: '#6366F1'
+    backgroundColor: themeStore.isDark() ? '#1A1D26' : '#FFFFFF',
+    borderStyle: themeStore.isDark() ? 'black' : 'white',
+    color: themeStore.isDark() ? '#6B7280' : '#9CA3AF',
+    selectedColor: themeStore.isDark() ? '#818CF8' : '#6366F1'
   })
 })
 
@@ -79,6 +83,34 @@ page {
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Dark Mode ===== */
+page.dark-mode {
+  --primary: #818CF8;
+  --primary-light: #A5B4FC;
+  --primary-soft: rgba(129, 140, 248, 0.12);
+  --primary-gradient: linear-gradient(135deg, #818CF8, #C084FC);
+  --accent: #F472B6;
+  --accent-soft: rgba(244, 114, 182, 0.12);
+  --bg: #0F1117;
+  --card: #1A1D26;
+  --card-border: #2D3148;
+  --text: #F3F4F8;
+  --text-secondary: #9CA3AF;
+  --text-soft: #9CA3AF;
+  --text-muted: #6B7280;
+  --success: #34D399;
+  --danger: #F87171;
+  --warning: #FBBF24;
+  --shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  --shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8rpx 40rpx rgba(0, 0, 0, 0.4);
+}
+
+page.dark-mode {
+  background: var(--bg);
+  color: var(--text);
 }
 
 view,

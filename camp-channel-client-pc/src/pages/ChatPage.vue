@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, triggerRef } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api/client'
 import { useAuthStore } from '../stores/auth'
@@ -114,10 +114,14 @@ const selectedConv = ref<any>(null)
 const conversations = ref<any[]>([])
 const messages = ref<any[]>([])
 const messagesRef = ref<HTMLDivElement>()
+const conversationVersion = ref(0) // Force re-render counter
 
-const filteredConversations = computed(() =>
-  conversations.value.filter(c => (c.name || '').includes(searchQuery.value))
-)
+const filteredConversations = computed(() => {
+  // Access version to force re-computation
+  conversationVersion.value
+  // Return new object references to force Vue to re-render
+  return conversations.value.map(c => ({ ...c })).filter(c => (c.name || '').includes(searchQuery.value))
+})
 
 // Filter out recalled messages (status 5 = recalled)
 const visibleMessages = computed(() =>
@@ -254,6 +258,8 @@ function handleIncomingMessage(data: any) {
   }
   
   conversations.value = newConversations
+  conversationVersion.value++ // Force UI update
+  triggerRef(conversations)
   console.log('[handleIncomingMessage] conversations updated, first item lastMsg:', conversations.value[0]?.lastMsg)
 }
 
@@ -459,7 +465,18 @@ async function recallMessage(messageId: number) {
   try {
     await api.post(`/chat/messages/${messageId}/recall`)
     const msg = messages.value.find(m => m.id === messageId)
-    if (msg) msg.status = 5
+    if (msg) {
+      msg.status = 5
+      // Update conversation list to show recall message
+      const conv = conversations.value.find(c => c.id === msg.isSelf ? activeChat.value : msg.senderId)
+      if (conv) {
+        conv.lastMsg = '对方撤回了一条消息'
+        conv.time = '刚刚'
+        const idx = conversations.value.indexOf(conv)
+        conversations.value.splice(idx, 1)
+        conversations.value.unshift(conv)
+      }
+    }
   } catch (e: any) {
     window.alert(e.response?.data?.message || '撤回失败')
   }

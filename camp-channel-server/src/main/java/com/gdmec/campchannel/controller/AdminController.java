@@ -16,7 +16,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "管理员后台模块", description = "提供用户管理、频道审核、内容审核、操作日志功能")
 @Slf4j
@@ -66,7 +68,7 @@ public class AdminController {
         com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Post> pendPw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
         pendPw.eq("status", 0);
         stats.put("pendingPosts", postService.count(pendPw));
-        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<ChannelMember> pendCw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Channel> pendCw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
         pendCw.eq("status", 0);
         stats.put("pendingChannels", channelService.count(pendCw));
         return Result.success(stats);

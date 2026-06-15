@@ -34,12 +34,9 @@
             <view class="msg-bubble" @longpress="handleLongPress(msg)">
               <text v-if="msg.status === 2" class="msg-text recalled-text">消息已撤回</text>
               <template v-else>
-                <text v-if="msg.content" class="msg-text">{{ msg.content }}</text>
+                <text v-if="msg.content && msg.msgType === 1" class="msg-text">{{ msg.content }}</text>
                 <image v-if="msg.mediaUrl && msg.msgType === 2" :src="msg.mediaUrl" mode="widthFix" class="msg-image" @tap="previewImage(msg.mediaUrl)" />
-                <view v-if="msg.mediaUrl && msg.msgType === 3" class="msg-video" @tap="previewVideo(msg.mediaUrl)">
-                  <text class="video-icon">▶</text>
-                  <text class="video-label">视频消息</text>
-                </view>
+                <video v-if="msg.mediaUrl && msg.msgType === 3" :src="msg.mediaUrl" class="msg-video" controls :show-center-play-btn="true" :show-play-btn="true" :enable-progress-gesture="false" object-fit="cover" />
               </template>
             </view>
             <text class="msg-time">{{ msg.time }}</text>
@@ -51,12 +48,9 @@
             <view class="msg-bubble bubble-self" @longpress="handleLongPress(msg)">
               <text v-if="msg.status === 2" class="msg-text recalled-text">消息已撤回</text>
               <template v-else>
-                <text v-if="msg.content" class="msg-text">{{ msg.content }}</text>
+                <text v-if="msg.content && msg.msgType === 1" class="msg-text">{{ msg.content }}</text>
                 <image v-if="msg.mediaUrl && msg.msgType === 2" :src="msg.mediaUrl" mode="widthFix" class="msg-image" @tap="previewImage(msg.mediaUrl)" />
-                <view v-if="msg.mediaUrl && msg.msgType === 3" class="msg-video" @tap="previewVideo(msg.mediaUrl)">
-                  <text class="video-icon">▶</text>
-                  <text class="video-label">视频消息</text>
-                </view>
+                <video v-if="msg.mediaUrl && msg.msgType === 3" :src="msg.mediaUrl" class="msg-video" controls :show-center-play-btn="true" :show-play-btn="true" :enable-progress-gesture="false" object-fit="cover" />
               </template>
             </view>
             <text class="msg-time msg-time-self">{{ msg.time }}</text>
@@ -85,8 +79,8 @@
         placeholder-class="ph"
         @confirm="sendMessage"
       />
-      <view class="btn-image" @tap="chooseImage">
-        <text>📷</text>
+      <view class="btn-media" @tap="showMediaMenu">
+        <text>➕</text>
       </view>
       <button class="btn-send" @tap="sendMessage">发送</button>
     </view>
@@ -261,56 +255,12 @@ async function chooseImage() {
     const res = await uni.chooseImage({
       count: 1,
       sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
+      sourceType: ['album'],
     })
     if (res.tempFilePaths?.length) {
-      uni.showLoading({ title: '上传中...' })
-      const uploadRes = await new Promise((resolve, reject) => {
-        uni.uploadFile({
-          url: `${BASE_URL}/upload/image`,
-          filePath: res.tempFilePaths[0],
-          name: 'file',
-          header: { Authorization: `Bearer ${authStore.token}` },
-          success: (r) => resolve(JSON.parse(r.data)),
-          fail: reject,
-        })
-      }) as any
-      uni.hideLoading()
-
-      if (uploadRes.code === 200 && uploadRes.data?.url) {
-        const mediaUrl = uploadRes.data.url
-        // Send as image message
-        const sendRes = await request<any>({
-          url: '/group-messages',
-          method: 'POST',
-          data: {
-            channelId: channelId.value,
-            content: '[图片]',
-            mediaUrl: mediaUrl,
-            msgType: 2,
-          },
-        })
-        if (sendRes?.code === 200) {
-          messages.value.push({
-            id: sendRes.data?.id || Date.now(),
-            content: '[图片]',
-            mediaUrl: processImageUrl(mediaUrl),
-            msgType: 2,
-            status: 1,
-            username: myName.value,
-            avatar: myAvatar.value,
-            senderId: authStore.userInfo?.userId || 0,
-            time: '刚刚',
-            isSelf: true,
-          })
-          scrollToBottom()
-        }
-      }
+      await uploadAndSendMedia(res.tempFilePaths[0], '/upload/image', 2, '[图片]')
     }
-  } catch (_) {
-    uni.hideLoading()
-    uni.showToast({ title: '发送图片失败', icon: 'none' })
-  }
+  } catch (_) {}
 }
 
 function handleLongPress(msg: GroupMsg) {
@@ -338,22 +288,95 @@ function handleLongPress(msg: GroupMsg) {
   })
 }
 
-function previewImage(url: string) {
-  if (url) uni.previewImage({ urls: [url] })
+function showMediaMenu() {
+  uni.showActionSheet({
+    itemList: ['图片', '拍摄', '视频'],
+    success: (res) => {
+      if (res.tapIndex === 0) chooseImage()
+      else if (res.tapIndex === 1) chooseCamera()
+      else if (res.tapIndex === 2) chooseVideo()
+    },
+  })
 }
 
-function previewVideo(url: string) {
-  if (url) {
-    uni.navigateTo({
-      url: `/pages/chat/detail?videoUrl=${encodeURIComponent(url)}`,
-      fail: () => {
-        // Fallback: open in browser
-        // #ifdef H5
-        window.open(url, '_blank')
-        // #endif
-      }
+async function chooseCamera() {
+  try {
+    const res = await uni.chooseImage({
+      count: 1,
+      sourceType: ['camera'],
     })
+    if (res.tempFilePaths?.length) {
+      await uploadAndSendMedia(res.tempFilePaths[0], '/upload/image', 2, '[图片]')
+    }
+  } catch (_) {}
+}
+
+async function chooseVideo() {
+  try {
+    const res = await uni.chooseVideo({
+      sourceType: ['album', 'camera'],
+      maxDuration: 60,
+      compressed: true,
+    })
+    if (res.tempFilePath) {
+      await uploadAndSendMedia(res.tempFilePath, '/upload/video', 3, '[视频]')
+    }
+  } catch (_) {}
+}
+
+async function uploadAndSendMedia(filePath: string, endpoint: string, msgType: number, contentLabel: string) {
+  try {
+    uni.showLoading({ title: '上传中...' })
+    const uploadRes = await new Promise<any>((resolve, reject) => {
+      uni.uploadFile({
+        url: `${BASE_URL}${endpoint}`,
+        filePath,
+        name: 'file',
+        header: { Authorization: `Bearer ${authStore.token}` },
+        success: (r) => resolve(JSON.parse(r.data)),
+        fail: reject,
+      })
+    })
+    uni.hideLoading()
+
+    if (uploadRes.code === 200 && uploadRes.data?.url) {
+      const mediaUrl = uploadRes.data.url
+      const sendRes = await request<any>({
+        url: '/group-messages',
+        method: 'POST',
+        data: {
+          channelId: channelId.value,
+          content: contentLabel,
+          mediaUrl: mediaUrl,
+          msgType: msgType,
+        },
+      })
+      if (sendRes?.code === 200) {
+        messages.value.push({
+          id: sendRes.data?.id || Date.now(),
+          content: contentLabel,
+          mediaUrl: processImageUrl(mediaUrl),
+          msgType: msgType,
+          status: 1,
+          username: myName.value,
+          avatar: myAvatar.value,
+          senderId: authStore.userInfo?.userId || 0,
+          time: '刚刚',
+          isSelf: true,
+        })
+        scrollToBottom()
+      }
+    } else {
+      throw new Error('upload failed')
+    }
+  } catch (_) {
+    uni.hideLoading()
+    uni.showToast({ title: msgType === 2 ? '发送图片失败' : '发送视频失败', icon: 'none' })
   }
+}
+
+function previewImage(url: string) {
+  if (url) uni.previewImage({ urls: [url] })
 }
 
 function connectWebSocket() {
@@ -511,26 +534,11 @@ function scrollToBottom() {
 }
 
 .msg-video {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 300rpx;
-  height: 200rpx;
-  background: rgba(0, 0, 0, 0.3);
+  width: 400rpx;
+  height: 280rpx;
   border-radius: 12rpx;
   margin-top: 8rpx;
-}
-
-.video-icon {
-  font-size: 48rpx;
-  color: #ffffff;
-}
-
-.video-label {
-  font-size: 22rpx;
-  color: #ffffff;
-  margin-top: 8rpx;
+  display: block;
 }
 
 .msg-time {
@@ -597,13 +605,14 @@ function scrollToBottom() {
   color: var(--text-muted);
 }
 
-.btn-image {
+.btn-media {
   width: 72rpx;
   height: 72rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 40rpx;
+  flex-shrink: 0;
 }
 
 .btn-send {

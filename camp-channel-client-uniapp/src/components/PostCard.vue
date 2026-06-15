@@ -1,5 +1,8 @@
 <template>
   <view class="post-card" @tap="handleClick">
+    <view v-if="post.isPinned" class="pin-badge">
+      <text>📌 置顶</text>
+    </view>
     <view class="post-header">
       <view class="post-avatar" @tap.stop="onAvatarClick">
         <image 
@@ -70,6 +73,7 @@ interface Post {
   likeCount?: number
   commentCount?: number
   isLiked?: boolean
+  isPinned?: boolean
 }
 
 const props = defineProps<{
@@ -128,6 +132,18 @@ function handleImageError() {
   margin-bottom: 20rpx;
   box-shadow: var(--shadow-sm);
   position: relative;
+}
+
+.pin-badge {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  font-size: 22rpx;
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 4rpx 16rpx;
+  border-radius: 100rpx;
+  font-weight: 600;
 }
 
 .post-header {

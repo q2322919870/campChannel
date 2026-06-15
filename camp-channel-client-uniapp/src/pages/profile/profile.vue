@@ -32,9 +32,25 @@
     </view>
 
     <view class="profile-nav">
+      <view class="nav-item" @tap="goEditProfile">
+        <text class="nav-icon">✏️</text>
+        <text class="nav-label">编辑资料</text>
+      </view>
       <view class="nav-item" @tap="goMyPosts">
         <text class="nav-icon">📝</text>
         <text class="nav-label">我的帖子</text>
+      </view>
+      <view class="nav-item" @tap="goDrafts">
+        <text class="nav-icon">📋</text>
+        <text class="nav-label">我的草稿</text>
+      </view>
+      <view class="nav-item" @tap="goFollowingFeed">
+        <text class="nav-icon">🔔</text>
+        <text class="nav-label">关注动态</text>
+      </view>
+      <view class="nav-item" @tap="goFollowList">
+        <text class="nav-icon">👤</text>
+        <text class="nav-label">关注 / 粉丝</text>
       </view>
       <view class="nav-item" @tap="goFriends">
         <text class="nav-icon">👥</text>
@@ -47,6 +63,14 @@
       <view class="nav-item" @tap="goLikedPosts">
         <text class="nav-icon">❤</text>
         <text class="nav-label">赞过的贴</text>
+      </view>
+      <view class="nav-item" @tap="goHotPosts">
+        <text class="nav-icon">🔥</text>
+        <text class="nav-label">热门帖子</text>
+      </view>
+      <view class="nav-item" @tap="goTreeHole">
+        <text class="nav-icon">🌫️</text>
+        <text class="nav-label">树洞</text>
       </view>
       <view class="nav-item" @tap="goSettings">
         <text class="nav-icon">⚙</text>
@@ -212,8 +236,25 @@ async function downloadAvatar() {
   }
 }
 
+function goEditProfile() {
+  uni.navigateTo({ url: '/pages/settings/edit-profile' })
+}
+
 function goMyPosts() {
   uni.navigateTo({ url: '/pages/post/my-posts' })
+}
+
+function goDrafts() {
+  uni.navigateTo({ url: '/pages/post/drafts' })
+}
+
+function goFollowingFeed() {
+  uni.navigateTo({ url: '/pages/follow/following-feed' })
+}
+
+function goFollowList() {
+  const userId = authStore.userInfo?.userId || 0
+  uni.navigateTo({ url: `/pages/follow/follow-list?userId=${userId}` })
 }
 
 function goFriends() {
@@ -226,6 +267,14 @@ function goFavourites() {
 
 function goLikedPosts() {
   uni.navigateTo({ url: '/pages/post/liked-posts' })
+}
+
+function goHotPosts() {
+  uni.navigateTo({ url: '/pages/post/hot-posts' })
+}
+
+function goTreeHole() {
+  uni.navigateTo({ url: '/pages/tree-hole/tree-hole' })
 }
 
 function goSettings() {
