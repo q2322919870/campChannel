@@ -48,6 +48,30 @@ public class AdminController {
     @Autowired
     private UserMapper userMapper;
 
+    @GetMapping("/stats")
+    @Operation(summary = "后台首页统计数据")
+    public Result<Map<String, Object>> getStats(
+            @AuthenticationPrincipal SecurityUser currentUser) {
+        if (!"sys_admin".equals(currentUser.getRole())) {
+            return Result.failed(ErrorCode.FORBIDDEN);
+        }
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalUsers", userService.count());
+        long postCount = postService.count();
+        stats.put("totalPosts", postCount);
+        long commentCount = commentService.count();
+        stats.put("totalComments", commentCount);
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Channel> chQ = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        stats.put("totalChannels", channelService.count(chQ));
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Post> pendPw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        pendPw.eq("status", 0);
+        stats.put("pendingPosts", postService.count(pendPw));
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<ChannelMember> pendCw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        pendCw.eq("status", 0);
+        stats.put("pendingChannels", channelService.count(pendCw));
+        return Result.success(stats);
+    }
+
     @GetMapping("/users")
     @Operation(summary = "获取用户列表")
     public Result<List<User>> getUsers(
@@ -67,8 +91,8 @@ public class AdminController {
         return Result.success(users);
     }
 
-    @PutMapping("/users/{userId}/status")
-    @Operation(summary = "禁用/启用用户")
+    @PostMapping("/users/{userId}/status")
+    @Operation(summary = "禁用/启用用户（API文档定义的标准Path）")
     public Result<Void> updateUserStatus(
             @PathVariable Long userId,
             @RequestBody StatusUpdateRequest request,
@@ -88,7 +112,7 @@ public class AdminController {
 
         operationLogService.log(currentUser.getId(), "用户管理", 
                 request.getStatus() == 0 ? "禁用用户" : "启用用户",
-                "操作用户ID: " + userId, "PUT", "/admin/users/" + userId + "/status", null);
+                "操作用户ID: " + userId, "POST", "/admin/users/" + userId + "/status", null);
 
         return Result.success(request.getStatus() == 0 ? "已禁用用户" : "已启用用户");
     }
@@ -412,38 +436,6 @@ public class AdminController {
         return Result.success(logs);
     }
 
-    @PostMapping("/announcement")
-    @Operation(summary = "发布全站公告")
-    public Result<Void> sendAnnouncement(
-            @RequestBody AnnouncementRequest request,
-            @AuthenticationPrincipal SecurityUser currentUser) {
-
-        if (!"sys_admin".equals(currentUser.getRole())) {
-            return Result.failed(ErrorCode.FORBIDDEN);
-        }
-
-        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
-            return Result.failed(ErrorCode.BAD_REQUEST, "公告标题不能为空");
-        }
-
-        // 获取所有用户
-        List<Long> allUserIds = userMapper.selectList(
-                new QueryWrapper<>()).stream()
-                .map(com.gdmec.campchannel.entity.User::getId)
-                .toList();
-
-        // 向每个用户发送通知
-        for (Long uid : allUserIds) {
-            notificationService.sendNotification(uid, "system", request.getTitle(),
-                    request.getContent(), "announcement");
-        }
-
-        operationLogService.log(currentUser.getId(), "系统管理", "发布公告",
-                "标题: " + request.getTitle(), "POST", "/admin/announcement", null);
-
-        return Result.success("公告已发布，覆盖 " + allUserIds.size() + " 个用户", null);
-    }
-
     @Data
     public static class StatusUpdateRequest {
         private Integer status;
@@ -458,11 +450,5 @@ public class AdminController {
     @Data
     public static class ApproveRequest {
         private boolean approved;
-    }
-
-    @Data
-    public static class AnnouncementRequest {
-        private String title;
-        private String content;
     }
 }

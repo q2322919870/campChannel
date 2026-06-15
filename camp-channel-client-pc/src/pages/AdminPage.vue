@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿<template>
+﻿﻿﻿﻿﻿﻿﻿﻿<template>
   <div class="admin-page">
     <div class="admin-sidebar">
       <div
@@ -452,9 +452,10 @@ async function publishAnnouncement() {
   announceLoading.value = true
   announceError.value = ''
   try {
-    const res = await api.post('/admin/announcement', {
+    const res = await api.post('/announcements', {
       title: announcementTitle.value,
       content: announcementContent.value,
+      type: 'system', // default to system announcement
     })
     if (res.data.code === 200) {
       alert(res.data.message || '公告已发布')

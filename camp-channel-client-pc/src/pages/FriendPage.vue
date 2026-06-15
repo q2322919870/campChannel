@@ -112,7 +112,8 @@ async function sendFriendRequest(friendId: number) {
 
 async function fetchPendingRequests() {
   try {
-    const res = await api.get('/friends/requests/pending')
+    // VP0-004: /friends/requests/pending → GET /api/friends/requests (per API spec)
+    const res = await api.get('/api/friends/requests')
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       pendingRequests.value = await Promise.all(res.data.data.map(async (r: any) => {
         try {
@@ -145,7 +146,8 @@ async function rejectRequest(requestId: number) {
 
 async function fetchFriends() {
   try {
-    const res = await api.get('/friends/list')
+    // VP0-004: /friends/list → GET /api/friends (per API spec & Backend_Dev fix)
+    const res = await api.get('/api/friends')
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       friends.value = res.data.data.map((u: any) => ({
         id: u.id,

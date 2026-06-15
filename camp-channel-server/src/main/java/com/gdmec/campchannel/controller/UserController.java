@@ -289,8 +289,16 @@ public class UserController {
     }
 
     @PutMapping("/me")
-    @Operation(summary = "更新个人信息")
+    @Operation(summary = "更新个人信息（兼容旧路径）")
     public Result<User> updateProfile(
+            @RequestBody UpdateProfileRequest request,
+            @AuthenticationPrincipal SecurityUser currentUser) {
+        return updateProfileV3(request, currentUser);
+    }
+
+    @PutMapping("/profile")
+    @Operation(summary = "更新个人资料（API文档定义的标准Path）")
+    public Result<User> updateProfileV3(
             @RequestBody UpdateProfileRequest request,
             @AuthenticationPrincipal SecurityUser currentUser) {
         
@@ -302,14 +310,11 @@ public class UserController {
         if (StringUtils.hasText(request.getUsername())) {
             user.setUsername(request.getUsername());
         }
-        if (StringUtils.hasText(request.getAvatar())) {
-            user.setAvatar(request.getAvatar());
+        if (StringUtils.hasText(request.getRealName())) {
+            user.setRealName(request.getRealName());
         }
-        if (StringUtils.hasText(request.getEmail())) {
-            user.setEmail(request.getEmail());
-        }
-        if (request.getEmailNotify() != null) {
-            user.setEmailNotify(request.getEmailNotify());
+        if (StringUtils.hasText(request.getPhone())) {
+            user.setPhone(request.getPhone());
         }
 
         userService.updateById(user);
@@ -317,12 +322,12 @@ public class UserController {
         return Result.success("更新成功", user);
     }
 
-    @PostMapping("/change-password")
+    @PutMapping("/password")
     @Operation(summary = "修改密码")
     public Result<Void> changePassword(
             @RequestBody ChangePasswordRequest request,
             @AuthenticationPrincipal SecurityUser currentUser) {
-        
+
         if (!StringUtils.hasText(request.getOldPassword()) || !StringUtils.hasText(request.getNewPassword())) {
             return Result.failed(ErrorCode.BAD_REQUEST, "旧密码和新密码不能为空");
         }
@@ -345,9 +350,9 @@ public class UserController {
         return Result.success("密码修改成功，请重新登录", null);
     }
 
-    @PostMapping("/logout-device")
-    @Operation(summary = "远程设备下线")
-    public Result<Void> logoutDevice(@AuthenticationPrincipal SecurityUser currentUser) {
+    @PostMapping("/logout-all")
+    @Operation(summary = "远程所有设备下线（兼容旧路径）")
+    public Result<Void> logoutAllDevices(@AuthenticationPrincipal SecurityUser currentUser) {
         String activeTokenKey = "active_token:" + currentUser.getUsername();
         redisUtils.del(activeTokenKey);
         return Result.success("已强制所有设备下线", null);
@@ -363,9 +368,9 @@ public class UserController {
         return Result.success(devices);
     }
 
-    @PostMapping("/devices/{deviceId}/logout")
-    @Operation(summary = "远程下线指定设备")
-    public Result<Void> logoutDeviceById(
+    @DeleteMapping("/devices/{deviceId}")
+    @Operation(summary = "远程下线指定设备（API文档定义的标准Path）")
+    public Result<Void> logoutDeviceByDeviceId(
             @PathVariable Long deviceId,
             @AuthenticationPrincipal SecurityUser currentUser) {
 
@@ -377,12 +382,19 @@ public class UserController {
         return Result.success("已强制该设备下线", null);
     }
 
+    @PostMapping("/devices/{deviceId}/logout")
+    @Operation(summary = "远程下线指定设备（兼容旧路径）")
+    public Result<Void> logoutDeviceByIdLegacy(
+            @PathVariable Long deviceId,
+            @AuthenticationPrincipal SecurityUser currentUser) {
+        return logoutDeviceByDeviceId(deviceId, currentUser);
+    }
+
     @Data
     public static class UpdateProfileRequest {
         private String username;
-        private String avatar;
-        private String email;
-        private Integer emailNotify;
+        private String realName;
+        private String phone;
     }
 
     @Data
