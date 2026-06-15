@@ -40,43 +40,39 @@ function manageDevices() {
 .settings-page {
   min-height: 100vh;
   background: transparent;
-  position: relative;
-  z-index: 1;
 }
 
 .settings-header {
   padding: 32rpx;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--card);
   margin: 20rpx;
-  border-radius: 20rpx;
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
+  border-radius: var(--radius-lg);
+  border: 1rpx solid var(--card-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .page-title {
   font-size: 40rpx;
   font-weight: bold;
-  color: #E8EFF7;
+  color: var(--text);
 }
 
 .settings-section {
   margin: 0 20rpx 16rpx 20rpx;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20rpx;
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1rpx solid var(--card-border);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .section-title {
   padding: 24rpx 32rpx;
   font-size: 26rpx;
   font-weight: 600;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-muted);
   background: transparent;
-  border-bottom: 1rpx solid rgba(124, 159, 203, 0.1);
+  border-bottom: 1rpx solid var(--card-border);
 }
 
 .setting-item {
@@ -84,8 +80,7 @@ function manageDevices() {
   align-items: center;
   justify-content: space-between;
   padding: 28rpx 32rpx;
-  border-bottom: 1rpx solid rgba(124, 159, 203, 0.08);
-  transition: background 0.2s;
+  border-bottom: 1rpx solid var(--card-border);
 }
 
 .setting-item:last-child {
@@ -93,17 +88,17 @@ function manageDevices() {
 }
 
 .setting-item:active {
-  background: rgba(124, 159, 203, 0.05);
+  background: var(--bg);
 }
 
 .setting-label {
   font-size: 28rpx;
-  color: #E8EFF7;
+  color: var(--text);
 }
 
 .setting-arrow {
   font-size: 36rpx;
-  color: rgba(232, 239, 247, 0.4);
+  color: var(--text-muted);
 }
 
 .about-item {
@@ -115,11 +110,11 @@ function manageDevices() {
 
 .about-label {
   font-size: 28rpx;
-  color: #E8EFF7;
+  color: var(--text);
 }
 
 .about-value {
   font-size: 28rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-secondary);
 }
 </style>

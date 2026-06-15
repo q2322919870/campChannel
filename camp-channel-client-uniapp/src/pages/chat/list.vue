@@ -1,6 +1,34 @@
 <template>
   <view class="chat-list-container" @touchstart.capture="onTouchStart" @touchend.capture="onTouchEnd">
-    <view v-if="sessions.length === 0" class="empty-state">
+    <!-- Group Chat Section -->
+    <view v-if="groupChannels.length > 0" class="section">
+      <view class="section-header">
+        <text class="section-title">频道群聊</text>
+      </view>
+      <view
+        v-for="ch in groupChannels"
+        :key="'g-' + ch.id"
+        class="session-item group-session"
+        @tap="goGroupChat(ch)"
+      >
+        <view class="session-avatar-wrapper">
+          <view class="session-avatar group-avatar">
+            <text>#</text>
+          </view>
+        </view>
+        <view class="session-info">
+          <view class="session-top">
+            <text class="session-name">{{ ch.name }}</text>
+          </view>
+          <view class="session-bottom">
+            <text class="session-preview">频道群聊</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Private Chat Section -->
+    <view v-if="sessions.length === 0 && groupChannels.length === 0" class="empty-state">
       <text class="empty-icon">💬</text>
       <text class="empty-text">暂无会话</text>
     </view>
@@ -61,7 +89,13 @@ interface Session {
   online?: boolean
 }
 
+interface GroupChannel {
+  id: number
+  name: string
+}
+
 const sessions = ref<Session[]>([])
+const groupChannels = ref<GroupChannel[]>([])
 const loading = ref(false)
 let pollTimer: any = null
 
@@ -75,6 +109,7 @@ onMounted(() => {
     return
   }
   loadSessions()
+  loadGroupChannels()
   clearBadge()
   connectWebSocket()
   startPolling()
@@ -90,6 +125,24 @@ onUnmounted(() => {
 
 function clearBadge() {
   uni.removeTabBarBadge({ index: 2 })
+}
+
+async function loadGroupChannels() {
+  try {
+    const res = await request<any>('/channels/my')
+    if (res?.code === 200 && Array.isArray(res.data)) {
+      groupChannels.value = res.data.map((ch: any) => ({
+        id: ch.id,
+        name: ch.name || '频道',
+      }))
+    }
+  } catch (_) {}
+}
+
+function goGroupChat(ch: GroupChannel) {
+  uni.navigateTo({
+    url: `/pages/chat/group-chat?channelId=${ch.id}&channelName=${encodeURIComponent(ch.name)}`
+  })
 }
 
 async function loadSessions() {
@@ -185,7 +238,6 @@ function startPolling() {
   background: transparent;
   padding: 20rpx 0;
   box-sizing: border-box;
-  padding-bottom: 20rpx;
 }
 
 .empty-state {
@@ -203,40 +255,50 @@ function startPolling() {
 
 .empty-text {
   font-size: 28rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
 }
 
 .loading-state {
   text-align: center;
   padding: 40rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
   font-size: 26rpx;
+}
+
+.section {
+  margin-bottom: 16rpx;
+}
+
+.section-header {
+  padding: 16rpx 32rpx 8rpx;
+}
+
+.section-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.group-avatar {
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.group-session {
+  border-left: 6rpx solid #10B981;
 }
 
 .session-item {
   display: flex;
   align-items: center;
   padding: 24rpx 30rpx;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--card);
   margin: 0 20rpx 12rpx 20rpx;
-  border-radius: 20rpx;
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  position: relative;
-  overflow: hidden;
-}
-
-.session-item::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%);
-  pointer-events: none;
-  border-radius: 20rpx;
+  border-radius: var(--radius);
+  border: 1rpx solid var(--card-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .session-avatar {
@@ -249,23 +311,18 @@ function startPolling() {
   font-size: 36rpx;
   color: #ffffff;
   font-weight: bold;
-  margin-right: 24rpx;
-  flex-shrink: 0;
 }
 
 .session-avatar-img {
   width: 88rpx;
   height: 88rpx;
   border-radius: 50%;
-  margin-right: 24rpx;
-  flex-shrink: 0;
 }
 
 .session-avatar-wrapper {
   position: relative;
   margin-right: 24rpx;
   flex-shrink: 0;
-  z-index: 1;
 }
 
 .session-avatar-wrapper .session-avatar,
@@ -280,16 +337,14 @@ function startPolling() {
   width: 18rpx;
   height: 18rpx;
   border-radius: 50%;
-  background-color: #2ecc71;
-  border: 3rpx solid #0F1923;
+  background-color: var(--success);
+  border: 3rpx solid var(--card);
   z-index: 2;
 }
 
 .session-info {
   flex: 1;
   min-width: 0;
-  z-index: 1;
-  position: relative;
 }
 
 .session-top {
@@ -302,12 +357,12 @@ function startPolling() {
 .session-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #E8EFF7;
+  color: var(--text);
 }
 
 .session-time {
   font-size: 22rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -319,7 +374,7 @@ function startPolling() {
 
 .session-preview {
   font-size: 26rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -330,7 +385,7 @@ function startPolling() {
   min-width: 36rpx;
   height: 36rpx;
   border-radius: 18rpx;
-  background: #F2B5D4;
+  background: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;

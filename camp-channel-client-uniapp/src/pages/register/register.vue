@@ -180,26 +180,26 @@ const handleRegister = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60rpx 40rpx;
+  padding: 40rpx 48rpx;
   box-sizing: border-box;
 }
 
 .register-card {
   width: 100%;
   background-color: var(--card);
-  border-radius: 36rpx;
-  padding: 48rpx;
+  border-radius: var(--radius-lg);
+  padding: 40rpx;
   box-sizing: border-box;
-  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-lg);
 }
 
 .form-item {
-  margin-bottom: 36rpx;
+  margin-bottom: 28rpx;
 }
 
 .code-row {
   display: flex;
-  gap: 20rpx;
+  gap: 16rpx;
   align-items: flex-end;
 }
 
@@ -212,12 +212,13 @@ const handleRegister = async () => {
 }
 
 .btn-code {
-  height: 90rpx;
-  padding: 0 24rpx;
-  background: linear-gradient(135deg, var(--primary), var(--primary));
+  height: 96rpx;
+  padding: 0 28rpx;
+  background: var(--primary-soft);
   border-radius: 20rpx;
-  color: #ffffff;
+  color: var(--primary);
   font-size: 24rpx;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -232,22 +233,22 @@ const handleRegister = async () => {
 
 .label {
   color: var(--text);
-  font-size: 28rpx;
-  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  margin-bottom: 12rpx;
   display: block;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .input-box {
   width: 100%;
-  height: 90rpx;
+  height: 96rpx;
   background-color: var(--bg);
   border-radius: 20rpx;
-  padding: 0 30rpx;
+  padding: 0 28rpx;
   box-sizing: border-box;
   color: var(--text);
   font-size: 28rpx;
-  border: 1px solid var(--card-border);
+  border: 2rpx solid transparent;
 }
 
 .ph {
@@ -255,7 +256,10 @@ const handleRegister = async () => {
 }
 
 .error-area {
-  margin-bottom: 24rpx;
+  margin-bottom: 20rpx;
+  padding: 16rpx 24rpx;
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: 12rpx;
 }
 
 .error-text {
@@ -266,16 +270,17 @@ const handleRegister = async () => {
 .btn-primary {
   width: 100%;
   height: 96rpx;
-  background: linear-gradient(135deg, var(--primary), var(--primary));
+  background: var(--primary-gradient);
   border-radius: 20rpx;
   color: #ffffff;
   font-size: 32rpx;
-  font-weight: bold;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  margin-top: 12rpx;
+  margin-top: 8rpx;
+  box-shadow: 0 8rpx 24rpx rgba(99, 102, 241, 0.25);
 }
 
 .btn-primary::after {
@@ -284,8 +289,9 @@ const handleRegister = async () => {
 
 .login-link {
   text-align: center;
-  margin-top: 40rpx;
+  margin-top: 32rpx;
   color: var(--primary);
   font-size: 26rpx;
+  font-weight: 600;
 }
 </style>

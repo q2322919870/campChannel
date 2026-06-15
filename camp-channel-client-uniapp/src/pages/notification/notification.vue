@@ -4,11 +4,11 @@
       <view class="tab" :class="{ active: activeTab === 'all' }" @tap="activeTab = 'all'">
         <text>全部</text>
       </view>
-      <view class="tab" :class="{ active: activeTab === 'like' }" @tap="activeTab = 'like'">
-        <text>赞</text>
+      <view class="tab" :class="{ active: activeTab === 'interaction' }" @tap="activeTab = 'interaction'">
+        <text>互动</text>
       </view>
-      <view class="tab" :class="{ active: activeTab === 'comment' }" @tap="activeTab = 'comment'">
-        <text>评论</text>
+      <view class="tab" :class="{ active: activeTab === 'chat' }" @tap="activeTab = 'chat'">
+        <text>聊天</text>
       </view>
       <view class="tab" :class="{ active: activeTab === 'system' }" @tap="activeTab = 'system'">
         <text>系统</text>
@@ -60,12 +60,14 @@ const authStore = useAuthStore()
 
 const activeTab = ref('all')
 const notifications = ref<any[]>([])
+const page = ref(1)
+const hasMore = ref(true)
 
 const hasUnread = computed(() => notifications.value.some((n) => !n.read))
 
 const filteredNotifications = computed(() => {
   if (activeTab.value === 'all') return notifications.value
-  return notifications.value.filter((n) => n.type === activeTab.value)
+  return notifications.value.filter((n) => n.category === activeTab.value)
 })
 
 onMounted(() => {
@@ -78,18 +80,26 @@ onMounted(() => {
 
 async function loadNotifications() {
   try {
-    const res = await request<any>('/notifications/unread')
+    const res = await request<any>(`/notifications/history?page=${page.value}&size=30`)
     if (res?.code === 200) {
-      notifications.value = (res.data || []).map((n: any) => ({
+      const list = (res.data || []).map((n: any) => ({
         id: n.id,
         type: n.type || 'system',
-        icon: n.type === 'like' ? '❤️' : n.type === 'comment' ? '💬' : '📢',
+        category: n.category || 'system',
+        icon: n.type === 'like' ? '❤️' : n.type === 'comment' ? '💬' : n.type === 'follow' ? '👤' : n.type === 'mention' ? '@' : '📢',
         title: n.title || '',
         content: n.content || '',
-        createdAt: formatTime(n.createdAt),
-        read: n.read || false,
-        color: n.type === 'like' ? '#f38ba8' : n.type === 'comment' ? '#89b4fa' : '#a6e3a1',
+        createdAt: formatTime(n.createTime || n.createdAt),
+        read: n.isRead === 1 || n.isRead === true,
+        relatedId: n.relatedId,
+        color: n.type === 'like' ? '#f38ba8' : n.type === 'comment' ? '#89b4fa' : n.category === 'interaction' ? '#a6e3a1' : '#cba6f7',
       }))
+      if (page.value === 1) {
+        notifications.value = list
+      } else {
+        notifications.value = [...notifications.value, ...list]
+      }
+      if (list.length < 30) hasMore.value = false
     }
   } catch (_) {}
 }
@@ -109,6 +119,14 @@ function handleTap(n: any) {
     n.read = true
     request<any>({ url: `/notifications/${n.id}/read`, method: 'POST' }).catch(() => {})
   }
+  // Navigate based on notification type
+  if (n.type === 'like' || n.type === 'comment' || n.type === 'mention') {
+    if (n.relatedId) {
+      uni.navigateTo({ url: `/pages/post/detail?id=${n.relatedId}` })
+    }
+  } else if (n.type === 'follow') {
+    // Could navigate to follower profile
+  }
 }
 
 function formatTime(t: string): string {
@@ -127,10 +145,9 @@ function formatTime(t: string): string {
 <style>
 .notify-container {
   min-height: 100vh;
-  background: #0F1923;
+  background: var(--bg);
   padding: 30rpx;
   box-sizing: border-box;
-  padding-bottom: 30rpx;
 }
 
 .tabs {
@@ -143,25 +160,22 @@ function formatTime(t: string): string {
   padding: 14rpx 32rpx;
   border-radius: 100rpx;
   font-size: 26rpx;
-  color: rgba(232, 239, 247, 0.6);
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
+  color: var(--text-secondary);
+  background: var(--bg);
 }
 
 .tab.active {
-  background: rgba(124, 159, 203, 0.15);
-  color: #7C9FCB;
-  border-color: #7C9FCB;
+  background: var(--primary);
+  color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(99, 102, 241, 0.25);
 }
 
 .mark-all {
   text-align: right;
   padding: 0 0 16rpx 0;
   font-size: 24rpx;
-  color: #7C9FCB;
+  color: var(--primary);
 }
 
 .empty-state {
@@ -178,41 +192,27 @@ function formatTime(t: string): string {
 
 .empty-text {
   font-size: 28rpx;
-  color: rgba(232, 239, 247, 0.4);
+  color: var(--text-muted);
 }
 
 .notify-item {
   display: flex;
   align-items: flex-start;
   padding: 28rpx;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  border-radius: 24rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius);
   margin-bottom: 16rpx;
-  position: relative;
-  overflow: hidden;
-}
-
-.notify-item::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 50%, transparent 100%);
-  pointer-events: none;
-  border-radius: 24rpx;
+  box-shadow: var(--shadow-sm);
 }
 
 .notify-item.unread {
-  border-left: 6rpx solid #7C9FCB;
+  border-left: 6rpx solid var(--primary);
 }
 
 .notify-icon-wrapper {
   margin-right: 20rpx;
   flex-shrink: 0;
-  position: relative;
-  z-index: 1;
 }
 
 .notify-icon {
@@ -228,8 +228,6 @@ function formatTime(t: string): string {
 .notify-body {
   flex: 1;
   min-width: 0;
-  position: relative;
-  z-index: 1;
 }
 
 .notify-top {
@@ -242,35 +240,32 @@ function formatTime(t: string): string {
 .notify-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #E8EFF7;
+  color: var(--text);
 }
 
 .notify-time {
   font-size: 20rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .notify-content {
   font-size: 26rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-secondary);
   line-height: 1.4;
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  position: relative;
-  z-index: 1;
 }
 
 .notify-dot {
   width: 12rpx;
   height: 12rpx;
   border-radius: 50%;
-  background: #F2B5D4;
+  background: var(--accent);
   position: absolute;
   top: 20rpx;
   right: 20rpx;
-  z-index: 1;
 }
 </style>

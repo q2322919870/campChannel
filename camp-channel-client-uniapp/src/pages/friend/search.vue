@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import request from '../../utils/request'
+import request, { processImageUrl } from '../../utils/request'
 import { useAuthStore } from '../../stores/auth'
 
 const authStore = useAuthStore()
@@ -82,12 +82,12 @@ async function handleSearch() {
   if (!keyword.value.trim()) return
   searched.value = true
   try {
-    const res = await request<any>(`/friends/search?q=${encodeURIComponent(keyword.value.trim())}`)
+    const res = await request<any>(`/friends/search?keyword=${encodeURIComponent(keyword.value.trim())}`)
     if (res?.code === 200) {
       results.value = (res.data || []).map((u: any) => ({
         id: u.id || u.userId,
         username: u.username || '未知',
-        avatar: u.avatar || '',
+        avatar: processImageUrl(u.avatar || ''),
         email: u.email || '',
         color: u.color || 'var(--primary)',
         requestSent: u.requestSent || false,
@@ -162,7 +162,7 @@ async function sendRequest(user: any) {
 .btn-search {
   height: 80rpx;
   padding: 0 32rpx;
-  background: linear-gradient(135deg, var(--primary), var(--primary));
+  background: var(--primary);
   border-radius: 40rpx;
   color: #ffffff;
   font-size: 26rpx;
@@ -279,7 +279,7 @@ async function sendRequest(user: any) {
 .btn-add {
   height: 60rpx;
   padding: 0 24rpx;
-  background: linear-gradient(135deg, var(--primary), var(--primary));
+  background: var(--primary);
   border-radius: 30rpx;
   color: #ffffff;
   font-size: 22rpx;

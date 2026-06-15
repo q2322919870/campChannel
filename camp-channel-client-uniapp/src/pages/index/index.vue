@@ -1,8 +1,21 @@
 <template>
   <view class="home-page" @touchstart.capture="onTouchStart" @touchend.capture="onTouchEnd">
     <view class="home-header">
-      <text class="page-title">首页</text>
-      <scroll-view v-if="channelTabs.length > 0" scroll-x class="channel-tabs">
+      <view class="header-top">
+        <text class="page-title">首页</text>
+        <view class="search-bar" @tap="focusSearch">
+          <input
+            v-model="searchKeyword"
+            placeholder="搜索帖子..."
+            class="search-input"
+            confirm-type="search"
+            @confirm="doSearch"
+          />
+          <text v-if="searchKeyword" class="search-clear" @tap.stop="clearSearch">×</text>
+          <text v-else class="search-icon">🔍</text>
+        </view>
+      </view>
+      <scroll-view v-if="channelTabs.length > 0 && !isSearching" scroll-x class="channel-tabs">
         <view
           v-for="tab in channelTabs"
           :key="tab.id"
@@ -105,6 +118,8 @@ const tabIndex = ref(0)
 const posts = ref<Post[]>([])
 const loading = ref(false)
 const refreshing = ref(false)
+const searchKeyword = ref('')
+const isSearching = ref(false)
 
 let unsubscribeNewPost: (() => void) | null = null
 let unsubscribeNewComment: (() => void) | null = null
@@ -234,9 +249,62 @@ function showUserCard(userId: number) {
 }
 
 function sharePost(post: Post) {
-  uni.showShareMenu({
-    withShareTicket: true,
+  const shareText = `${post.author}: ${post.content.substring(0, 100)}...`
+  uni.setClipboardData({
+    data: shareText,
+    success: () => {
+      uni.showToast({ title: '内容已复制，可粘贴分享', icon: 'none', duration: 2000 })
+    },
+    fail: () => {
+      uni.showToast({ title: '分享失败', icon: 'none' })
+    }
   })
+}
+
+function focusSearch() {
+  // input auto-focuses when tapped
+}
+
+async function doSearch() {
+  const keyword = searchKeyword.value.trim()
+  if (!keyword) {
+    clearSearch()
+    return
+  }
+  isSearching.value = true
+  loading.value = true
+  try {
+    const res = await request<any>(`/posts/search?keyword=${encodeURIComponent(keyword)}&page=1&size=20`)
+    if (res?.code === 200) {
+      posts.value = (res.data || []).map((p: any) => ({
+        id: p.id,
+        authorId: p.userId || p.authorId,
+        author: p.author || p.username || '未知',
+        avatar: processImageUrl(p.avatar || ''),
+        userId: p.userId,
+        time: formatTime(p.createdAt),
+        channelName: p.channelName || '',
+        channelId: p.channelId,
+        userChannelRole: p.userChannelRole,
+        title: p.title || '',
+        content: p.content || '',
+        images: safeParseImages(p.images),
+        likeCount: p.likeCount || 0,
+        commentCount: p.commentCount || 0,
+        isLiked: p.isLiked || false,
+      }))
+    }
+  } catch (_) {
+    uni.showToast({ title: '搜索失败', icon: 'none' })
+  } finally {
+    loading.value = false
+  }
+}
+
+function clearSearch() {
+  searchKeyword.value = ''
+  isSearching.value = false
+  loadPosts()
 }
 
 function connectWebSocket() {
@@ -272,51 +340,63 @@ function connectWebSocket() {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  position: relative;
-  z-index: 1;
+  background: var(--bg);
 }
 
 .home-header {
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 24rpx 32rpx;
-  border-bottom: 1rpx solid rgba(124, 159, 203, 0.15);
+  background: var(--card);
+  padding: 20rpx 32rpx 16rpx;
+  box-shadow: var(--shadow-sm);
   position: relative;
   z-index: 10;
 }
 
-.home-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-  border-radius: 0;
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
 }
 
 .page-title {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: #E8EFF7;
-  margin-bottom: 16rpx;
+  font-size: 44rpx;
+  font-weight: 800;
+  color: var(--text);
   display: block;
-  position: relative;
-  z-index: 1;
+  flex-shrink: 0;
+}
+
+.search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1rpx solid var(--card-border);
+  border-radius: 100rpx;
+  padding: 8rpx 20rpx;
+  gap: 8rpx;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--text);
+  height: 48rpx;
+}
+
+.search-icon {
+  font-size: 28rpx;
+  color: var(--text-muted);
+}
+
+.search-clear {
+  font-size: 32rpx;
+  color: var(--text-muted);
+  padding: 0 8rpx;
 }
 
 .channel-tabs {
   white-space: nowrap;
-  position: relative;
-  z-index: 1;
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
@@ -329,29 +409,28 @@ function connectWebSocket() {
 .channel-tab {
   display: inline-flex;
   align-items: center;
-  padding: 12rpx 32rpx;
+  padding: 12rpx 28rpx;
   border-radius: 100rpx;
   font-size: 26rpx;
-  color: rgba(232, 239, 247, 0.6);
-  background: rgba(124, 159, 203, 0.08);
-  margin-right: 16rpx;
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-secondary);
+  background: var(--bg);
+  margin-right: 12rpx;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .channel-tab.active {
-  background: rgba(124, 159, 203, 0.15);
-  border-color: #7C9FCB;
-  color: #7C9FCB;
+  background: var(--primary);
+  color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(99, 102, 241, 0.25);
 }
 
 .tab-badge {
   position: absolute;
   top: -8rpx;
   right: -8rpx;
-  background: #7C9FCB;
+  background: var(--accent);
   color: #ffffff;
   font-size: 20rpx;
   padding: 2rpx 12rpx;
@@ -363,9 +442,7 @@ function connectWebSocket() {
 .posts-list {
   flex: 1;
   height: 100%;
-  padding: 16rpx;
-  position: relative;
-  z-index: 1;
+  padding: 20rpx 24rpx;
 }
 
 .content-swiper {
@@ -378,13 +455,13 @@ function connectWebSocket() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80rpx 0;
+  padding: 120rpx 0;
 }
 
 .loading-text,
 .empty-text {
   font-size: 28rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-muted);
 }
 
 .empty-icon {

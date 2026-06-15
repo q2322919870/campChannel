@@ -2,7 +2,7 @@
   <view class="login-container">
     <view class="logo-area">
       <view class="logo-box">
-        <text class="logo-icon">🏫</text>
+        <text class="logo-text">CC</text>
       </view>
       <text class="app-title">Camp Channel</text>
       <text class="app-subtitle">广东机电职业技术学院专属校园频道</text>
@@ -11,28 +11,33 @@
     <view class="form-card">
       <view class="form-item">
         <text class="label">学校认证邮箱</text>
-        <input 
-          v-model="email" 
-          type="text" 
-          placeholder="请输入以 @stu.gdmec.edu.cn 结尾的邮箱" 
-          class="input-box"
-          placeholder-class="placeholder-style"
-        />
+        <view class="input-wrapper">
+          <text class="input-icon">✉</text>
+          <input 
+            v-model="email" 
+            type="text" 
+            placeholder="请输入以 @stu.gdmec.edu.cn 结尾的邮箱" 
+            class="input-box"
+            placeholder-class="placeholder-style"
+          />
+        </view>
       </view>
 
       <view class="form-item">
         <text class="label">登录密码</text>
-        <input 
-          v-model="password" 
-          type="password" 
-          placeholder="请输入密码" 
-          class="input-box"
-          placeholder-class="placeholder-style"
-        />
+        <view class="input-wrapper">
+          <text class="input-icon">🔒</text>
+          <input 
+            v-model="password" 
+            type="password" 
+            placeholder="请输入密码" 
+            class="input-box"
+            placeholder-class="placeholder-style"
+          />
+        </view>
       </view>
 
       <view v-if="errorMsg" class="error-area">
-        <text class="error-icon">⚠️</text>
         <text class="error-text">{{ errorMsg }}</text>
       </view>
 
@@ -42,7 +47,8 @@
       </button>
 
       <view class="register-link" @tap="goRegister">
-        <text>还没有账号？立即注册</text>
+        <text>还没有账号？</text>
+        <text class="register-text">立即注册</text>
       </view>
     </view>
 
@@ -128,165 +134,141 @@ const handleLogin = async () => {
 <style>
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0F1923 0%, #1a2a3a 50%, #2d3748 100%);
-  background-attachment: fixed;
+  background: var(--bg, #F3F4F8);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0 40rpx;
+  padding: 0 48rpx;
   box-sizing: border-box;
-  position: relative;
-}
-
-.login-container::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(124, 159, 203, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(242, 181, 212, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 40% 20%, rgba(124, 159, 203, 0.1) 0%, transparent 50%);
-  z-index: 0;
-  pointer-events: none;
 }
 
 .logo-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 60rpx;
-  position: relative;
-  z-index: 1;
+  margin-bottom: 72rpx;
 }
 
 .logo-box {
-  width: 140rpx;
-  height: 140rpx;
-  background: linear-gradient(135deg, #7C9FCB, #F2B5D4);
-  border-radius: 40rpx;
+  width: 128rpx;
+  height: 128rpx;
+  background: var(--primary-gradient, linear-gradient(135deg, #6366F1, #A855F7));
+  border-radius: 36rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 16rpx 32rpx rgba(124, 159, 203, 0.3);
-  margin-bottom: 30rpx;
+  box-shadow: 0 16rpx 40rpx rgba(99, 102, 241, 0.3);
+  margin-bottom: 28rpx;
 }
 
-.logo-icon {
-  font-size: 70rpx;
+.logo-text {
+  font-size: 48rpx;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 2rpx;
 }
 
 .app-title {
-  color: #E8EFF7;
-  font-size: 52rpx;
-  font-weight: bold;
+  color: var(--text, #1A1D26);
+  font-size: 48rpx;
+  font-weight: 800;
   letter-spacing: 2rpx;
   margin-bottom: 12rpx;
 }
 
 .app-subtitle {
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-secondary, #6B7280);
   font-size: 26rpx;
 }
 
 .form-card {
   width: 100%;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  border-radius: 36rpx;
+  background: var(--card, #FFFFFF);
+  border-radius: var(--radius-lg, 32rpx);
   padding: 48rpx;
   box-sizing: border-box;
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.form-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-  border-radius: 36rpx;
+  box-shadow: var(--shadow-lg, 0 8rpx 40rpx rgba(0, 0, 0, 0.08));
 }
 
 .form-item {
-  margin-bottom: 36rpx;
-  position: relative;
-  z-index: 1;
+  margin-bottom: 32rpx;
 }
 
 .label {
-  color: #E8EFF7;
-  font-size: 28rpx;
-  margin-bottom: 16rpx;
+  color: var(--text, #1A1D26);
+  font-size: 26rpx;
+  margin-bottom: 12rpx;
   display: block;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 96rpx;
+  background: var(--bg, #F3F4F8);
+  border-radius: 20rpx;
+  padding: 0 28rpx;
+  box-sizing: border-box;
+  border: 2rpx solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--primary, #6366F1);
+}
+
+.input-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
 }
 
 .input-box {
-  width: 100%;
-  height: 90rpx;
-  background: rgba(15, 25, 35, 0.5);
-  border-radius: 20rpx;
-  padding: 0 30rpx;
-  box-sizing: border-box;
-  color: #E8EFF7;
+  flex: 1;
+  height: 100%;
+  color: var(--text, #1A1D26);
   font-size: 28rpx;
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
+  background: transparent;
 }
 
 .placeholder-style {
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-muted, #9CA3AF);
 }
 
 .error-area {
-  display: flex;
-  align-items: center;
-  margin-bottom: 24rpx;
-  position: relative;
-  z-index: 1;
-}
-
-.error-icon {
-  font-size: 28rpx;
-  margin-right: 12rpx;
+  padding: 16rpx 24rpx;
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
 }
 
 .error-text {
-  color: #F2B5D4;
+  color: var(--danger, #EF4444);
   font-size: 24rpx;
 }
 
 .btn-login {
   width: 100%;
   height: 96rpx;
-  background: linear-gradient(135deg, #7C9FCB, #F2B5D4);
+  background: var(--primary-gradient, linear-gradient(135deg, #6366F1, #A855F7));
   border-radius: 20rpx;
   color: #ffffff;
   font-size: 32rpx;
-  font-weight: bold;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  margin-top: 12rpx;
-  box-shadow: 0 8rpx 24rpx rgba(124, 159, 203, 0.3);
-  position: relative;
-  z-index: 1;
+  margin-top: 8rpx;
+  box-shadow: 0 8rpx 24rpx rgba(99, 102, 241, 0.25);
+}
+
+.btn-login[disabled] {
+  opacity: 0.6;
+  box-shadow: none;
 }
 
 .btn-login::after {
@@ -296,18 +278,19 @@ const handleLogin = async () => {
 .register-link {
   text-align: center;
   margin-top: 32rpx;
-  color: #7C9FCB;
+  color: var(--text-secondary, #6B7280);
   font-size: 26rpx;
-  position: relative;
-  z-index: 1;
+}
+
+.register-text {
+  color: var(--primary, #6366F1);
+  font-weight: 600;
 }
 
 .agreement {
-  color: rgba(232, 239, 247, 0.6);
-  font-size: 24rpx;
-  margin-top: 40rpx;
+  color: var(--text-muted, #9CA3AF);
+  font-size: 22rpx;
+  margin-top: 48rpx;
   text-align: center;
-  position: relative;
-  z-index: 1;
 }
 </style>

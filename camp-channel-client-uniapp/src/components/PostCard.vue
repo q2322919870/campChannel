@@ -122,56 +122,31 @@ function handleImageError() {
 
 <style scoped>
 .post-card {
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  border-radius: 24rpx;
-  padding: 24rpx;
-  margin-bottom: 16rpx;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: var(--shadow-sm);
   position: relative;
-  overflow: hidden;
-}
-
-.post-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-  border-radius: 24rpx;
 }
 
 .post-header {
   display: flex;
   align-items: center;
-  margin-bottom: 16rpx;
-  position: relative;
-  z-index: 1;
+  margin-bottom: 20rpx;
 }
 
 .post-avatar {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 14rpx;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
   overflow: hidden;
   margin-right: 16rpx;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #7C9FCB, #F2B5D4);
+  background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  z-index: 1;
 }
 
 .avatar-img {
@@ -182,7 +157,7 @@ function handleImageError() {
 .avatar-placeholder {
   color: #ffffff;
   font-size: 32rpx;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .post-meta {
@@ -190,14 +165,12 @@ function handleImageError() {
   display: flex;
   flex-direction: column;
   gap: 4rpx;
-  position: relative;
-  z-index: 1;
 }
 
 .post-author {
   font-size: 28rpx;
-  font-weight: 600;
-  color: #E8EFF7;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .role-badge {
@@ -206,104 +179,100 @@ function handleImageError() {
   border-radius: 8rpx;
   display: inline-block;
   width: fit-content;
-  position: relative;
-  z-index: 1;
 }
 
 .role-owner {
-  background: rgba(240, 173, 78, 0.2);
-  color: #f0ad4e;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warning);
 }
 
 .role-admin {
-  background: rgba(242, 181, 212, 0.2);
-  color: #F2B5D4;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .role-member {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(232, 239, 247, 0.6);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .post-time {
   font-size: 22rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-muted);
 }
 
 .post-channel {
   font-size: 22rpx;
-  color: #7C9FCB;
-  padding: 4rpx 16rpx;
-  background: rgba(124, 159, 203, 0.15);
+  color: var(--primary);
+  padding: 6rpx 16rpx;
+  background: var(--primary-soft);
   border-radius: 100rpx;
   flex-shrink: 0;
-  position: relative;
-  z-index: 1;
+  font-weight: 500;
 }
 
 .post-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #E8EFF7;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text);
   margin-bottom: 12rpx;
-  line-height: 1.4;
+  line-height: 1.5;
   display: block;
-  position: relative;
-  z-index: 1;
 }
 
 .post-content {
   font-size: 26rpx;
-  color: rgba(232, 239, 247, 0.6);
-  line-height: 1.6;
+  color: var(--text-secondary);
+  line-height: 1.7;
   margin-bottom: 16rpx;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  position: relative;
-  z-index: 1;
 }
 
 .post-images {
   display: flex;
   gap: 8rpx;
   margin-bottom: 16rpx;
-  position: relative;
-  z-index: 1;
 }
 
 .post-image {
   flex: 1;
   height: 200rpx;
-  border-radius: 12rpx;
-  background: rgba(15, 25, 35, 0.5);
+  border-radius: 16rpx;
+  background: var(--bg);
 }
 
 .post-actions {
   display: flex;
   align-items: center;
-  gap: 32rpx;
+  gap: 8rpx;
   padding-top: 16rpx;
-  border-top: 1rpx solid rgba(124, 159, 203, 0.15);
-  position: relative;
-  z-index: 1;
+  border-top: 1rpx solid var(--card-border);
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  padding: 8rpx 16rpx;
+  gap: 6rpx;
+  padding: 10rpx 20rpx;
   border-radius: 100rpx;
   transition: all 0.2s ease;
-  position: relative;
-  z-index: 1;
+  background: transparent;
+}
+
+.action-btn:active {
+  background: var(--bg);
 }
 
 .action-btn.liked {
-  color: #F2B5D4;
+  color: var(--accent);
+}
+
+.action-btn.liked .action-text {
+  color: var(--accent);
 }
 
 .action-icon {
@@ -312,6 +281,6 @@ function handleImageError() {
 
 .action-text {
   font-size: 24rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-muted);
 }
 </style>

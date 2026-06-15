@@ -106,7 +106,7 @@ function goDetail(postId: number) {
 <style>
 .page {
   min-height: 100vh;
-  background: #0F1923;
+  background: var(--bg);
 }
 .list-scroll {
   height: 100vh;
@@ -115,13 +115,13 @@ function goDetail(postId: number) {
 .loading {
   text-align: center;
   padding: 30rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
   font-size: 26rpx;
 }
 .empty {
   text-align: center;
   padding: 100rpx 0;
-  color: rgba(232, 239, 247, 0.4);
+  color: var(--text-muted);
   font-size: 28rpx;
 }
 </style>

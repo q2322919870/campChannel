@@ -2,7 +2,7 @@
   <view class="create-post-page">
     <scroll-view scroll-y class="page-content">
       <view class="create-post-card">
-        <text class="page-title">发布帖子</text>
+        <text class="page-title">{{ editId ? '编辑帖子' : '发布帖子' }}</text>
 
         <view class="user-info-row">
           <view class="user-avatar">
@@ -73,7 +73,7 @@
               :disabled="loading || !channelId || !content.trim()"
               @tap="handleSubmit"
             >
-              {{ loading ? '发布中...' : '发布' }}
+              {{ loading ? (editId ? '更新中...' : '发布中...') : (editId ? '更新' : '发布') }}
             </button>
           </view>
         </view>
@@ -85,7 +85,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
-import request from '../../utils/request'
+import request, { BASE_URL } from '../../utils/request'
 
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.userInfo)
@@ -103,11 +103,20 @@ const images = ref<string[]>([])
 const topic = ref('')
 const loading = ref(false)
 const error = ref('')
+const editId = ref<number | null>(null)
 
 onMounted(() => {
   if (!authStore.token) {
     uni.reLaunch({ url: '/pages/login/login' })
     return
+  }
+  // Check for edit mode
+  const pages = getCurrentPages()
+  const page = pages[pages.length - 1] as any
+  const editParam = page?.options?.editId
+  if (editParam) {
+    editId.value = parseInt(editParam)
+    loadPostForEdit(editId.value)
   }
   fetchChannels()
 })
@@ -117,8 +126,43 @@ async function fetchChannels() {
     const res = await request<any>('/channels/my')
     if (res?.code === 200 && Array.isArray(res.data)) {
       channels.value = res.data
+      // If in edit mode and channelId already set, find the right index
+      if (editId.value && channelId.value) {
+        const idx = channels.value.findIndex((c: Channel) => c.id === channelId.value)
+        if (idx >= 0) channelIndex.value = idx
+      }
     }
   } catch (_) {}
+}
+
+async function loadPostForEdit(id: number) {
+  try {
+    const res = await request<any>(`/posts/${id}`)
+    if (res?.code === 200 && res.data) {
+      const p = res.data
+      content.value = p.content || ''
+      channelId.value = p.channelId
+      // Parse images
+      if (p.images) {
+        if (Array.isArray(p.images)) {
+          images.value = p.images
+        } else if (typeof p.images === 'string') {
+          try {
+            const parsed = JSON.parse(p.images)
+            if (Array.isArray(parsed)) images.value = parsed
+          } catch (_) {}
+        }
+      }
+      // Extract topic from content
+      const topicMatch = (p.content || '').match(/#([^#]+)#/)
+      if (topicMatch) {
+        topic.value = topicMatch[1]
+        content.value = content.value.replace(/#[^#]+#/, '').trim()
+      }
+    }
+  } catch (_) {
+    uni.showToast({ title: '加载帖子失败', icon: 'none' })
+  }
 }
 
 function onChannelChange(e: any) {
@@ -145,7 +189,7 @@ async function uploadImage(filePath: string) {
     
     const res = await new Promise((resolve, reject) => {
       uni.uploadFile({
-        url: `${getBaseUrl()}/api/upload/image`,
+        url: `${BASE_URL}/upload/image`,
         filePath: filePath,
         name: 'file',
         header: {
@@ -175,11 +219,6 @@ async function uploadImage(filePath: string) {
   }
 }
 
-function getBaseUrl(): string {
-  const storedUrl = uni.getStorageSync('api_base_url')
-  return storedUrl || 'http://localhost:8080'
-}
-
 function removeImage(index: number) {
   images.value.splice(index, 1)
 }
@@ -200,19 +239,21 @@ async function handleSubmit() {
   }
   
   try {
+    const url = editId.value ? `/posts/${editId.value}` : '/posts'
+    const method = editId.value ? 'PUT' : 'POST'
     const res = await request<any>({
-      url: '/posts',
-      method: 'POST',
+      url,
+      method,
       data: {
         channelId: channelId.value,
         content: finalContent,
         images: images.value.length > 0 ? images.value : null,
-        videoUrl: null,
+        videoUrls: null,
       },
     })
     
     if (res?.code === 200) {
-      uni.showToast({ title: '发布成功', icon: 'success' })
+      uni.showToast({ title: editId.value ? '更新成功' : '发布成功', icon: 'success' })
       setTimeout(() => {
         uni.navigateBack()
       }, 1500)

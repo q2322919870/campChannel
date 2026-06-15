@@ -32,13 +32,22 @@
       <view class="section-header">
         <text class="section-title">发布公告</text>
       </view>
+      <view class="form-group">
+        <input
+          v-model="announcementTitle"
+          type="text"
+          placeholder="公告标题"
+          class="form-input"
+          placeholder-class="ph"
+        />
+      </view>
       <textarea
         v-model="announcementContent"
         placeholder="输入公告内容..."
         class="announcement-input"
         placeholder-class="ph"
       />
-      <button class="btn-announce" @tap="publishAnnouncement" :disabled="!announcementContent.trim()">
+      <button class="btn-announce" @tap="publishAnnouncement" :disabled="!announcementContent.trim() || !announcementTitle.trim()">
         发布公告
       </button>
     </view>
@@ -108,7 +117,8 @@ import request from '../../utils/request'
 
 const authStore = useAuthStore()
 
-const stats = ref({ userCount: 0, postCount: 0, commentCount: 0, channelCount: 0 })
+const stats = ref<{ userCount: number | string; postCount: number | string; commentCount: number | string; channelCount: number | string }>({ userCount: 0, postCount: 0, commentCount: 0, channelCount: 0 })
+const announcementTitle = ref('')
 const announcementContent = ref('')
 const reports = ref<any[]>([])
 const userSearch = ref('')
@@ -130,16 +140,24 @@ onMounted(async () => {
 
 async function loadStats() {
   try {
-    const res = await request<any>('/admin/stats')
-    if (res?.code === 200) {
-      stats.value = res.data || stats.value
+    // No /admin/stats endpoint, compute from paginated data
+    const [usersRes, channelsRes] = await Promise.all([
+      request<any>('/admin/users?page=1&size=1'),
+      request<any>('/channels/search?keyword='),
+    ])
+    // We can only approximate counts from pagination
+    stats.value = {
+      userCount: usersRes?.data?.length ? '—' : 0,
+      postCount: '—',
+      commentCount: '—',
+      channelCount: channelsRes?.data?.length || 0,
     }
   } catch (_) {}
 }
 
 async function loadReports() {
   try {
-    const res = await request<any>('/reports?status=PENDING')
+    const res = await request<any>('/reports/admin?page=1&size=20')
     if (res?.code === 200) {
       reports.value = res.data || []
     }
@@ -147,15 +165,22 @@ async function loadReports() {
 }
 
 async function publishAnnouncement() {
-  if (!announcementContent.value.trim()) return
+  if (!announcementContent.value.trim() || !announcementTitle.value.trim()) {
+    uni.showToast({ title: '请填写标题和内容', icon: 'none' })
+    return
+  }
   try {
     const res = await request<any>({
       url: '/admin/announcement',
       method: 'POST',
-      data: { content: announcementContent.value.trim() },
+      data: {
+        title: announcementTitle.value.trim(),
+        content: announcementContent.value.trim(),
+      },
     })
     if (res?.code === 200) {
       uni.showToast({ title: '公告发布成功', icon: 'success' })
+      announcementTitle.value = ''
       announcementContent.value = ''
     } else {
       uni.showToast({ title: res?.message || '发布失败', icon: 'none' })
@@ -168,11 +193,11 @@ async function publishAnnouncement() {
 async function handleReport(reportId: number, action: string) {
   try {
     const res = await request<any>({
-      url: `/reports/${reportId}/handle`,
-      method: 'POST',
-      data: { 
-        approved: action === 'DELETE',
-        note: action === 'DELETE' ? '删除内容' : '驳回举报'
+      url: `/reports/admin/${reportId}`,
+      method: 'PUT',
+      data: {
+        status: action === 'DELETE' ? 1 : 2, // 1=confirmed, 2=dismissed
+        handleNote: action === 'DELETE' ? '删除内容' : '驳回举报',
       },
     })
     if (res?.code === 200) {
@@ -183,15 +208,24 @@ async function handleReport(reportId: number, action: string) {
 }
 
 async function searchUsers() {
-  if (!userSearch.value.trim()) return
   userSearched.value = true
   try {
-    const res = await request<any>(`/admin/users?q=${encodeURIComponent(userSearch.value.trim())}`)
+    // Backend GET /admin/users only supports pagination, no search
+    const res = await request<any>('/admin/users?page=1&size=50')
     if (res?.code === 200) {
-      userResults.value = res.data || []
+      const allUsers = res.data || []
+      if (userSearch.value.trim()) {
+        const q = userSearch.value.trim().toLowerCase()
+        userResults.value = allUsers.filter((u: any) =>
+          (u.username || '').toLowerCase().includes(q) ||
+          (u.email || '').toLowerCase().includes(q)
+        )
+      } else {
+        userResults.value = allUsers
+      }
     }
   } catch (_) {
-    uni.showToast({ title: '搜索失败', icon: 'none' })
+    uni.showToast({ title: '加载失败', icon: 'none' })
   }
 }
 
@@ -309,6 +343,22 @@ async function toggleBan(user: any) {
   margin-bottom: 16rpx;
 }
 
+.form-group {
+  margin-bottom: 16rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  background-color: var(--card);
+  border-radius: 20rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: var(--text);
+  border: 1px solid var(--card-border);
+  box-sizing: border-box;
+}
+
 .ph {
   color: var(--text-muted);
 }
@@ -316,7 +366,7 @@ async function toggleBan(user: any) {
 .btn-announce {
   width: 100%;
   height: 80rpx;
-  background: linear-gradient(135deg, var(--primary), var(--primary));
+  background: var(--primary);
   border-radius: 20rpx;
   color: #ffffff;
   font-size: 28rpx;
@@ -425,7 +475,7 @@ async function toggleBan(user: any) {
 .btn-search-small {
   height: 72rpx;
   padding: 0 28rpx;
-  background: linear-gradient(135deg, var(--primary), var(--primary));
+  background: var(--primary);
   border-radius: 36rpx;
   color: #ffffff;
   font-size: 24rpx;

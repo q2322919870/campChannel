@@ -217,7 +217,7 @@ function goSearch() {
 <style>
 .friend-list-container {
   min-height: 100vh;
-  background: #0F1923;
+  background: var(--bg);
   padding: 30rpx;
   box-sizing: border-box;
 }
@@ -229,13 +229,12 @@ function goSearch() {
 .search-input-wrapper {
   display: flex;
   align-items: center;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
   border-radius: 100rpx;
   padding: 0 30rpx;
   height: 80rpx;
+  box-shadow: var(--shadow-sm);
 }
 
 .search-icon {
@@ -245,7 +244,7 @@ function goSearch() {
 
 .search-placeholder {
   font-size: 28rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
 }
 
 .section {
@@ -262,26 +261,25 @@ function goSearch() {
 .section-title {
   font-size: 30rpx;
   font-weight: bold;
-  color: #E8EFF7;
+  color: var(--text);
   padding-left: 12rpx;
-  border-left: 6rpx solid #7C9FCB;
+  border-left: 6rpx solid var(--primary);
 }
 
 .arrow {
   font-size: 24rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
 }
 
 .request-item {
   display: flex;
   align-items: center;
   padding: 20rpx;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  border-radius: 20rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius);
   margin-bottom: 12rpx;
+  box-shadow: var(--shadow-sm);
 }
 
 .request-avatar {
@@ -295,12 +293,12 @@ function goSearch() {
   width: 64rpx;
   height: 64rpx;
   border-radius: 50%;
-  background: rgba(124, 159, 203, 0.15);
+  background: var(--primary-soft);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26rpx;
-  color: #7C9FCB;
+  color: var(--primary);
   font-weight: bold;
   margin-right: 16rpx;
   flex-shrink: 0;
@@ -309,7 +307,7 @@ function goSearch() {
 .request-name {
   flex: 1;
   font-size: 28rpx;
-  color: #E8EFF7;
+  color: var(--text);
 }
 
 .request-actions {
@@ -320,7 +318,7 @@ function goSearch() {
 .btn-approve {
   height: 56rpx;
   padding: 0 24rpx;
-  background: linear-gradient(135deg, #7C9FCB, #7C9FCB);
+  background: var(--primary-gradient);
   border-radius: 28rpx;
   color: #ffffff;
   font-size: 22rpx;
@@ -328,19 +326,20 @@ function goSearch() {
   align-items: center;
   justify-content: center;
   border: none;
+  box-shadow: 0 4rpx 12rpx rgba(99, 102, 241, 0.2);
 }
 
 .btn-reject {
   height: 56rpx;
   padding: 0 24rpx;
-  background: rgba(242, 181, 212, 0.15);
+  background: var(--accent-soft);
   border-radius: 28rpx;
-  color: #F2B5D4;
+  color: var(--accent);
   font-size: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1rpx solid rgba(242, 181, 212, 0.3);
+  border: none;
 }
 
 .btn-approve::after,
@@ -352,12 +351,11 @@ function goSearch() {
   display: flex;
   align-items: center;
   padding: 24rpx 20rpx;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  border-radius: 20rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius);
   margin-bottom: 12rpx;
+  box-shadow: var(--shadow-sm);
 }
 
 .friend-avatar {
@@ -390,33 +388,33 @@ function goSearch() {
 .friend-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #E8EFF7;
+  color: var(--text);
   display: block;
   margin-bottom: 6rpx;
 }
 
 .friend-desc {
   font-size: 24rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-secondary);
 }
 
 .friend-status {
   width: 16rpx;
   height: 16rpx;
   border-radius: 50%;
-  background-color: rgba(232, 239, 247, 0.3);
+  background-color: var(--card-border);
   flex-shrink: 0;
   margin-left: 16rpx;
 }
 
 .friend-status.online {
-  background-color: #7C9FCB;
+  background-color: var(--success);
 }
 
 .empty-state {
   text-align: center;
   padding: 40rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
   font-size: 26rpx;
 }
 </style>

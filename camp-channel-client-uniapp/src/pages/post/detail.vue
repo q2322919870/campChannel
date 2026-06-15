@@ -20,6 +20,7 @@
         </view>
         
         <text class="post-title">{{ post.title }}</text>
+        <text v-if="post.editCount > 0" class="edited-tag">已编辑</text>
         <text class="post-content">{{ post.content }}</text>
         
         <view v-if="post.images && post.images.length" class="post-images">
@@ -36,16 +37,24 @@
         <view class="post-actions">
           <view class="action-btn" :class="{ liked: isLiked }" @tap="toggleLike">
             <text class="action-icon">{{ isLiked ? '❤' : '♡' }}</text>
-            <text class="action-text">{{ likeCount }}</text>
+            <text class="action-text">{{ post.likeCount }}</text>
+          </view>
+          <view class="action-btn">
+            <text class="action-icon">💬</text>
+            <text class="action-text">{{ comments.length || post.commentCount }}</text>
+          </view>
+          <view class="action-btn" :class="{ favourited: isFavourited }" @tap="toggleFavourite">
+            <text class="action-icon">{{ isFavourited ? '★' : '☆' }}</text>
+            <text class="action-text">收藏</text>
+          </view>
+          <view v-if="currentUserId === post.userId" class="action-btn" @tap="editPost">
+            <text class="action-icon">✏</text>
           </view>
           <view v-if="currentUserId === post.userId" class="action-btn danger" @tap="deletePost">
             <text class="action-icon">🗑</text>
           </view>
           <view class="action-btn" @tap="sharePost">
             <text class="action-icon">↗</text>
-          </view>
-          <view class="action-btn" @tap="showReport = true">
-            <text class="action-icon">⚑</text>
           </view>
         </view>
       </view>
@@ -77,8 +86,13 @@
               <text v-if="c.userId === currentUserId" class="me-badge">(我)</text>
             </view>
             <text class="comment-text">{{ c.content }}</text>
-            <text class="comment-time">{{ c.time || '' }}</text>
-            <text v-if="currentUserId === c.userId" class="delete-comment" @tap="deleteComment(c.id)">删除</text>
+            <view class="comment-footer">
+              <text class="comment-time">{{ c.time || '' }}</text>
+              <view class="comment-like-btn" :class="{ liked: c.isLiked }" @tap="toggleCommentLike(c)">
+                <text>{{ c.isLiked ? '❤' : '♡' }} {{ c.likeCount || '' }}</text>
+              </view>
+              <text v-if="currentUserId === c.userId || currentUserId === post.userId" class="delete-comment" @tap="deleteComment(c.id)">删除</text>
+            </view>
           </view>
         </view>
         
@@ -108,6 +122,9 @@ interface Post {
   content: string
   images: string[]
   time: string
+  editCount: number
+  likeCount: number
+  commentCount: number
 }
 
 interface Comment {
@@ -117,6 +134,8 @@ interface Comment {
   avatar: string
   userId: number
   time: string
+  isLiked: boolean
+  likeCount: number
 }
 
 const post = ref<Post>({
@@ -128,10 +147,13 @@ const post = ref<Post>({
   content: '',
   images: [],
   time: '',
+  editCount: 0,
+  likeCount: 0,
+  commentCount: 0,
 })
 
 const isLiked = ref(false)
-const likeCount = ref(0)
+const isFavourited = ref(false)
 const comments = ref<Comment[]>([])
 const newComment = ref('')
 const showReport = ref(false)
@@ -169,6 +191,8 @@ onMounted(() => {
   if (postId.value) {
     fetchPost()
     fetchComments()
+    // Increment view count
+    request<any>(`/posts/${postId.value}/view`).catch(() => {})
   }
 })
 
@@ -183,19 +207,25 @@ async function fetchPost() {
         author: data.username || data.author || '用户',
         avatar: processImageUrl(data.avatar || ''),
         userChannelRole: data.userChannelRole,
-        title: data.topic || data.title || '帖子',
+        title: data.topic || data.title || (data.content ? data.content.substring(0, 50) : '帖子'),
         content: data.content || '',
         images: safeParseImages(data.images),
         time: formatTime(data.createTime || data.createdAt),
+        editCount: data.editCount || 0,
+        likeCount: data.likeCount || 0,
+        commentCount: data.commentCount || 0,
       }
+      // Use isLiked directly from post response
+      isLiked.value = data.isLiked || false
     }
     
-    // Get like status
-    const likeRes = await request<any>(`/posts/${postId.value}/like/status`)
-    if (likeRes?.code === 200) {
-      isLiked.value = likeRes.data.hasLiked || false
-      likeCount.value = likeRes.data.likeCount || 0
-    }
+    // Get favourite status (non-critical, fail silently)
+    try {
+      const favRes = await request<any>(`/posts/${postId.value}/favourite/status`)
+      if (favRes?.code === 200 && favRes.data) {
+        isFavourited.value = favRes.data.isFavourited || false
+      }
+    } catch (_) {}
   } catch (_) {
     uni.showToast({ title: '加载失败', icon: 'none' })
   }
@@ -212,6 +242,8 @@ async function fetchComments() {
         avatar: processImageUrl(c.avatar || ''),
         userId: c.userId || 0,
         time: formatTime(c.createTime || c.createdAt),
+        isLiked: c.isLiked || false,
+        likeCount: c.likeCount || 0,
       }))
     }
   } catch (_) {}
@@ -237,7 +269,12 @@ async function toggleLike() {
     })
     if (res?.code === 200 && res.data) {
       isLiked.value = res.data.liked
-      likeCount.value = res.data.likeCount
+      post.value.likeCount = res.data.likeCount ?? (res.data.liked ? post.value.likeCount + 1 : Math.max(post.value.likeCount - 1, 0))
+    } else {
+      // Optimistic toggle if server doesn't return structured data
+      isLiked.value = !isLiked.value
+      post.value.likeCount += isLiked.value ? 1 : -1
+      post.value.likeCount = Math.max(post.value.likeCount, 0)
     }
   } catch (_) {}
 }
@@ -263,6 +300,8 @@ async function addComment() {
         avatar: processImageUrl(c.avatar || ''),
         userId: c.userId || currentUserId.value,
         time: '刚刚',
+        isLiked: false,
+        likeCount: 0,
       })
       newComment.value = ''
       uni.showToast({ title: '评论成功', icon: 'success' })
@@ -273,9 +312,48 @@ async function addComment() {
 }
 
 function sharePost() {
-  uni.showShareMenu({
-    withShareTicket: true,
+  // Use clipboard as reliable share method (uni.showShareMenu requires page-level onShareAppMessage)
+  const shareText = `${post.value.author}: ${post.value.content.substring(0, 100)}...`
+  uni.setClipboardData({
+    data: shareText,
+    success: () => {
+      uni.showToast({ title: '内容已复制，可粘贴分享', icon: 'none', duration: 2000 })
+    },
+    fail: () => {
+      uni.showToast({ title: '分享失败', icon: 'none' })
+    }
   })
+}
+
+function editPost() {
+  uni.navigateTo({ url: `/pages/post/create?editId=${post.value.id}` })
+}
+
+async function toggleFavourite() {
+  try {
+    const res = await request<any>({
+      url: `/posts/${postId.value}/favourite`,
+      method: 'POST',
+    })
+    if (res?.code === 200) {
+      isFavourited.value = !isFavourited.value
+      uni.showToast({ title: isFavourited.value ? '已收藏' : '已取消收藏', icon: 'success' })
+    }
+  } catch (_) {}
+}
+
+async function toggleCommentLike(comment: Comment) {
+  try {
+    const res = await request<any>({
+      url: `/posts/${postId.value}/comments/${comment.id}/like`,
+      method: 'POST',
+    })
+    if (res?.code === 200) {
+      const liked = res.data === true || res.data?.liked === true
+      comment.isLiked = liked
+      comment.likeCount = liked ? (comment.likeCount || 0) + 1 : Math.max((comment.likeCount || 0) - 1, 0)
+    }
+  } catch (_) {}
 }
 
 async function deletePost() {
@@ -580,6 +658,36 @@ function previewImage(index: number) {
 .comment-time {
   font-size: 22rpx;
   color: var(--text-muted);
+}
+
+.comment-footer {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.comment-like-btn {
+  font-size: 22rpx;
+  color: var(--text-muted);
+  padding: 4rpx 8rpx;
+}
+
+.comment-like-btn.liked {
+  color: #ff4757;
+}
+
+.edited-tag {
+  font-size: 22rpx;
+  color: var(--primary);
+  background: var(--primary-soft, rgba(99, 102, 241, 0.1));
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+  margin-bottom: 8rpx;
+  display: inline-block;
+}
+
+.action-btn.favourited {
+  color: #f59e0b;
 }
 
 .delete-comment {

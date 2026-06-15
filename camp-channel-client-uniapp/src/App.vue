@@ -10,12 +10,12 @@ onLaunch(() => {
     loadUnreadCount()
   }
   
-  // Set custom tab bar style with glassmorphism
+  // Set custom tab bar style
   uni.setTabBarStyle({
-    backgroundColor: '#0F1923',
-    borderStyle: 'black',
-    color: 'rgba(232, 239, 247, 0.6)',
-    selectedColor: '#7C9FCB'
+    backgroundColor: '#FFFFFF',
+    borderStyle: 'white',
+    color: '#9CA3AF',
+    selectedColor: '#6366F1'
   })
 })
 
@@ -50,29 +50,35 @@ onHide(() => {})
 </template>
 
 <style>
+/* ===== Global Design Tokens ===== */
 page {
-  background: linear-gradient(135deg, #0F1923 0%, #1a2a3a 50%, #2d3748 100%);
-  background-attachment: fixed;
-  color: #E8EFF7;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  min-height: 100vh;
-  position: relative;
-}
+  --primary: #6366F1;
+  --primary-light: #818CF8;
+  --primary-soft: rgba(99, 102, 241, 0.08);
+  --primary-gradient: linear-gradient(135deg, #6366F1, #A855F7);
+  --accent: #EC4899;
+  --accent-soft: rgba(236, 72, 153, 0.08);
+  --bg: #F3F4F8;
+  --card: #FFFFFF;
+  --card-border: #E8EAF0;
+  --text: #1A1D26;
+  --text-secondary: #6B7280;
+  --text-soft: #6B7280;
+  --text-muted: #9CA3AF;
+  --success: #10B981;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  --shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8rpx 40rpx rgba(0, 0, 0, 0.08);
+  --radius: 24rpx;
+  --radius-lg: 32rpx;
 
-/* Animated gradient background */
-page::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(124, 159, 203, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(242, 181, 212, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 40% 20%, rgba(124, 159, 203, 0.1) 0%, transparent 50%);
-  z-index: 0;
-  pointer-events: none;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 view,
@@ -80,13 +86,24 @@ text,
 input,
 textarea,
 button {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
-/* Remove custom scrollbar styles */
-
+/* Remove scrollbar */
 ::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+/* Global button reset */
+button::after {
+  border: none;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  line-height: inherit;
 }
 </style>

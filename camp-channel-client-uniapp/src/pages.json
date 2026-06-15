@@ -4,9 +4,9 @@
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "校园频道",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8",
         "enablePullDownRefresh": true
       }
     },
@@ -14,25 +14,25 @@
       "path": "pages/login/login",
       "style": {
         "navigationStyle": "custom",
-        "backgroundColor": "#0F1923"
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/register/register",
       "style": {
         "navigationBarTitleText": "注册账号",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/channel/channel",
       "style": {
         "navigationBarTitleText": "频道广场",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8",
         "enablePullDownRefresh": true
       }
     },
@@ -40,130 +40,148 @@
       "path": "pages/post/create",
       "style": {
         "navigationBarTitleText": "发布帖子",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/post/detail",
       "style": {
         "navigationBarTitleText": "帖子详情",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/post/my-posts",
       "style": {
         "navigationBarTitleText": "我的帖子",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/post/liked-posts",
       "style": {
         "navigationBarTitleText": "赞过的贴",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/post/favourites",
+      "style": {
+        "navigationBarTitleText": "我的收藏",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/chat/list",
       "style": {
         "navigationBarTitleText": "消息",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/chat/detail",
       "style": {
         "navigationBarTitleText": "聊天",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
+      }
+    },
+    {
+      "path": "pages/chat/group-chat",
+      "style": {
+        "navigationBarTitleText": "频道群聊",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/friend/list",
       "style": {
         "navigationBarTitleText": "好友列表",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/friend/search",
       "style": {
         "navigationBarTitleText": "搜索好友",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/notification/notification",
       "style": {
         "navigationBarTitleText": "通知中心",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/profile/profile",
       "style": {
         "navigationBarTitleText": "个人中心",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/settings/settings",
       "style": {
         "navigationBarTitleText": "设置",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/admin/admin",
       "style": {
         "navigationBarTitleText": "管理后台",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     },
     {
       "path": "pages/test/connection",
       "style": {
         "navigationBarTitleText": "连接测试",
-        "navigationBarBackgroundColor": "#7c9dd4",
-        "navigationBarTextStyle": "white",
-        "backgroundColor": "#f0f2f8"
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "navigationBarTextStyle": "black",
+        "backgroundColor": "#F3F4F8"
       }
     }
   ],
   "globalStyle": {
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "black",
     "navigationBarTitleText": "Camp Channel",
-    "navigationBarBackgroundColor": "#7c9dd4",
-    "backgroundColor": "#f0f2f8"
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F3F4F8"
   },
   "tabBar": {
-    "color": "#ffffff",
-    "selectedColor": "#7C9FCB",
-    "backgroundColor": "rgba(15,25,35,0.92)",
+    "color": "#9CA3AF",
+    "selectedColor": "#6366F1",
+    "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
       {

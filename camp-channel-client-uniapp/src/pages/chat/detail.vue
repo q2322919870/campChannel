@@ -355,7 +355,7 @@ function scrollToBottom() {
   font-size: 28rpx;
   color: #ffffff;
   font-weight: bold;
-  background: rgba(124, 159, 203, 0.15);
+  background: var(--primary-soft);
 }
 
 .msg-avatar-img {
@@ -364,8 +364,8 @@ function scrollToBottom() {
 }
 
 .self-avatar-bg {
-  background: rgba(242, 181, 212, 0.2);
-  color: #F2B5D4;
+  background: var(--primary-gradient);
+  color: #ffffff;
 }
 
 .msg-body {
@@ -373,35 +373,17 @@ function scrollToBottom() {
 }
 
 .msg-bubble {
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--card);
   border-radius: 20rpx;
   padding: 20rpx 28rpx;
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  position: relative;
-  overflow: hidden;
-}
-
-.msg-bubble::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%);
-  pointer-events: none;
-  border-radius: 20rpx;
+  border: 1rpx solid var(--card-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .bubble-self {
-  background: linear-gradient(135deg, #7C9FCB, #7C9FCB);
+  background: var(--primary-gradient);
   border: none;
-}
-
-.bubble-self::before {
-  display: none;
+  box-shadow: 0 4rpx 16rpx rgba(99, 102, 241, 0.2);
 }
 
 .bubble-self .msg-text {
@@ -410,10 +392,8 @@ function scrollToBottom() {
 
 .msg-text {
   font-size: 28rpx;
-  color: #E8EFF7;
+  color: var(--text);
   line-height: 1.5;
-  position: relative;
-  z-index: 1;
 }
 
 .msg-meta {
@@ -425,7 +405,7 @@ function scrollToBottom() {
 
 .msg-time {
   font-size: 20rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
 }
 
 .message-self .msg-meta {
@@ -434,24 +414,24 @@ function scrollToBottom() {
 
 .msg-recalled {
   font-size: 20rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
   font-style: italic;
 }
 
 .msg-read {
   font-size: 20rpx;
-  color: #7C9FCB;
+  color: var(--primary);
 }
 
 .msg-sending {
   font-size: 20rpx;
-  color: rgba(232, 239, 247, 0.5);
+  color: var(--text-muted);
   font-style: italic;
 }
 
 .msg-failed {
   font-size: 20rpx;
-  color: #F2B5D4;
+  color: var(--danger);
 }
 
 .chat-input-bar {
@@ -459,37 +439,36 @@ function scrollToBottom() {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--card);
   padding: 16rpx 30rpx;
   padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
   padding-bottom: calc(16rpx + constant(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   gap: 20rpx;
-  border-top: 1rpx solid rgba(124, 159, 203, 0.15);
+  border-top: 1rpx solid var(--card-border);
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.04);
 }
 
 .chat-input {
   flex: 1;
   height: 72rpx;
-  background: rgba(124, 159, 203, 0.06);
+  background: var(--bg);
   border-radius: 36rpx;
   padding: 0 30rpx;
   font-size: 28rpx;
-  color: #E8EFF7;
-  border: 1rpx solid rgba(124, 159, 203, 0.1);
+  color: var(--text);
+  border: 1rpx solid var(--card-border);
 }
 
 .ph {
-  color: rgba(232, 239, 247, 0.4);
+  color: var(--text-muted);
 }
 
 .btn-send {
   width: 120rpx;
   height: 72rpx;
-  background: linear-gradient(135deg, #7C9FCB, #7C9FCB);
+  background: var(--primary-gradient);
   border-radius: 36rpx;
   color: #ffffff;
   font-size: 26rpx;
@@ -498,6 +477,7 @@ function scrollToBottom() {
   justify-content: center;
   border: none;
   flex-shrink: 0;
+  box-shadow: 0 4rpx 12rpx rgba(99, 102, 241, 0.25);
 }
 
 .btn-send::after {

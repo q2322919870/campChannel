@@ -153,6 +153,7 @@ compressVideo(sourceFile, targetFile, MAX_VIDEO_SIZE);
 |------|------|------|
 | `/posts` | GET | 获取帖子列表（分页） |
 | `/posts` | POST | 创建帖子（含 images + videoUrls） |
+| `/posts/{id}` | GET | 获取帖子详情（含 isLiked 字段） |
 | `/posts/{id}` | PUT | 编辑帖子 |
 | `/posts/{id}` | DELETE | 删除帖子 |
 | `/posts/{id}/like` | POST | 切换点赞 |
@@ -160,7 +161,11 @@ compressVideo(sourceFile, targetFile, MAX_VIDEO_SIZE);
 | `/posts/channel/{id}` | GET | 获取频道帖子 |
 | `/posts/user/{id}` | GET | 获取用户帖子 |
 | `/posts/{id}/comments` | GET | 获取评论列表 |
+| `/posts/{id}/favourite` | POST | 收藏/取消收藏 |
 | `/posts/{id}/favourite/status` | GET | 获取收藏状态 |
+| `/posts/favourites` | GET | 获取收藏帖子列表（分页） |
+| `/posts/search` | GET | 搜索帖子（keyword 参数） |
+| `/posts/{id}/view` | GET | 增加浏览量 |
 
 **数据结构**：
 ```java
@@ -177,8 +182,16 @@ class Post {
     Integer isPinned;      // 是否置顶
     Integer editCount;     // 编辑次数
     Date createTime;
+
+    @TableField(exist = false)
+    Boolean isLiked;       // 当前用户是否点赞（非数据库字段，查询时动态填充）
 }
 ```
+
+**帖子详情响应说明**：
+- `GET /posts/{id}` 返回的帖子数据中包含 `isLiked` 字段（当前用户是否已点赞）
+- `likeCount` 和 `commentCount` 为数据库持久化字段，与列表页保持一致
+- 前端应直接使用帖子实体中的 `isLiked`、`likeCount`、`commentCount`，无需额外调用 `/like/status` 接口
 
 ### 4. 评论系统
 
@@ -224,19 +237,39 @@ class Post {
 
 ### 7. 实时通信
 
-**文件**：`WebSocketConfig.java`, `RawWebSocketHandler.java`, `ChatController.java`
+**文件**：`WebSocketConfig.java`, `RawWebSocketHandler.java`, `ChatController.java`, `GroupMessageController.java`
 
 **WebSocket 功能**：
-- 私聊消息实时推送
-- 群聊消息实时推送
+- 私聊消息实时推送（事件：`new_message`）
+- 群聊消息实时推送（事件：`new_group_message`）
 - 在线状态管理
 - 未读消息计数
+- 已读回执推送
 
 **连接流程**：
 1. 客户端连接 → WebSocket 握手（携带 Token）
 2. 服务端验证 Token → 建立连接
 3. 消息格式：JSON（type + content + timestamp）
 4. 断开连接 → 清理会话
+
+**群聊 WebSocket 事件**：
+```json
+// 事件类型：new_group_message
+{
+  "type": "new_group_message",
+  "data": {
+    "id": 1,
+    "channelId": 1,
+    "content": "消息内容",
+    "mediaUrl": null,
+    "msgType": 1,
+    "senderId": 2,
+    "username": "发送者",
+    "avatar": "/uploads/avatars/xxx.jpg",
+    "createTime": "2026-06-15T10:00:00"
+  }
+}
+```
 
 ### 8. 频道系统
 
@@ -250,11 +283,49 @@ class Post {
 | `/channels/{id}` | GET | 获取频道详情 |
 | `/channels/{id}/members` | GET | 获取频道成员 |
 | `/channels/{id}/join` | POST | 加入频道 |
+| `/channels/{id}/leave` | POST | 退出频道 |
+| `/channels/search` | GET | 搜索频道（keyword 参数） |
 
 **角色权限**：
-- `owner` - 频道所有者（可置顶、删除帖子）
-- `admin` - 管理员（可置顶帖子）
+- `owner` - 频道所有者（可置顶、删除帖子、管理成员）
+- `admin` - 管理员（可置顶帖子、禁言成员）
 - `member` - 普通成员
+
+### 8.5 群聊消息系统
+
+**文件**：`GroupMessageController.java`, `GroupMessageServiceImpl.java`
+
+**核心接口**：
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/group-messages` | POST | 发送群聊消息 |
+| `/group-messages/{channelId}` | GET | 获取频道群聊消息（分页） |
+| `/group-messages/{messageId}` | DELETE | 撤回群聊消息 |
+
+**消息数据结构**：
+```java
+class GroupMessage {
+    Long id;
+    Long channelId;       // 所属频道
+    Long senderId;        // 发送者ID
+    String content;       // 文字内容
+    String mediaUrl;      // 媒体URL（图片/视频）
+    Integer msgType;      // 1=文字, 2=图片, 3=视频
+    Integer status;       // 1=正常, 2=已撤回
+    Date createTime;
+}
+```
+
+**消息发送流程**：
+1. 客户端 POST 消息（含 channelId + content/mediaUrl + msgType）
+2. 服务端保存消息记录
+3. 通过 WebSocket 向频道所有在线成员推送 `new_group_message` 事件
+4. 客户端收到事件后追加到消息列表
+
+**撤回规则**：
+- 仅发送者可撤回自己的消息
+- 撤回后 `status` 从 1 变为 2
+- 前端展示"消息已撤回"占位文本
 
 ### 9. 画廊系统
 
@@ -342,6 +413,66 @@ class Post {
 | `POST /posts` | 发帖 | JSON {channelId, content, images, videoUrls} |
 | `GET /follow/{id}/counts` | 用户卡片粉丝数 | JSON {code, data: {followerCount, followingCount}} |
 | `GET /friends/list` | 好友状态检查 | JSON {code, data: [Friend]} |
+
+### UniApp 端搭配（微信小程序）
+
+| 后端接口 | UniApp 端使用场景 | 数据格式 |
+|---------|-----------------|----------|
+| `POST /auth/login` | 邮箱密码登录 | JSON {email, password} → JSON {token, userId} |
+| `GET /posts?page=X&size=Y` | 首页帖子信息流 | JSON {code, data: [Post]} |
+| `GET /posts/{id}` | 帖子详情（含 isLiked） | JSON {code, data: Post} |
+| `POST /posts` | 发布帖子 | JSON {channelId, content, images} |
+| `PUT /posts/{id}` | 编辑帖子 | JSON {content, images} |
+| `POST /posts/{id}/like` | 点赞/取消点赞 | → JSON {liked, likeCount} |
+| `POST /posts/{id}/favourite` | 收藏/取消收藏 | → JSON toggle |
+| `GET /posts/favourites` | 我的收藏列表 | JSON {code, data: [Post]} |
+| `GET /posts/search?keyword=X` | 搜索帖子 | JSON {code, data: [Post]} |
+| `GET /posts/{id}/view` | 浏览量 +1 | JSON {code} |
+| `GET /posts/{id}/comments` | 评论列表 | JSON {code, data: [Comment]} |
+| `POST /posts/{id}/comments` | 发表评论 | JSON {content} |
+| `GET /channels/my` | 我的频道列表 | JSON {code, data: [Channel]} |
+| `GET /channels/{id}` | 频道详情 | JSON {code, data: Channel} |
+| `GET /channels/search?keyword=X` | 搜索频道 | JSON {code, data: [Channel]} |
+| `POST /upload/image` | 图片上传（FormData） | file → JSON {url} |
+| `GET /chat/conversations/with-unread` | 聊天会话列表 | JSON {code, data: [Session]} |
+| `POST /chat/messages/send` | 发送私聊消息 | JSON {receiverId, content, type} |
+| `GET /chat/history/{friendId}` | 聊天历史记录 | JSON {code, data: [Message]} |
+| `POST /group-messages` | 发送群聊消息 | JSON {channelId, content, mediaUrl, msgType} |
+| `GET /group-messages/{channelId}` | 群聊消息历史 | JSON {code, data: [GroupMsg]} |
+| `DELETE /group-messages/{id}` | 撤回群聊消息 | JSON {code} |
+| `GET /follow/{id}/counts` | 关注/粉丝数量 | JSON {followerCount, followingCount} |
+| `POST /follow/{id}/toggle` | 关注/取消关注 | JSON toggle |
+| `GET /notifications/unread/count` | 未读通知数 | JSON {code, data: Number} |
+| `GET /notifications/history` | 通知历史 | JSON {code, data: [Notification]} |
+| WebSocket `ws://host:8080/ws/raw?token=X` | 实时消息推送 | 事件: new_message, new_group_message |
+
+**UniApp 请求封装**：
+```typescript
+// utils/request.ts
+const BASE_URL = 'http://10.50.30.104:8080/api'
+
+const request = (options: UniApp.RequestOptions) => {
+  const token = uni.getStorageSync('token')
+  return uni.request({
+    ...options,
+    url: BASE_URL + options.url,
+    header: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      ...options.header
+    }
+  })
+}
+```
+
+**图片URL处理**：
+```typescript
+// 后端返回相对路径，前端需拼接 BASE_URL
+const processImageUrl = (url: string) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  return BASE_URL + url
+}
+```
 
 ---
 

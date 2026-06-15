@@ -16,12 +16,16 @@
             <text class="stat-label">帖子</text>
           </view>
           <view class="stat-item">
-            <text class="stat-value">{{ friends }}</text>
-            <text class="stat-label">好友</text>
+            <text class="stat-value">{{ followingCount }}</text>
+            <text class="stat-label">关注</text>
           </view>
           <view class="stat-item">
-            <text class="stat-value">{{ likes }}</text>
-            <text class="stat-label">获赞</text>
+            <text class="stat-value">{{ followerCount }}</text>
+            <text class="stat-label">粉丝</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value">{{ friends }}</text>
+            <text class="stat-label">好友</text>
           </view>
         </view>
       </view>
@@ -35,6 +39,10 @@
       <view class="nav-item" @tap="goFriends">
         <text class="nav-icon">👥</text>
         <text class="nav-label">好友管理</text>
+      </view>
+      <view class="nav-item" @tap="goFavourites">
+        <text class="nav-icon">★</text>
+        <text class="nav-label">我的收藏</text>
       </view>
       <view class="nav-item" @tap="goLikedPosts">
         <text class="nav-icon">❤</text>
@@ -86,7 +94,8 @@ const email = ref(authStore.userInfo?.email || '')
 const avatarUrl = ref('')
 const posts = ref(0)
 const friends = ref(0)
-const likes = ref(0)
+const followingCount = ref(0)
+const followerCount = ref(0)
 const isAdmin = ref(false)
 const showAvatarPreview = ref(false)
 
@@ -123,6 +132,16 @@ async function fetchProfile() {
     const fRes = await request<any>('/friends/list')
     if (fRes?.code === 200 && Array.isArray(fRes.data)) {
       friends.value = fRes.data.length
+    }
+    
+    // Get follow/follower counts
+    const userId = authStore.userInfo?.userId
+    if (userId) {
+      const followRes = await request<any>(`/follow/${userId}/counts`)
+      if (followRes?.code === 200 && followRes.data) {
+        followingCount.value = followRes.data.followingCount || 0
+        followerCount.value = followRes.data.followerCount || 0
+      }
     }
   } catch (_) {}
 }
@@ -201,6 +220,10 @@ function goFriends() {
   uni.navigateTo({ url: '/pages/friend/list' })
 }
 
+function goFavourites() {
+  uni.navigateTo({ url: '/pages/post/favourites' })
+}
+
 function goLikedPosts() {
   uni.navigateTo({ url: '/pages/post/liked-posts' })
 }
@@ -232,8 +255,6 @@ function handleLogout() {
   min-height: 100vh;
   background: transparent;
   padding: 32rpx;
-  position: relative;
-  z-index: 1;
   padding-bottom: 32rpx;
 }
 
@@ -242,44 +263,23 @@ function handleLogout() {
   gap: 24rpx;
   align-items: center;
   padding: 32rpx;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  border-radius: 20rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius-lg);
   margin-bottom: 16rpx;
-  position: relative;
-  overflow: hidden;
-}
-
-.profile-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-  border-radius: 20rpx;
+  box-shadow: var(--shadow);
 }
 
 .avatar-wrapper {
   position: relative;
   flex-shrink: 0;
-  z-index: 1;
 }
 
 .profile-avatar {
   width: 160rpx;
   height: 160rpx;
-  border-radius: 20rpx;
-  background: linear-gradient(135deg, #7C9FCB, #F2B5D4);
+  border-radius: 50%;
+  background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -307,21 +307,19 @@ function handleLogout() {
 
 .profile-info {
   flex: 1;
-  position: relative;
-  z-index: 1;
 }
 
 .profile-name {
   font-size: 40rpx;
   font-weight: 700;
-  color: #E8EFF7;
+  color: var(--text);
   margin-bottom: 8rpx;
   display: block;
 }
 
 .profile-email {
   font-size: 24rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-secondary);
   margin-bottom: 24rpx;
   display: block;
 }
@@ -339,12 +337,12 @@ function handleLogout() {
   display: block;
   font-size: 36rpx;
   font-weight: 700;
-  color: #7C9FCB;
+  color: var(--primary);
 }
 
 .stat-label {
   font-size: 22rpx;
-  color: rgba(232, 239, 247, 0.6);
+  color: var(--text-muted);
 }
 
 .profile-nav {
@@ -359,64 +357,41 @@ function handleLogout() {
   align-items: center;
   gap: 16rpx;
   padding: 24rpx;
-  background: rgba(124, 159, 203, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.15);
-  border-radius: 14rpx;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
-.nav-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-  border-radius: 14rpx;
+.nav-item:active {
+  background: var(--bg);
 }
 
 .nav-icon {
   font-size: 40rpx;
-  position: relative;
-  z-index: 1;
 }
 
 .nav-label {
   font-size: 28rpx;
-  color: #E8EFF7;
+  color: var(--text);
   font-weight: 500;
-  position: relative;
-  z-index: 1;
 }
 
 .logout-btn {
   width: 100%;
   padding: 24rpx;
-  border: 1rpx solid rgba(242, 181, 212, 0.3);
-  border-radius: 14rpx;
-  background: rgba(242, 181, 212, 0.05);
-  color: #F2B5D4;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 28rpx;
   font-weight: 600;
-  position: relative;
-  z-index: 1;
 }
 
 .avatar-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -433,8 +408,8 @@ function handleLogout() {
 
 .avatar-preview-img {
   width: 100%;
-  border-radius: 20rpx;
-  background: rgba(124, 159, 203, 0.1);
+  border-radius: var(--radius);
+  background: var(--card);
 }
 
 .avatar-actions {
@@ -449,11 +424,9 @@ function handleLogout() {
   align-items: center;
   gap: 12rpx;
   padding: 24rpx 36rpx;
-  background: rgba(124, 159, 203, 0.12);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1rpx solid rgba(124, 159, 203, 0.2);
-  border-radius: 16rpx;
+  background: var(--card);
+  border: 1rpx solid var(--card-border);
+  border-radius: var(--radius);
 }
 
 .avatar-btn:active {
@@ -466,6 +439,6 @@ function handleLogout() {
 
 .btn-label {
   font-size: 24rpx;
-  color: #E8EFF7;
+  color: var(--text);
 }
 </style>
