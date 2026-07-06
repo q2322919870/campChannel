@@ -1,3 +1,95 @@
-(docs/Camp_Channel_Bug_Analysis_And_Optimization_Plan.md is just a markdown documentation file, which doesn't fall into any of the categories that should be ignored according to the rules. It's a source/config file that should be tracked in git.)
+```
+# Dependencies
+node_modules/
+**/node_modules/
+.julia/
+.julia/**
+zig-cache/
+zig-out/
 
-# No changes needed - only a documentation file was added
+# Build outputs
+build/
+dist/
+target/
+**/target/
+out/
+**/out/
+
+# Compiled files
+*.class
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.out
+*.pyc
+__pycache__/
+**/__pycache__/
+
+# Environment
+.env
+.env.local
+.env.*
+**/.env
+**/.env.*
+
+# Editors
+.vscode/
+**/.vscode/
+.idea/
+**/.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+**/*.log
+logs/
+**/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+htmlcov/
+.coverage
+.mypy_cache/
+**/.mypy_cache/
+.pytest_cache/
+**/.pytest_cache/
+
+# Dart/Flutter specific
+.dart_tool/
+**/.dart_tool/
+.pub/
+**/.pub/
+packages/
+**/packages/
+build/
+**/build/
+*.g.dart
+**/*.g.dart
+*.freezed.dart
+**/*.freezed.dart
+
+# Java/Maven/Gradle
+.gradle/
+**/.gradle/
+*.jar
+*.war
+*.ear
+!*.jar
+!*.war
+!*.ear
+
+# Flutter
+.dart_tool/
+.packages
+.pubspec.lock
+flutter_export_environment.sh
+```

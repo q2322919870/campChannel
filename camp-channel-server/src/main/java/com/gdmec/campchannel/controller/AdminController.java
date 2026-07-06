@@ -3,6 +3,7 @@ package com.gdmec.campchannel.controller;
 import com.gdmec.campchannel.common.api.ErrorCode;
 import com.gdmec.campchannel.common.api.Result;
 import com.gdmec.campchannel.entity.*;
+import com.gdmec.campchannel.mapper.LoginDeviceMapper;
 import com.gdmec.campchannel.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.gdmec.campchannel.security.SecurityUser;
@@ -50,6 +51,9 @@ public class AdminController {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private LoginDeviceMapper loginDeviceMapper;
+
     @GetMapping("/stats")
     @Operation(summary = "后台首页统计数据")
     public Result<Map<String, Object>> getStats(
@@ -71,6 +75,24 @@ public class AdminController {
         com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Channel> pendCw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
         pendCw.eq("status", 0);
         stats.put("pendingChannels", channelService.count(pendCw));
+        
+        // 新增：今日新增用户数
+        java.time.LocalDateTime todayStart = java.time.LocalDate.now().atStartOfDay();
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User> todayUserQw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        todayUserQw.ge("create_time", todayStart);
+        stats.put("todayNewUsers", userService.count(todayUserQw));
+        
+        // 新增：今日发帖数
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Post> todayPostQw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        todayPostQw.ge("create_time", todayStart);
+        stats.put("todayPosts", postService.count(todayPostQw));
+        
+        // 新增：近 7 天活跃用户数（通过登录设备表统计）
+        java.time.LocalDateTime weekAgo = java.time.LocalDateTime.now().minusDays(7);
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<LoginDevice> activeQw = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        activeQw.ge("last_active_time", weekAgo).select("DISTINCT user_id");
+        stats.put("weeklyActiveUsers", loginDeviceMapper.selectMaps(activeQw).size());
+        
         return Result.success(stats);
     }
 
@@ -452,5 +474,42 @@ public class AdminController {
     @Data
     public static class ApproveRequest {
         private boolean approved;
+    }
+
+    @Data
+    public static class BatchApproveRequest {
+        private List<Long> postIds;
+        private boolean approved;
+    }
+
+    @PostMapping("/posts/batch-approve")
+    @Operation(summary = "批量审核帖子")
+    public Result<Void> batchApprovePosts(
+            @RequestBody BatchApproveRequest request,
+            @AuthenticationPrincipal SecurityUser currentUser) {
+        
+        if (!"sys_admin".equals(currentUser.getRole())) {
+            return Result.failed(ErrorCode.FORBIDDEN);
+        }
+
+        for (Long postId : request.getPostIds()) {
+            Post post = postService.getById(postId);
+            if (post != null) {
+                post.setStatus(request.isApproved() ? 1 : 2);
+                postService.updateById(post);
+            }
+        }
+
+        operationLogService.log(
+            currentUser.getId(),
+            "内容审核",
+            request.isApproved() ? "批量通过帖子" : "批量拒绝帖子",
+            "批量审核帖子 ID: " + String.join(",", request.getPostIds().stream().map(String::valueOf).toList()),
+            "POST",
+            "/admin/posts/batch-approve",
+            null
+        );
+
+        return Result.success("批量审核完成");
     }
 }
