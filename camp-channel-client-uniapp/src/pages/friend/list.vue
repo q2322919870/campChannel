@@ -97,7 +97,7 @@ onUnmounted(() => {
 async function loadFriends() {
   loading.value = true
   try {
-    const friendsRes = await request<any>('/friends/list')
+    const friendsRes = await request<any>('/friends')
     if (friendsRes?.code === 200) {
       const friendList = friendsRes.data || []
       // Try to get online status, but don't fail if unavailable

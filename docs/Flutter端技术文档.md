@@ -1,5 +1,9 @@
 # Camp Channel Flutter 端技术文档
 
+> 版本：V3.1
+> 最后更新：2026-07-06
+> 状态：V3.1 网络与体验优化已完成
+
 ## 项目概述
 
 Camp Channel Flutter 端是一个基于 Flutter/Dart 的跨平台移动端应用，支持 Android 和 iOS，与 PC 端功能保持一致。
@@ -10,7 +14,7 @@ Camp Channel Flutter 端是一个基于 Flutter/Dart 的跨平台移动端应用
 |------|------|------|
 | Flutter | 3.x | 跨平台框架 |
 | Dart | 3.x | 编程语言 |
-| Dio | 5.x | HTTP 客户端 |
+| Dio | 5.x | HTTP 客户端（V3.1 接入重试拦截器） |
 | Provider | 6.x | 状态管理 |
 | ImagePicker | 1.x | 图片/视频选择 |
 | Crypto | 3.x | MD5 哈希计算 |
@@ -18,6 +22,7 @@ Camp Channel Flutter 端是一个基于 Flutter/Dart 的跨平台移动端应用
 | PermissionHandler | 11.x | 运行时权限 |
 | SharedPrefs | 2.x | 本地存储 |
 | WebSocketChannel | 3.x | 实时通信 |
+| cached_network_image | 3.x | 图片缓存（V3.1 确认已集成） |
 
 ### 项目结构
 
@@ -26,7 +31,8 @@ camp-channel-client-flutter/
 ├── lib/
 │   ├── core/               # 核心模块
 │   │   ├── network/
-│   │   │   └── api_client.dart     # Dio 封装，统一 API 请求
+│   │   │   ├── api_client.dart     # Dio 封装，统一 API 请求
+│   │   │   └── retry_interceptor.dart # 网络重试拦截器（V3.1 新增）
 │   │   └── services/
 │   │       ├── storage_service.dart # 本地存储（SharedPreferences）
 │   │       ├── user_provider.dart   # 用户状态管理（Provider）
@@ -34,7 +40,7 @@ camp-channel-client-flutter/
 │   │       └── burst_service.dart   # 粒子爆发效果
 │   ├── pages/              # 页面
 │   │   ├── home_page.dart          # 首页（底部导航）
-│   │   ├── channel_feed_page.dart  # 频道帖子流
+│   │   ├── channel_feed_page.dart  # 频道帖子流（ListView.builder 懒加载）
 │   │   ├── create_post_page.dart   # 发帖页面（支持图片+视频）
 │   │   ├── post_detail_page.dart   # 帖子详情页
 │   │   ├── gallery_upload_page.dart # 画廊上传页
@@ -43,8 +49,11 @@ camp-channel-client-flutter/
 │   ├── widgets/            # 可复用组件
 │   │   ├── post_card.dart          # 帖子卡片
 │   │   ├── user_card.dart          # 用户信息卡片
+│   │   ├── video_player_widget.dart # 视频播放组件（dispose 释放资源）
 │   │   ├── comment_widget.dart     # 评论组件
 │   │   └── ...
+│   ├── theme/             # 主题配置
+│   │   └── theme_data.dart         # 亮色/暗色主题（V3.1 确认 darkTheme 已实现）
 │   ├── canvas/             # Canvas 动画效果
 │   │   ├── canvas_effects.dart     # 流体背景、粒子系统
 │   │   └── gallery_3d_carousel.dart # 3D 轮播图
@@ -278,3 +287,131 @@ Future<Map<String, dynamic>?> checkVideoExists(String hash)
 | 3D 画廊不支持视频 | Gallery3DItem 无 videoUrl 字段 | 添加 videoUrl 字段和 isVideo 判断 |
 | 帖子详情不显示视频 | 仅解析 images 字段 | 添加 videoUrls 解析和网格显示 |
 | PostCard 不显示视频 | 无 videoUrls 参数 | 添加 videoUrls 参数和视频网格组件 |
+| 视频播放内存泄漏 | VideoPlayerController 未释放 | `video_player_widget.dart` 在 dispose() 中释放 |
+| 图片重复下载 | 无缓存 | 集成 `cached_network_image` |
+| 实时通信依赖缺失 | 未引入 web_socket_channel | pubspec.yaml 添加依赖 |
+| 列表性能差 | 使用 Column 渲染全部项 | `channel_feed_page.dart` 改用 `ListView.builder` 懒加载 |
+
+---
+
+## V3.1 网络与体验优化
+
+V3.1 版本围绕《Camp_Channel_Bug_Analysis_And_Optimization_Plan.md》中标记的 Flutter 端 P1/P2 问题进行系统性优化。经代码审查确认，部分历史问题（视频内存释放、暗色模式、列表懒加载、依赖补齐）已在前期版本修复，本版本主要新增网络重试机制以提升弱网体验。
+
+### 1. 网络重试机制（ISSUE-F-P1-005）
+
+**文件**：`lib/core/network/retry_interceptor.dart`（新增）、`lib/core/network/api_client.dart`（注册拦截器）
+
+**问题**：移动端网络环境复杂（地铁、电梯、信号弱），原有 Dio 客户端无重试机制，单次网络抖动即导致请求失败，用户体验差。
+
+**方案**：自定义 `RetryInterceptor` 继承 `Interceptor`，在 `onError` 回调中根据错误类型判断是否重试，采用线性退避策略。
+
+```dart
+class RetryInterceptor extends Interceptor {
+  final Dio dio;
+  final int maxRetries;
+  final Duration retryDelay;
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    final retryCount = (err.requestOptions.extra['retryCount'] ?? 0) as int;
+    if (retryCount < maxRetries && _shouldRetry(err)) {
+      err.requestOptions.extra['retryCount'] = retryCount + 1;
+      Future.delayed(retryDelay * (retryCount + 1), () {
+        dio.fetch(err.requestOptions).then(handler.resolve).catchError((e) => handler.reject(e as DioException));
+      });
+      return;
+    }
+    handler.next(err);
+  }
+
+  bool _shouldRetry(DioException err) {
+    if (err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.sendTimeout ||
+        err.type == DioExceptionType.receiveTimeout ||
+        err.type == DioExceptionType.connectionError) {
+      return true;
+    }
+    if (err.response?.statusCode != null && err.response!.statusCode! >= 500) {
+      return true;
+    }
+    return false;
+  }
+}
+```
+
+**注册到 ApiClient**：
+```dart
+_dio.interceptors.add(RetryInterceptor(_dio, maxRetries: 3));
+```
+
+**重试策略**：
+| 错误类型 | 是否重试 | 说明 |
+|---------|---------|------|
+| connectionTimeout | ✅ | 连接超时，可能是网络瞬时阻塞 |
+| sendTimeout / receiveTimeout | ✅ | 发送/接收超时 |
+| connectionError | ✅ | 网络中断 |
+| 5xx 服务器错误 | ✅ | 服务器临时故障 |
+| 4xx 客户端错误 | ❌ | 请求本身有问题，重试无意义 |
+| 401 未授权 | ❌ | Token 失效，需重新登录 |
+
+**退避算法**：线性退避 `retryDelay * (retryCount + 1)`，默认基础延迟 1s，重试 3 次最大等待 6s（1s + 2s + 3s）。
+
+### 2. 已确认修复的历史问题
+
+经 V3.1 代码审查，以下问题在前期版本已修复，本版本仅做文档确认：
+
+#### 2.1 视频播放器内存释放（ISSUE-F-P1-003）
+
+**文件**：`lib/widgets/video_player_widget.dart`
+
+`VideoPlayerController` 在 `dispose()` 中正确调用 `_controller.dispose()` 释放原生资源，避免视频列表滑动时的内存累积。
+
+#### 2.2 暗色模式（ISSUE-F-P2-001）
+
+**文件**：`lib/theme/theme_data.dart`
+
+已实现 `darkTheme` getter，返回暗色 ThemeData，配合 `MaterialApp.themeMode` 实现系统跟随/手动切换。
+
+#### 2.3 列表懒加载（ISSUE-F-OPT-001）
+
+**文件**：`lib/pages/channel_feed_page.dart`
+
+帖子流使用 `ListView.builder` 而非 `Column`，仅渲染可见项，支持千级帖子流畅滚动。
+
+#### 2.4 关键依赖补齐（ISSUE-F-P0-001/002/003）
+
+**文件**：`pubspec.yaml`
+
+确认已集成：
+- `web_socket_channel: ^3.0.0` — WebSocket 实时通信
+- `cached_network_image: ^3.3.0` — 图片缓存，避免重复下载
+- `provider: ^6.1.0` — 状态管理
+
+### 3. 架构性改进（延期项）
+
+以下两项涉及大规模架构重构，影响面广，已延期至 V4.0 处理：
+
+| 编号 | 问题 | 延期原因 |
+|------|------|---------|
+| ISSUE-F-P1-004 | 状态管理从 Provider 迁移至 Riverpod/Bloc | 涉及全应用状态层重写，需独立版本周期 |
+| ISSUE-F-P1-006 | 文件目录模块化拆分 | 涉及 import 路径全量调整，需配合 IDE 重构工具 |
+
+---
+
+## V3.1 修复实施清单
+
+| 编号 | 优先级 | 问题 | 状态 |
+|------|--------|------|------|
+| ISSUE-F-P1-005 | P1 | 弱网请求失败 | ✅ 已修复（RetryInterceptor） |
+| ISSUE-F-P1-003 | P1 | 视频内存泄漏 | ✅ 前期已修复（dispose 释放） |
+| ISSUE-F-P2-001 | P2 | 暗色模式 | ✅ 前期已修复（darkTheme） |
+| ISSUE-F-OPT-001 | Opt | 列表性能 | ✅ 前期已修复（ListView.builder） |
+| ISSUE-F-P0-001/002/003 | P0 | 依赖缺失 | ✅ 前期已修复（pubspec.yaml） |
+| ISSUE-F-P1-004 | P1 | 状态管理迁移 | ⏸ 延期至 V4.0 |
+| ISSUE-F-P1-006 | P1 | 模块化拆分 | ⏸ 延期至 V4.0 |
+
+---
+
+**文档版本**：V3.1
+**本次更新**：补充 V3.1 网络重试拦截器说明，确认前期已修复的视频内存释放、暗色模式、列表懒加载、依赖补齐等问题，记录延期项

@@ -70,7 +70,7 @@ public class FriendshipController {
         return Result.success("已拒绝好友申请", null);
     }
 
-    @GetMapping("")
+    @GetMapping({"", "/list"})
     @Operation(summary = "获取好友列表")
     public Result<List<User>> getFriends(
             @AuthenticationPrincipal SecurityUser currentUser) {

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'auth_interceptor.dart';
+import 'retry_interceptor.dart';
 import '../services/storage_service.dart';
 
 /// 统一网络请求客户端 (单例)
@@ -17,6 +18,7 @@ class ApiClient {
     ));
 
     _dio.interceptors.add(AuthInterceptor());
+    _dio.interceptors.add(RetryInterceptor(_dio, maxRetries: 3));
     _dio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,

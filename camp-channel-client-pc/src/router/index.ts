@@ -69,9 +69,17 @@ const router = createRouter({
 // Authentication guard (hybrid transitions handled by HybridTransitionManager)
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
+  const userStr = localStorage.getItem('user')
+  let user: any = null
+  if (userStr) {
+    try { user = JSON.parse(userStr) } catch {}
+  }
+
   if (to.meta.requiresAuth && !token) {
     next('/login')
   } else if (to.path === '/login' && token) {
+    next('/home')
+  } else if (to.meta.requiresAdmin && (!user || user.role !== 'sys_admin')) {
     next('/home')
   } else {
     next()

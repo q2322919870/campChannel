@@ -76,6 +76,16 @@ public class RawWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         try {
+            Long userId = (Long) session.getAttributes().get("userId");
+            if (userId != null) {
+                String limitKey = "ws_rate_limit:" + userId;
+                // Limit to 10 messages per 10 seconds
+                if (!redisUtils.isAllowedRateLimit(limitKey, 10, 10)) {
+                    log.warn("WS rate limit exceeded for userId={}", userId);
+                    sendJson(session, Map.of("type", "error", "message", "发送消息过于频繁，请稍后再试"));
+                    return;
+                }
+            }
             Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
             String type = (String) payload.getOrDefault("type", "");
             if ("ping".equals(type)) {

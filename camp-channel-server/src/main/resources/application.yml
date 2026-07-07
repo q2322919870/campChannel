@@ -16,17 +16,18 @@ spring:
     username: root
     password: q871651480  # 请修改为您本地数据库密码
     hikari:
-      minimum-idle: 5
-      maximum-pool-size: 15
-      idle-timeout: 30000
+      minimum-idle: 10
+      maximum-pool-size: 30
+      idle-timeout: 300000
       pool-name: CampChannelHikariCP
       max-lifetime: 1800000
-      connection-timeout: 30000
+      connection-timeout: 20000
+      keepalive-time: 60000
   sql:
     init:
       mode: always
       continue-on-error: true
-      schema-locations: classpath:db/schema.sql,classpath:db/migration-v2.0.sql
+      schema-locations: classpath:db/schema.sql,classpath:db/migration-v2.0.sql,classpath:db/migration-v3.0.sql,classpath:db/migration-v3.1.sql
   data:
     redis:
       host: localhost

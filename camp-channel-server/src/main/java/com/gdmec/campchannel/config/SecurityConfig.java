@@ -65,14 +65,18 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/register",
                                 "/auth/send-code",
+                                "/auth/refresh",
                                 "/api/auth/login",
                                 "/api/auth/register",
-                                "/api/auth/send-code"
+                                "/api/auth/send-code",
+                                "/api/auth/refresh"
                         ).permitAll()
                         // WebSocket 端点放行（SockJS 会发起 HTTP 请求）
                         .requestMatchers("/ws/**", "/ws", "/api/ws/**").permitAll()
                         // 静态资源与本地文件服务放行（为本地模拟 OSS 预览使用）
                         .requestMatchers("/uploads/**", "/api/uploads/**").permitAll()
+                        // 健康检查端点放行
+                        .requestMatchers("/actuator/health", "/api/actuator/health").permitAll()
                         // Swagger-UI / OpenAPI 接口文档放行
                         .requestMatchers(
                                 "/swagger-ui.html",

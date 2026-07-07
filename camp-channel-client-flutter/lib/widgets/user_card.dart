@@ -139,7 +139,7 @@ class _UserCardState extends State<UserCard> {
 
   Future<void> _checkFriendStatus() async {
     try {
-      final response = await _apiClient.get('/friends/list');
+      final response = await _apiClient.get('/friends');
       final result = response.data;
       if (result != null && result['code'] == 200 && result['data'] != null) {
         final list = result['data'] as List;

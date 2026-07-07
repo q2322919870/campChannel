@@ -17,7 +17,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Tag(name = "文件上传模块", description = "本地模拟 OSS 文件上传")
@@ -30,23 +32,91 @@ public class UploadController {
     private String uploadPath;
 
     private static final long MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    /** 允许的图片 MIME 类型白名单 */
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp"
+    );
+
+    /** 允许的视频 MIME 类型白名单 */
+    private static final Set<String> ALLOWED_VIDEO_TYPES = Set.of(
+            "video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"
+    );
+
+    /** 允许的图片扩展名白名单 */
+    private static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of(
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"
+    );
+
+    /** 允许的视频扩展名白名单 */
+    private static final Set<String> ALLOWED_VIDEO_EXTENSIONS = Set.of(
+            ".mp4", ".webm", ".mov", ".avi"
+    );
 
     @PostMapping("/image")
     @Operation(summary = "上传图片")
     public Result<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
+        if (!validateFile(file, false, MAX_IMAGE_SIZE)) {
+            return Result.failed(com.gdmec.campchannel.common.api.ErrorCode.BAD_REQUEST, "图片文件校验失败");
+        }
         return uploadFile(file, "images", false);
     }
 
     @PostMapping("/video")
     @Operation(summary = "上传视频（自动去重和压缩）")
     public Result<Map<String, String>> uploadVideo(@RequestParam("file") MultipartFile file) {
+        if (!validateFile(file, true, 100 * 1024 * 1024)) {
+            return Result.failed(com.gdmec.campchannel.common.api.ErrorCode.BAD_REQUEST, "视频文件校验失败");
+        }
         return uploadFile(file, "videos", true);
     }
 
     @PostMapping("/avatar")
     @Operation(summary = "上传头像")
     public Result<Map<String, String>> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        if (!validateFile(file, false, MAX_IMAGE_SIZE)) {
+            return Result.failed(com.gdmec.campchannel.common.api.ErrorCode.BAD_REQUEST, "头像文件校验失败");
+        }
         return uploadFile(file, "avatars", false);
+    }
+
+    /**
+     * 文件安全校验：白名单机制 + 大小二次校验
+     */
+    private boolean validateFile(MultipartFile file, boolean isVideo, long maxSize) {
+        if (file == null || file.isEmpty()) {
+            return false;
+        }
+
+        if (file.getSize() > maxSize) {
+            log.warn("文件大小超限: {} bytes > {} bytes", file.getSize(), maxSize);
+            return false;
+        }
+
+        String contentType = file.getContentType();
+        Set<String> allowedTypes = isVideo ? ALLOWED_VIDEO_TYPES : ALLOWED_IMAGE_TYPES;
+        if (contentType == null || !allowedTypes.contains(contentType.toLowerCase())) {
+            log.warn("不允许的文件类型: {}", contentType);
+            return false;
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+            return false;
+        }
+        String extension = "";
+        int dotIndex = originalFilename.lastIndexOf(".");
+        if (dotIndex > 0) {
+            extension = originalFilename.substring(dotIndex).toLowerCase();
+        }
+        Set<String> allowedExtensions = isVideo ? ALLOWED_VIDEO_EXTENSIONS : ALLOWED_IMAGE_EXTENSIONS;
+        if (!allowedExtensions.contains(extension)) {
+            log.warn("不允许的文件扩展名: {}", extension);
+            return false;
+        }
+
+        return true;
     }
 
     @GetMapping("/video/check")

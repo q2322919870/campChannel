@@ -92,4 +92,20 @@ build/
 .packages
 .pubspec.lock
 flutter_export_environment.sh
+
+# Media uploads
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+*.svg
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.flv
+*.m4v
 ```

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <teleport to="body">
     <div class="user-card-overlay" v-if="visible" @click.self="$emit('close')">
       <div class="user-card">
@@ -108,7 +108,7 @@ async function fetchProfile() {
       if (pRes.data.code === 200) profile.posts = pRes.data.data || []
     } catch {}
     try {
-      const fRes = await api.get('/friends/list')
+      const fRes = await api.get('/friends')
       if (fRes.data.code === 200) {
         profile.isFriend = (fRes.data.data || []).some((f: any) => f.id === props.userId || f.friendId === props.userId)
       }

@@ -7,6 +7,7 @@ import com.gdmec.campchannel.entity.Post;
 import com.gdmec.campchannel.entity.Report;
 import com.gdmec.campchannel.mapper.PostMapper;
 import com.gdmec.campchannel.mapper.ReportMapper;
+import com.gdmec.campchannel.service.NotificationService;
 import com.gdmec.campchannel.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private PostMapper postMapper;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -94,6 +98,23 @@ public class ReportServiceImpl implements ReportService {
                 postMapper.updateById(post);
                 log.info("举报确认违规，下架帖子 {}", post.getId());
             }
+        }
+
+        // 通知举报人处理结果
+        String resultText = status == 1 ? "已确认违规并处理" : "已驳回";
+        String title = "举报处理结果通知";
+        String content = "您举报的 " + report.getTargetType() + " (ID:" + report.getTargetId() + ") "
+                + resultText + "。处理说明: " + (handleNote != null ? handleNote : "无");
+        try {
+            notificationService.sendNotification(
+                    report.getReporterId(),
+                    "system",
+                    title,
+                    content,
+                    String.valueOf(report.getId())
+            );
+        } catch (Exception e) {
+            log.warn("发送举报处理结果通知失败: reportId={}, {}", reportId, e.getMessage());
         }
 
         log.info("管理员 {} 处理举报 {}，状态: {}", handlerId, reportId, status);

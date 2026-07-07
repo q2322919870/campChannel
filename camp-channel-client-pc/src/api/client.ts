@@ -49,15 +49,26 @@ api.interceptors.response.use(
       originalRequest._retry = true
       isRefreshing = true
       
-      // Clear token and redirect only if no refresh mechanism
-      if (hadToken) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        window.location.hash = '#/login'
-      }
-      
-      isRefreshing = false
-      onTokenRefreshed('')
+      return api.post('/auth/refresh', { refreshToken: hadToken })
+        .then((res) => {
+          isRefreshing = false
+          let rawToken = res.data.data.token
+          if (rawToken.startsWith('Bearer ')) {
+            rawToken = rawToken.substring(7)
+          }
+          localStorage.setItem('token', rawToken)
+          onTokenRefreshed(rawToken)
+          originalRequest.headers.Authorization = `Bearer ${rawToken}`
+          return api(originalRequest)
+        })
+        .catch((refreshError) => {
+          isRefreshing = false
+          onTokenRefreshed('')
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          window.location.hash = '#/login'
+          return Promise.reject(refreshError)
+        })
     }
     return Promise.reject(error)
   }

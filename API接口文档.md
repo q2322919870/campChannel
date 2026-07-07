@@ -1028,6 +1028,29 @@ Content-Type: multipart/form-data
 
 **基础路径：** `/api/admin`
 
+### 15.0 后台统计数据
+```
+GET /api/admin/stats
+Authorization: Bearer <token>
+```
+**响应：**
+```json
+{
+  "code": 200,
+  "data": {
+    "totalUsers": 100,
+    "totalPosts": 500,
+    "totalComments": 1200,
+    "totalChannels": 30,
+    "pendingPosts": 5,
+    "pendingChannels": 2,
+    "todayNewUsers": 8,
+    "todayPosts": 25,
+    "weeklyActiveUsers": 60
+  }
+}
+```
+
 ### 15.1 获取所有用户
 ```
 GET /api/admin/users?page=1&size=20
@@ -1076,6 +1099,7 @@ Authorization: Bearer <token>
   "action": "delete_post"
 }
 ```
+**说明：** 处理完成后会自动通过 WebSocket 推送通知给举报人。
 
 ### 15.6 发布公告
 ```
@@ -1096,11 +1120,67 @@ DELETE /api/admin/announcements/{announcementId}
 Authorization: Bearer <token>
 ```
 
+### 15.8 批量审核帖子
+```
+POST /api/admin/posts/batch-approve
+Authorization: Bearer <token>
+```
+**请求体：**
+```json
+{
+  "postIds": [1, 2, 3, 4],
+  "approved": true
+}
+```
+**说明：** `approved=true` 批量通过，`approved=false` 批量拒绝。
+
+### 15.9 批量审核评论
+```
+POST /api/admin/comments/batch-approve
+Authorization: Bearer <token>
+```
+**请求体：**
+```json
+{
+  "commentIds": [1, 2, 3],
+  "approved": true
+}
+```
+
 ---
 
-## 16. WebSocket实时通信
+## 16. 系统监控模块
 
-### 16.1 STOMP WebSocket（PC端）
+**基础路径：** `/api/actuator`
+
+### 16.1 健康检查
+```
+GET /api/actuator/health
+```
+**说明：** 无需认证，用于运维监控。
+**响应：**
+```json
+{
+  "code": 200,
+  "data": {
+    "status": "UP",
+    "timestamp": "2026-07-06T15:30:00",
+    "database": {
+      "status": "UP",
+      "product": "MySQL"
+    },
+    "redis": {
+      "status": "UP"
+    }
+  }
+}
+```
+
+---
+
+## 17. WebSocket实时通信
+
+### 17.1 STOMP WebSocket（PC端）
 **连接地址：** `ws://localhost:8080/ws`
 
 **订阅频道：**
@@ -1118,7 +1198,7 @@ Authorization: Bearer <token>
 }
 ```
 
-### 16.2 Raw WebSocket（移动端）
+### 17.2 Raw WebSocket（移动端）
 **连接地址：** `ws://localhost:8080/ws/raw`
 
 **连接时携带Token：** `ws://localhost:8080/ws/raw?token=xxx`

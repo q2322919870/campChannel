@@ -129,23 +129,29 @@ const visibleMessages = computed(() =>
 )
 
 let stompClient: any = null
+const wsSubscriptions: any[] = []
 
 async function connectWebSocket() {
   try {
     if ((window as any).__stompClient) {
       stompClient = (window as any).__stompClient
-      stompClient.subscribe('/user/queue/messages', (msg: any) => {
+      
+      // Unsubscribe any previous subscriptions to avoid duplicate messages and stale closures
+      wsSubscriptions.forEach(sub => { try { sub.unsubscribe() } catch(e){} })
+      wsSubscriptions.length = 0
+
+      wsSubscriptions.push(stompClient.subscribe('/user/queue/messages', (msg: any) => {
         handleIncomingMessage(JSON.parse(msg.body))
-      })
+      }))
       // Subscribe to read receipt notifications
-      stompClient.subscribe('/user/queue/read-receipts', (msg: any) => {
+      wsSubscriptions.push(stompClient.subscribe('/user/queue/read-receipts', (msg: any) => {
         handleReadReceipt(JSON.parse(msg.body))
-      })
+      }))
       // Subscribe to online status updates
-      stompClient.subscribe('/user/queue/online-status', (msg: any) => {
+      wsSubscriptions.push(stompClient.subscribe('/user/queue/online-status', (msg: any) => {
         const data = JSON.parse(msg.body)
         handleOnlineStatus(data.userId, data.online)
-      })
+      }))
       return
     }
     const token = localStorage.getItem('token')
@@ -156,24 +162,29 @@ async function connectWebSocket() {
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       onConnect: () => {
         console.log('STOMP connected, subscribing...')
-        stompClient.subscribe('/user/queue/messages', (msg: any) => {
+        
+        wsSubscriptions.forEach(sub => { try { sub.unsubscribe() } catch(e){} })
+        wsSubscriptions.length = 0
+
+        wsSubscriptions.push(stompClient.subscribe('/user/queue/messages', (msg: any) => {
           console.log('Received message:', msg.body)
           handleIncomingMessage(JSON.parse(msg.body))
-        })
+        }))
         // Subscribe to read receipt notifications
-        stompClient.subscribe('/user/queue/read-receipts', (msg: any) => {
+        wsSubscriptions.push(stompClient.subscribe('/user/queue/read-receipts', (msg: any) => {
           console.log('Read receipt:', msg.body)
           handleReadReceipt(JSON.parse(msg.body))
-        })
+        }))
         // Subscribe to online status updates
-        stompClient.subscribe('/user/queue/online-status', (msg: any) => {
+        wsSubscriptions.push(stompClient.subscribe('/user/queue/online-status', (msg: any) => {
           const data = JSON.parse(msg.body)
           console.log('Online status update:', data)
           handleOnlineStatus(data.userId, data.online)
-        })
+        }))
       },
     })
     stompClient.activate()
+    ;(window as any).__stompClient = stompClient
   } catch (e) {
     console.warn('WebSocket connection failed', e)
   }
@@ -531,6 +542,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (onlineTimer) clearInterval(onlineTimer)
+  wsSubscriptions.forEach(sub => { try { sub.unsubscribe() } catch(e){} })
+  wsSubscriptions.length = 0
 })
 </script>
 

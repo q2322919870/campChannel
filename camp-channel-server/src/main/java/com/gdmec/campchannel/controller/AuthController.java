@@ -221,6 +221,41 @@ public class AuthController {
         return Result.success("登录成功", responseData);
     }
 
+    @PostMapping("/refresh")
+    @Operation(summary = "刷新 Token")
+    public Result<Map<String, Object>> refresh(@RequestBody Map<String, String> requestBody) {
+        String oldToken = requestBody.get("refreshToken");
+        if (oldToken == null || oldToken.isEmpty()) {
+            return Result.failed(ErrorCode.BAD_REQUEST, "Token 不能为空");
+        }
+        if (oldToken.startsWith(jwtUtils.getTokenStartWith())) {
+            oldToken = oldToken.substring(jwtUtils.getTokenStartWith().length());
+        }
+        try {
+            io.jsonwebtoken.Claims claims = jwtUtils.getClaimsFromExpiredToken(oldToken);
+            String username = claims.getSubject();
+            if (username == null) {
+                return Result.failed(ErrorCode.UNAUTHORIZED, "无效的 Token");
+            }
+            // Generate new token
+            Map<String, Object> newClaims = new HashMap<>();
+            newClaims.put("userId", claims.get("userId", Long.class));
+            String newToken = jwtUtils.generateToken(username, newClaims);
+            
+            // Update active token in Redis
+            String activeTokenKey = "active_token:" + username;
+            redisUtils.set(activeTokenKey, newToken, jwtUtils.getExpiration());
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("token", jwtUtils.getTokenStartWith() + newToken);
+            responseData.put("accessToken", jwtUtils.getTokenStartWith() + newToken);
+            return Result.success("刷新成功", responseData);
+        } catch (Exception e) {
+            log.error("Token 刷新失败", e);
+            return Result.failed(ErrorCode.UNAUTHORIZED, "Token 刷新失败: " + e.getMessage());
+        }
+    }
+
     /**
      * 登录请求体 DTO
      */

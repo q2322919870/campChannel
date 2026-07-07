@@ -153,7 +153,7 @@ async function fetchProfile() {
     }
     
     // Get friend count
-    const fRes = await request<any>('/friends/list')
+    const fRes = await request<any>('/friends')
     if (fRes?.code === 200 && Array.isArray(fRes.data)) {
       friends.value = fRes.data.length
     }

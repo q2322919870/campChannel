@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="profile-page">
     <!-- Weather effects canvas overlay -->
     <canvas ref="weatherCanvas" class="weather-canvas"></canvas>
@@ -114,7 +114,7 @@ async function fetchProfile() {
     }
     const pRes = await api.get('/posts/my', { params: { page: 1, size: 100 } })
     if (pRes.data.code === 200 && Array.isArray(pRes.data.data)) posts.value = pRes.data.data.length
-    const fRes = await api.get('/friends/list')
+    const fRes = await api.get('/friends')
     if (fRes.data.code === 200 && Array.isArray(fRes.data.data)) friends.value = fRes.data.data.length
   } catch {}
 }

@@ -81,4 +81,32 @@ public class JwtUtils {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
+
+    public Boolean isTokenAboutToExpire(String token) {
+        try {
+            final Date expirationDate = getExpirationDateFromToken(token);
+            // If expires in less than 30 minutes
+            return (expirationDate.getTime() - System.currentTimeMillis()) < 1800 * 1000L;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String refreshToken(String token) {
+        final Claims claims = getAllClaimsFromToken(token);
+        final String username = claims.getSubject();
+        Map<String, Object> newClaims = new HashMap<>(claims);
+        newClaims.remove("sub");
+        newClaims.remove("iat");
+        newClaims.remove("exp");
+        return generateToken(username, newClaims);
+    }
+
+    public Claims getClaimsFromExpiredToken(String token) {
+        try {
+            return getAllClaimsFromToken(token);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            return e.getClaims();
+        }
+    }
 }
